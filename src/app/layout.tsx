@@ -5,6 +5,7 @@ import { Layout } from 'nextra-theme-docs'
 import { Head } from 'nextra/components'
 import { getPageMap } from 'nextra/page-map'
 
+import { Footer } from '@/components/lightpanda/Footer'
 import { Navbar } from '@/components/lightpanda/Navbar'
 import { DNSPrefetch } from '@lightpanda/common/components/DNSPrefetch'
 import { Favicon } from '@lightpanda/common/components/Favicon'
@@ -63,18 +64,17 @@ export default async function RootLayout({
             navbar={<Navbar />}
             pageMap={await getPageMap()}
             docsRepositoryBase={siteDetails.docsRepositoryBase}
-            footer={<span />}
+            footer={<Footer />}
             feedback={{
-              content: null,
+              content: 'Question? Send us feedback',
             }}
-            editLink={null}
             toc={{
               extraContent: (
                 <>
                   <Version />
                   <SocialIcons
                     socials={siteDetails.socials}
-                    classNames="flex flex-row items-center justify-start gap-4 w-1/2 mt-4"
+                    classNames="flex flex-row items-center justify-start gap-4 w-1/2 my-4"
                   />
                 </>
               ),
