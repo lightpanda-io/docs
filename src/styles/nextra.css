@@ -4,6 +4,7 @@
   --nextra-navbar-height: 91px;
   --x-color-gray-400: var(--foreground-accent);
   --x-color-slate-100: var(--foreground);
+  --default-mono-font-family: var(--code-font);
 }
 
 h1 {
@@ -13,6 +14,10 @@ h1 {
 input {
   color: var(--background);
   background-color: var(--secondary-foreground);
+}
+
+code.nextra-code {
+  @apply font-light;
 }
 
 .nextra-border {
