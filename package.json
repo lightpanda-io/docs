@@ -1,0 +1,34 @@
+{
+  "name": "docs",
+  "version": "1.0.0",
+  "author": "Nicolas Rigaudiere <nicolas@tonalogic.io>",
+  "license": "MIT",
+  "description": "Lightpanda Documentation",
+  "scripts": {
+    "dev": "next -p 1414",
+    "build": "NODE_ENV='production' next build",
+    "postbuild": "pagefind --site ./out --output-path ./out/_pagefind",
+    "typecheck": "npx tsc --noEmit",
+    "lint": "next lint && biome ci . --diagnostic-level=error",
+    "lint-apply": "next lint --fix && biome check . --write",
+    "start": "next start -p 1414"
+  },
+  "dependencies": {
+    "@lightpanda/common": "*",
+    "next": "^15.2.2",
+    "next-plausible": "^3.12.4",
+    "nextra": "^4.2.16",
+    "nextra-theme-docs": "^4.2.16",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@tailwindcss/postcss": "^4.0.17",
+    "autoprefixer": "^10.4.21",
+    "pagefind": "^1.3.0",
+    "postcss": "^8.5.3",
+    "tailwindcss": "4.0.0",
+    "tailwindcss-animate": "^1.0.7"
+  }
+}

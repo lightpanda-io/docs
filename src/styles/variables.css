@@ -1,0 +1,13 @@
+:root {
+  --background: #1c1c1c;
+  --background-opacity: #1c1c1c94;
+  --foreground: #f6f5ec; /* Beige */
+  --primary: #6cc7e2; /* Sky */
+  --primary-foreground: #1c1c1c; /* Panda */
+  --secondary: #007eaa; /* Wave */
+  --secondary-foreground: #dadada; /* Gray */
+
+  --primary-accent: #0b3861; /* Midnight */
+  --foreground-accent: #808080;
+  --hero-background: #1c1c1c;
+}

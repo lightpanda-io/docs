@@ -1,0 +1,58 @@
+@import "./../styles/variables.css";
+@import "tailwindcss";
+
+@utility text-balance {
+  text-wrap: balance;
+}
+
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-foreground-accent: var(--foreground-accent);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-accent: var(--primary-accent);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+}
+
+html {
+  @apply scroll-smooth;
+}
+
+body {
+  /* @apply text-lg; */
+
+  color: var(--foreground);
+  background: var(--background);
+  font-family: var(--main-font);
+  font-optical-sizing: auto;
+  font-style: normal;
+}
+
+.firaSans {
+  font-family: var(--main-font);
+  font-optical-sizing: auto;
+  font-style: normal;
+}
+
+.firaCode {
+  font-family: var(--code-font);
+  font-optical-sizing: auto;
+  font-style: normal;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--main-font);
+  font-optical-sizing: auto;
+  font-style: normal;
+}
+
+#lp-logo {
+  @apply transition-all ease-in-out w-5/6 lg:w-[85%];
+}

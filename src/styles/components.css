@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+header {
+  @apply transition-all;
+}
+
+.scrolled-header {
+  @apply border-b-transparent! border-b-0!;
+  @apply py-0!;
+  @apply bg-[var(--background-opacity)]! shadow-[0px_0px_28px_rgba(108,199,226,0.5)];
+}
+
+.scrolled-header nav {
+  @apply py-1! h-auto!;
+}
+
+#lp-logo {
+  @apply transition-all ease-in-out w-5/6 lg:w-[85%];
+}
+
+.scrolled-header #lp-logo {
+  @apply w-2/3;
+}

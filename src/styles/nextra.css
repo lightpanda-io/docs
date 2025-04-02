@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+:root {
+  --nextra-navbar-height: 91px;
+  --x-color-gray-400: var(--foreground-accent);
+  --x-color-slate-100: var(--foreground);
+}
+
+h1 {
+  @apply mt-6;
+}
+
+input {
+  color: var(--background);
+  background-color: var(--secondary-foreground);
+}
+
+.nextra-border {
+  border-color: var(--primary-accent) !important;
+}

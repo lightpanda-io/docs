@@ -1,0 +1,82 @@
+---
+title: Installation
+description: You can download the last binary from the nightly builds for Linux x86_64 and MacOS aarch64.
+---
+
+# Installation
+
+## Install from the nightly builds
+
+You can download the last binary from the [nightly
+builds](https://github.com/lightpanda-io/browser/releases/tag/nightly) for
+Linux x86_64 and MacOS aarch64.
+
+*For Linux*
+```bash copy
+curl -L -o lightpanda https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-x86_64-linux && \
+chmod a+x ./lightpanda
+```
+
+*For MacOS*
+```sh copy
+curl -L -o lightpanda https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-aarch64-macos && \
+chmod a+x ./lightpanda
+```
+
+## Dump a URL
+
+```sh copy
+./lightpanda fetch --dump https://lightpanda.io
+```
+```sh
+info(browser): GET https://lightpanda.io/ http.Status.ok
+info(browser): fetch script https://api.website.lightpanda.io/js/script.js: http.Status.ok
+info(browser): eval remote https://api.website.lightpanda.io/js/script.js: TypeError: Cannot read properties of undefined (reading 'pushState')
+<!DOCTYPE html>
+```
+
+## Start a CDP server
+
+```sh copy
+./lightpanda serve --host 127.0.0.1 --port 9222
+```
+```sh
+info(websocket): starting blocking worker to listen on 127.0.0.1:9222
+info(server): accepting new conn...
+```
+
+Once the CDP server started, you can run a Puppeteer script by configuring the
+`browserWSEndpoint`.
+
+```js
+'use strict'
+
+import puppeteer from 'puppeteer-core'
+
+// use browserWSEndpoint to pass the Lightpanda's CDP server address.
+const browser = await puppeteer.connect({
+  browserWSEndpoint: "ws://127.0.0.1:9222",
+})
+
+// The rest of your script remains the same.
+const context = await browser.createBrowserContext()
+const page = await context.newPage()
+
+// Dump all the links from the page.
+await page.goto('https://wikipedia.com/')
+
+const links = await page.evaluate(() => {
+  return Array.from(document.querySelectorAll('a')).map(row => {
+    return row.getAttribute('href')
+  })
+})
+
+console.log(links)
+
+await page.close()
+await context.close()
+await browser.disconnect()
+```
+
+## Telemetry
+By default, Lightpanda collects and sends usage telemetry. This can be disabled by setting an environment variable `LIGHTPANDA_DISABLE_TELEMETRY=true`. You can read Lightpanda's privacy policy at: [https://lightpanda.io/privacy-policy](https://lightpanda.io/privacy-policy).
