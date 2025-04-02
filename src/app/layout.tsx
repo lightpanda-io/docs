@@ -65,9 +65,8 @@ export default async function RootLayout({
             docsRepositoryBase={siteDetails.docsRepositoryBase}
             footer={<span />}
             feedback={{
-              content: null,
+              content: 'Question? Send us feedback',
             }}
-            editLink={null}
             toc={{
               extraContent: (
                 <>
