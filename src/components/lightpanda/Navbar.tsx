@@ -27,6 +27,18 @@ export const Navbar = () => {
       window.removeEventListener('scroll', handleScroll)
     }
   }, [])
+
+  useEffect(() => {
+    const domElements = document.querySelectorAll("a[href='/docs']") as NodeListOf<HTMLLinkElement>
+
+    for (const de of domElements) {
+      if (de.innerText === 'Back to website') {
+        de.href = '/'
+        return
+      }
+    }
+  }, [])
+
   return (
     <>
       <Nextra_Navbar
