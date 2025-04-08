@@ -33,7 +33,7 @@ export const Navbar = () => {
 
     for (const de of domElements) {
       if (de.innerText === 'Back to website') {
-        de.href = '/'
+        de.href = window.location.origin
         return
       }
     }
