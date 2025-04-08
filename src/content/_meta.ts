@@ -1,3 +1,4 @@
+import { siteDetails } from '@lightpanda/common/data/siteDetails'
 import type { MetaRecord } from 'nextra'
 
 /**
@@ -13,7 +14,7 @@ const meta: MetaRecord = {
   'back-to-website': {
     title: 'Back to website',
     type: 'page',
-    href: '/',
+    href: siteDetails.siteUrl,
   },
   index: {
     title: 'Introduction',

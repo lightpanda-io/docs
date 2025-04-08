@@ -1,4 +1,5 @@
 import { Logo } from '@lightpanda/common/components/Logo'
+import { siteDetails } from '@lightpanda/common/data/siteDetails'
 import { Navbar as Nextra_Navbar } from 'nextra-theme-docs'
 // import { useScrolledHeader } from '@lightpanda/common/hooks/useScrolledHeader'
 import { useEffect } from 'react'
@@ -29,11 +30,17 @@ export const Navbar = () => {
   }, [])
 
   useEffect(() => {
-    const domElements = document.querySelectorAll("a[href='/docs']") as NodeListOf<HTMLLinkElement>
-
+    const domElements = document.querySelectorAll(
+      `a[href='${siteDetails.siteUrl}']`,
+    ) as NodeListOf<HTMLLinkElement>
     for (const de of domElements) {
-      if (de.innerText === 'Back to website') {
-        de.href = window.location.origin
+      if (de.innerText.includes('Back to website')) {
+        console.log(de)
+        if (de.lastChild) {
+          de.removeChild(de.lastChild)
+        }
+        de.setAttribute('target', '_self')
+        de.classList.add('menuLink')
         return
       }
     }
