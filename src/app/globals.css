@@ -1,5 +1,8 @@
 @import "./../styles/variables.css";
 @import "tailwindcss";
+@import "./../styles/nextra.css";
+@import "./../styles/components.css";
+@import "./../../../../packages/common/src/styles/generics.css";
 
 @utility text-balance {
   text-wrap: balance;
