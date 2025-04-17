@@ -23,6 +23,24 @@ curl -L -o lightpanda https://github.com/lightpanda-io/browser/releases/download
 chmod a+x ./lightpanda
 ```
 
+*For Windows + WSL2*
+
+The Lightpanda browser is compatible to run on Windows inside WSL (Windows Subsystem for Linux). If WSL has not been installed before follow these steps (for more information see: [MS Windows install WSL](https://learn.microsoft.com/en-us/windows/wsl/install)).  
+Install & open WSL + Ubuntu from an **administrator** shell:
+  1. `wsl --install`
+  2. -- restart --
+  3. `wsl --install -d Ubuntu`
+  4. `wsl`
+
+Once WSL and a Linux distribution have been installed the browser can be installed in the same way it is installed for Linux.  
+Inside WSL install the Lightpanda browser:
+```bash copy
+curl -L -o lightpanda https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-x86_64-linux && \
+chmod a+x ./lightpanda
+```
+It is recommended to install clients like Puppeteer on the Windows host.
+
+
 ## Dump a URL
 
 ```sh copy
