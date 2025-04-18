@@ -15,9 +15,8 @@ import { Version } from '@lightpanda/common/components/Version'
 import { siteDetails } from '@lightpanda/common/data/siteDetails'
 
 import 'nextra-theme-docs/style.css'
+import '@lightpanda/common/styles/variables.css'
 import './globals.css'
-// import './../styles/nextra.css'
-// import './../styles/components.css'
 
 const firaSans = Fira_Sans({
   subsets: ['latin'],
