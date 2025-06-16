@@ -2,7 +2,7 @@
 
 import { Fira_Code, Fira_Sans } from 'next/font/google'
 import { Layout } from 'nextra-theme-docs'
-import { Head } from 'nextra/components'
+import { Head as NextraHead } from 'nextra/components'
 import { getPageMap } from 'nextra/page-map'
 
 import { Footer } from '@/components/lightpanda/Footer'
@@ -17,6 +17,7 @@ import { siteDetails } from '@lightpanda/common/data/siteDetails'
 import 'nextra-theme-docs/style.css'
 import '@lightpanda/common/styles/variables.css'
 import './globals.css'
+import { Canonical } from '@/components/lightpanda/Canonical'
 
 const firaSans = Fira_Sans({
   subsets: ['latin'],
@@ -37,7 +38,7 @@ export default async function RootLayout({
 }>) {
   return (
     <html lang="en" dir="ltr" suppressHydrationWarning>
-      <Head
+      <NextraHead
         backgroundColor={{
           dark: '#1c1c1c',
           light: '#1c1c1c',
@@ -56,7 +57,7 @@ export default async function RootLayout({
         `}</style>
         <Favicon />
         <DNSPrefetch />
-      </Head>
+      </NextraHead>
       <body data-pagefind-body>
         <Providers>
           <Layout
@@ -83,6 +84,7 @@ export default async function RootLayout({
               defaultTheme: 'dark',
             }}
           >
+            <Canonical />
             {children}
           </Layout>
         </Providers>
