@@ -35,7 +35,6 @@ export const Navbar = () => {
     ) as NodeListOf<HTMLLinkElement>
     for (const de of domElements) {
       if (de.innerText.includes('Back to website')) {
-        console.log(de)
         if (de.lastChild) {
           de.removeChild(de.lastChild)
         }
