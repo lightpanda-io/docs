@@ -1,3 +1,5 @@
+'use client'
+
 import { siteDetails } from '@lightpanda/common/data/siteDetails'
 import { useConfig } from 'nextra-theme-docs'
 import { useEffect } from 'react'
@@ -9,7 +11,7 @@ export const Canonical = () => {
     if (nextraConfig.normalizePagesResult) {
       /* Old school way because Next's Head component was not working */
       const { activeIndex, activePath } = nextraConfig.normalizePagesResult
-      const href = `${siteDetails.siteUrl}/docs${activePath[activeIndex].route}`
+      const href = `${siteDetails.siteUrl}/docs${activePath[activeIndex]?.route}`
       const ogTitle = document.createElement('link')
 
       ogTitle.setAttribute('rel', 'canonical')
