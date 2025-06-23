@@ -9,7 +9,7 @@
     "build": "NODE_ENV='production' next build",
     "postbuild": "pagefind --site ./out --output-path ./out/_pagefind",
     "typecheck": "npx tsc --noEmit",
-    "lint": "next lint && biome ci . --diagnostic-level=error",
+    "lint": "next lint && npx biome ci . --diagnostic-level=error",
     "lint-apply": "next lint --fix && biome check . --write",
     "start": "next start -p 1414"
   },
