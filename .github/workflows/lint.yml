@@ -27,8 +27,6 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ env.NODE_VERSION }}
-      - name: Enable Corepack
-        run: corepack enable
       - name: Lint
         run: yarn biome-lint
   # Typecheck job
@@ -42,7 +40,5 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-      - name: Enable Corepack
-        run: corepack enable
       - name: Typecheck Doc
         run: yarn typecheck
