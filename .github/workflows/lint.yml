@@ -17,18 +17,20 @@ env:
 jobs:
   # Lint job
   lint:
-      name: Lint (Next / Biome)
-      runs-on: ubuntu-latest
-      timeout-minutes: 2
-      steps:
-        - name: Checkout code
-          uses: actions/checkout@v4
-        - name: Setup Node @ ${{ env.NODE_VERSION }}
-          uses: actions/setup-node@v1
-          with:
-            node-version: ${{ env.NODE_VERSION }}
-        - name: Lint
-          run: yarn biome-lint
+    name: Lint (Next / Biome)
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Node @ ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Lint
+        run: yarn biome-lint
   # Typecheck job
   typecheck:
     name: TSC Typecheck
@@ -40,5 +42,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
+      - name: Enable Corepack
+        run: corepack enable
       - name: Typecheck Doc
         run: yarn typecheck

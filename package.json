@@ -14,6 +14,11 @@
     "lint-apply": "next lint --fix && biome check . --write",
     "start": "next start -p 1414"
   },
+  "engines": {
+    "node": "20.19",
+    "yarn": ">=4.7.0"
+  },
+  "packageManager": "yarn@4.7.0",
   "dependencies": {
     "@lightpanda/common": "*",
     "@tabler/icons-react": "^3.34.0",
