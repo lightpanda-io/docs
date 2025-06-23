@@ -8,10 +8,14 @@
     "dev": "next -p 1414",
     "build": "NODE_ENV='production' next build",
     "postbuild": "pagefind --site ./out --output-path ./out/_pagefind",
-    "typecheck": "npx tsc --noEmit",
-    "lint": "next lint && biome ci . --diagnostic-level=error",
+    "typecheck": "npx -p typescript tsc --noEmit",
+    "lint": "next lint && yarn dlx biome ci . --diagnostic-level=error",
+    "biome-lint": "npx biome ci . --diagnostic-level=error",
     "lint-apply": "next lint --fix && biome check . --write",
     "start": "next start -p 1414"
+  },
+  "engines": {
+    "node": "20.19"
   },
   "dependencies": {
     "@lightpanda/common": "*",
@@ -30,6 +34,7 @@
     "pagefind": "^1.3.0",
     "postcss": "^8.5.3",
     "tailwindcss": "4.0.0",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "typescript": "^5.7.3"
   }
 }
