@@ -1,0 +1,44 @@
+name: Lightpanda Docs
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types:
+      - opened
+      - edited
+      - synchronize
+
+# Environment variables available to all jobs and steps in this workflow
+env:
+  NODE_VERSION: "20.19.0"
+
+jobs:
+  # Lint job
+  lint:
+      name: Lint (Next / Biome)
+      runs-on: ubuntu-latest
+      timeout-minutes: 2
+      steps:
+        - name: Checkout code
+          uses: actions/checkout@v4
+        - name: Setup Node @ ${{ env.NODE_VERSION }}
+          uses: actions/setup-node@v1
+          with:
+            node-version: ${{ env.NODE_VERSION }}
+        - name: Lint
+          run: yarn biome-lint
+  # Typecheck job
+  typecheck:
+    name: TSC Typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Node @ ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Typecheck Doc
+        run: yarn typecheck
