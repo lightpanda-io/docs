@@ -2,6 +2,7 @@ import { Cards } from 'nextra/components'
 import { IconLightpanda } from '@lightpanda/common/components/icons/IconLightpanda'
 import { IconAutomate } from '@lightpanda/common/components/icons/IconAutomate'
 import { IconScrape } from '@lightpanda/common/components/icons/IconScrape'
+import { IconWorldSearch, IconSettings, IconSourceCode } from '@tabler/icons-react'
 
 # Introduction
 
@@ -13,16 +14,19 @@ import { IconScrape } from '@lightpanda/common/components/icons/IconScrape'
     href="/getting-started/what-is-lightpanda"
   />
   <Cards.Card
+    icon={<IconSettings color='black' />}
     title={<span className='text-background text-lg ml-1 font-medium'>Installation</span>}
     className="bg-foreground border-none py-1 hover:bg-foreground hover:shadow-[0px_0px_18px_rgba(246,245,236,1)] transition-shadow"
     href="/getting-started/installation"
   />
   <Cards.Card
+    icon={<IconWorldSearch color='black' />}
     title={<span className='text-background text-lg ml-1 font-medium'>Usage</span>}
     className="bg-foreground border-none py-1 hover:bg-foreground hover:shadow-[0px_0px_18px_rgba(246,245,236,1)] transition-shadow"
     href="/getting-started/usage"
   />
   <Cards.Card
+    icon={<IconSourceCode color='black' />}
     title={<span className='text-background text-lg ml-1 font-medium'>Build from sources</span>}
     className="bg-foreground border-none py-1 hover:bg-foreground hover:shadow-[0px_0px_18px_rgba(246,245,236,1)] transition-shadow"
     href="/guides/build-from-sources"
