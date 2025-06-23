@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@lightpanda/common": "*",
+    "@tabler/icons-react": "^3.34.0",
     "next": "^15.2.2",
     "next-plausible": "^3.12.4",
     "nextra": "^4.2.16",
