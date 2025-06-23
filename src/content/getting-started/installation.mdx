@@ -1,13 +1,27 @@
 ---
 title: Installation
-description: You can download the last binary from the nightly builds for Linux x86_64 and MacOS aarch64.
+description: You can download the last binary from the nightly builds for Linux x86_64 and MacOS aarch64 or use Docker image.
 ---
 
 # Installation
 
+## Install from Docker
+
+Lightpanda provides [official Docker
+images](https://hub.docker.com/r/lightpanda/browser) for both Linux amd64 and
+arm64 architectures.
+
+The following command fetches the Docker image and starts a new container exposing Lightpanda's CDP server on port `9222`.
+
+The `--privileged` option is required because the browser requires `io_uring` syscalls which are blocked by default by Docker.
+
+```sh copy
+$ docker run -d --name lightpanda -p 9222:9222 --privileged lightpanda/browser:nightly
+```
+
 ## Install from the nightly builds
 
-You can download the last binary from the [nightly
+The latest binary can be downloaded from the [nightly
 builds](https://github.com/lightpanda-io/browser/releases/tag/nightly) for
 Linux x86_64 and MacOS aarch64.
 
@@ -25,14 +39,14 @@ chmod a+x ./lightpanda
 
 *For Windows + WSL2*
 
-The Lightpanda browser is compatible to run on Windows inside WSL (Windows Subsystem for Linux). If WSL has not been installed before follow these steps (for more information see: [MS Windows install WSL](https://learn.microsoft.com/en-us/windows/wsl/install)).  
+The Lightpanda browser is compatible to run on Windows inside WSL (Windows Subsystem for Linux). If WSL has not been installed before follow these steps (for more information see: [MS Windows install WSL](https://learn.microsoft.com/en-us/windows/wsl/install)).
 Install & open WSL + Ubuntu from an **administrator** shell:
   1. `wsl --install`
   2. -- restart --
   3. `wsl --install -d Ubuntu`
   4. `wsl`
 
-Once WSL and a Linux distribution have been installed the browser can be installed in the same way it is installed for Linux.  
+Once WSL and a Linux distribution have been installed the browser can be installed in the same way it is installed for Linux.
 Inside WSL install the Lightpanda browser:
 ```bash copy
 curl -L -o lightpanda https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-x86_64-linux && \
@@ -41,60 +55,6 @@ chmod a+x ./lightpanda
 It is recommended to install clients like Puppeteer on the Windows host.
 
 
-## Dump a URL
-
-```sh copy
-./lightpanda fetch --dump https://lightpanda.io
-```
-```sh
-info(browser): GET https://lightpanda.io/ http.Status.ok
-info(browser): fetch script https://api.website.lightpanda.io/js/script.js: http.Status.ok
-info(browser): eval remote https://api.website.lightpanda.io/js/script.js: TypeError: Cannot read properties of undefined (reading 'pushState')
-<!DOCTYPE html>
-```
-
-## Start a CDP server
-
-```sh copy
-./lightpanda serve --host 127.0.0.1 --port 9222
-```
-```sh
-info(websocket): starting blocking worker to listen on 127.0.0.1:9222
-info(server): accepting new conn...
-```
-
-Once the CDP server started, you can run a Puppeteer script by configuring the
-`browserWSEndpoint`.
-
-```js
-'use strict'
-
-import puppeteer from 'puppeteer-core'
-
-// use browserWSEndpoint to pass the Lightpanda's CDP server address.
-const browser = await puppeteer.connect({
-  browserWSEndpoint: "ws://127.0.0.1:9222",
-})
-
-// The rest of your script remains the same.
-const context = await browser.createBrowserContext()
-const page = await context.newPage()
-
-// Dump all the links from the page.
-await page.goto('https://wikipedia.com/')
-
-const links = await page.evaluate(() => {
-  return Array.from(document.querySelectorAll('a')).map(row => {
-    return row.getAttribute('href')
-  })
-})
-
-console.log(links)
-
-await page.close()
-await context.close()
-await browser.disconnect()
-```
 
 ## Telemetry
 By default, Lightpanda collects and sends usage telemetry. This can be disabled by setting an environment variable `LIGHTPANDA_DISABLE_TELEMETRY=true`. You can read Lightpanda's privacy policy at: [https://lightpanda.io/privacy-policy](https://lightpanda.io/privacy-policy).
