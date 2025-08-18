@@ -6,6 +6,8 @@ import { IconWorldSearch, IconSettings, IconSourceCode } from '@tabler/icons-rea
 
 # Introduction
 
+## Getting started
+
 <Cards>
   <Cards.Card
     icon={<IconLightpanda />}
@@ -25,10 +27,21 @@ import { IconWorldSearch, IconSettings, IconSourceCode } from '@tabler/icons-rea
     className="bg-foreground border-none py-1 hover:bg-foreground hover:shadow-[0px_0px_18px_rgba(246,245,236,1)] transition-shadow"
     href="/getting-started/usage"
   />
+</Cards>
+
+## Guides
+
+<Cards>
   <Cards.Card
     icon={<IconSourceCode color='black' />}
     title={<span className='text-background text-lg ml-1 font-medium'>Build from sources</span>}
     className="bg-foreground border-none py-1 hover:bg-foreground hover:shadow-[0px_0px_18px_rgba(246,245,236,1)] transition-shadow"
     href="/guides/build-from-sources"
+  />
+  <Cards.Card
+    icon={<IconSettings color='black' />}
+    title={<span className='text-background text-lg ml-1 font-medium'>Configure a proxy</span>}
+    className="bg-foreground border-none py-1 hover:bg-foreground hover:shadow-[0px_0px_18px_rgba(246,245,236,1)] transition-shadow"
+    href="/guides/configure-a-proxy"
   />
 </Cards>
