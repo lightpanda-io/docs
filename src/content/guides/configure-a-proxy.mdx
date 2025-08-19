@@ -1,0 +1,47 @@
+---
+title: Configure a Proxy
+description: You can configure a proxy for use with the Lightpanda browser.
+---
+
+# Configure a Proxy
+
+Lightpanda supports HTTP and HTTPS proxies with basic opr bearer
+authentication. You can configure the proxy when starting the browser.
+
+## Configure HTTP Proxy
+
+Use the CLI option `--http_proxy` when starting Lightpanda to configure the
+proxy. Ensure your proxy address starts with `http://` or `https://`.
+
+Use a local proxy with the `fetch` command:
+```sh copy
+$ ./lightpanda fetch --http_proxy http://127.0.0.1:3000 https://lightpanda.io
+```
+Or configure the proxy with `serve` for the CDP server. All outgoing requests will use the proxy.
+```sh copy
+$ ./lightpanda serve --http_proxy http://127.0.0.1:3000
+```
+
+### HTTP Proxy with Basic Auth
+
+You can configure [basic
+auth](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Authentication#basic)
+for the proxy using the `username:password@` format in the proxy address. It
+works for both `fetch` and `serve` commands.
+
+```sh copy
+$ ./lightpanda fetch --http_proxy 'http://me\:my-password@127.0.0.1:3000' https://lightpanda.io
+```
+
+### HTTP Proxy with Bearer Auth
+
+Lightpanda supports [bearer
+auth](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Authentication#bearer)
+to authenticate with the `--proxy_bearer_token`. It works for both `fetch` and
+`serve` commands.
+
+This option will add a `Proxy-Authorization` header all the outgoing requests.
+
+```sh copy
+$ ./lightpanda fetch --http_proxy 'https://127.0.0.1:3000' --proxy_bearer_token 'MY-TOKEN' https://lightpanda.io
+```
