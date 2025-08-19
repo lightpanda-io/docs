@@ -30,7 +30,7 @@ for the proxy using the `username:password@` format in the proxy address. It
 works for both `fetch` and `serve` commands.
 
 ```sh copy
-$ ./lightpanda fetch --http_proxy 'http://me\:my-password@127.0.0.1:3000' https://lightpanda.io
+$ ./lightpanda fetch --http_proxy 'http://me:my-password@127.0.0.1:3000' https://lightpanda.io
 ```
 
 ### HTTP Proxy with Bearer Auth
@@ -43,5 +43,5 @@ to authenticate with the `--proxy_bearer_token`. It works for both `fetch` and
 This option will add a `Proxy-Authorization` header all the outgoing requests.
 
 ```sh copy
-$ ./lightpanda fetch --http_proxy 'https://127.0.0.1:3000' --proxy_bearer_token 'MY-TOKEN' https://lightpanda.io
+$ ./lightpanda fetch --http_proxy 'http://127.0.0.1:3000' --proxy_bearer_token 'MY-TOKEN' https://lightpanda.io
 ```
