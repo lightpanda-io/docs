@@ -1,14 +1,14 @@
 ---
-title: Configure a Proxy
+title: Configure a proxy
 description: You can configure a proxy for use with the Lightpanda browser.
 ---
 
-# Configure a Proxy
+# Configure a proxy
 
-Lightpanda supports HTTP and HTTPS proxies with basic opr bearer
+Lightpanda supports HTTP and HTTPS proxies with basic or bearer
 authentication. You can configure the proxy when starting the browser.
 
-## Configure HTTP Proxy
+## Configure HTTP proxy
 
 Use the CLI option `--http_proxy` when starting Lightpanda to configure the
 proxy. Ensure your proxy address starts with `http://` or `https://`.
@@ -22,7 +22,7 @@ Or configure the proxy with `serve` for the CDP server. All outgoing requests wi
 ./lightpanda serve --http_proxy http://127.0.0.1:3000
 ```
 
-### HTTP Proxy with Basic Auth
+### HTTP proxy with basic auth
 
 You can configure [basic
 auth](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Authentication#basic)
@@ -33,7 +33,7 @@ works for both `fetch` and `serve` commands.
 ./lightpanda fetch --http_proxy 'http://me:my-password@127.0.0.1:3000' https://lightpanda.io
 ```
 
-### HTTP Proxy with Bearer Auth
+### HTTP proxy with bearer auth
 
 Lightpanda supports [bearer
 auth](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Authentication#bearer)
