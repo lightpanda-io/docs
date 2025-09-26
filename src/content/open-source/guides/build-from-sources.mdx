@@ -14,12 +14,11 @@ Lightpanda also depends on
 [Netsurf libs](https://www.netsurf-browser.org/) and
 [Mimalloc](https://microsoft.github.io/mimalloc).
 
-<br />
 To be able to build the v8 engine for zig-js-runtime, you have to install some libs:
 
 **For Debian/Ubuntu based Linux:**
 
-```bash
+```bash copy
 sudo apt install xz-utils \
     python3 ca-certificates git \
     pkg-config libglib2.0-dev \
@@ -29,7 +28,7 @@ sudo apt install xz-utils \
 
 **For MacOS, you only need cmake:**
 
-```bash
+```bash copy
 brew install cmake
 ```
 
@@ -47,14 +46,14 @@ The project uses git submodules for dependencies.
 
 To init or update the submodules in the `vendor/` directory:
 
-```bash
+```bash copy
 make install-submodule
 ```
 #### Netsurf libs
 
 Netsurf libs are used for HTML parsing and DOM tree generation.
 
-```bash
+```bash copy
 make install-netsurf
 ```
 
@@ -65,7 +64,7 @@ For dev env, use `make install-netsurf-dev`.
 
 Mimalloc is used as a C memory allocator.
 
-```bash
+```bash copy
 make install-mimalloc
 ```
 
@@ -76,14 +75,18 @@ env var `MIMALLOC_SHOW_STATS=1`. See
 [https://microsoft.github.io/mimalloc/environment.html](https://microsoft.github.io/mimalloc/environment.html).
 
 <br />
-#### zig-js-runtime
+#### v8
 
-Our own Zig/Javascript runtime, which includes the v8 Javascript engine.
+Lightpanda browser depends on v8 Javascript engine.
 
 This build task is very long and cpu consuming, as you will build v8 from sources.
 
-```bash
-make install-zig-js-runtime
+```bash copy
+make get-v8
 ```
 
-For dev env, use `make install-zig-js-runtime-dev`.
+```bash copy
+make build-v8
+```
+
+For dev env, use `make build-v8-dev`.

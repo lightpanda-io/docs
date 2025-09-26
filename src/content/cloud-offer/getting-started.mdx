@@ -1,0 +1,47 @@
+---
+title: Getting started
+description: Start using remote browsers easily with Lightpanda cloud.
+---
+
+# Getting started
+
+## Create an account
+
+You can create a new account with an email on
+[https://lightpanda.io](https://lightpanda.io/#cloud-offer).
+
+You will receive an invitation by email to generate your token.
+Be careful to save your token, we won't display it again.
+
+## Start using a browser
+
+With your token, you can immediately use a remote browser with your CDP client.
+
+Example using [Playwright](https://playwright.dev/).
+
+
+```js copy
+import playwright from "playwright";
+
+const browser = await playwright.chromium.connectOverCDP(
+  "wss://cloud.lightpanda.io/ws?token=TOKEN",
+);
+const context = await browser.newContext();
+const page = await context.newPage();
+
+//...
+
+await page.close();
+await context.close();
+await browser.close();
+```
+
+You have access to Lightpanda and Chromium browsers.
+
+## Sign in to the dashboard
+
+You can access your dashboard on [https://inspect.cloud.lightpanda.io](https://inspect.cloud.lightpanda.io).
+
+Use your email and your token to log in.
+
+In the dashboard, you can review your last browsing sessions.

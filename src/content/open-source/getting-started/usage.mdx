@@ -1,0 +1,169 @@
+---
+title: Usage
+description: You can dump an URL manually or start a CDP server.
+---
+
+# Usage
+
+Use `./lightpanda help` for all options.
+
+## Dump an URL
+
+```sh copy
+./lightpanda fetch --dump https://demo-browser.lightpanda.io/campfire-commerce/
+```
+```sh
+INFO  http : navigate . . . . . . . . . . . . . . . . . . . . [+0ms]
+      url = https://demo-browser.lightpanda.io/campfire-commerce/
+      method = GET
+      reason = address_bar
+      body = false
+
+INFO  browser : executing script . . . . . . . . . . . . . .  [+196ms]
+      src = https://demo-browser.lightpanda.io/campfire-commerce/script.js
+      kind = javascript
+      cacheable = true
+
+INFO  http : request complete . . . . . . . . . . . . . . . . [+223ms]
+      source = xhr
+      url = https://demo-browser.lightpanda.io/campfire-commerce/json/product.json
+      status = 200
+
+INFO  http : request complete . . . . . . . . . . . . . . . . [+234ms]
+      source = xhr
+      url = https://demo-browser.lightpanda.io/campfire-commerce/json/reviews.json
+      status = 200
+<!DOCTYPE html>
+```
+
+### Options
+
+The fetch command accepts options:
+* `--dump` Dumps document to stdout.
+* `--with_base` Add a `<base>` tag in dump
+* `--log_level` change the log level, default is `info`. `--log_level debug`.
+* `--http_proxy` The HTTP proxy to use for all HTTP requests. A username:password can be included for basic authentication. `--http_proxy http://user:password@127.0.0.1:3000`.
+* `--http_timeout` The maximum time, in milliseconds, the transfer is allowedto complete. 0 means it never times out. Defaults to `10000`.
+
+See also [how to configure proxy](/open-source/guides/configure-a-proxy).
+
+## Start a CDP server
+
+To control Lightpanda with [Chrome Devtool Protocol](https://chromedevtools.github.io/devtools-protocol/) (CDP) clients like [Playwright](https://playwright.dev/) or [Puppeteer](https://pptr.dev/), you
+need to start the browser as a CDP server.
+
+```sh copy
+./lightpanda serve --host 127.0.0.1 --port 9222
+```
+```sh
+INFO  app : server running . . . . . . . . . . . . . . . . .  [+0ms]
+      address = 127.0.0.1:9222
+```
+### Options
+
+The fetch command accepts options:
+* `--host` Host of the CDP server, default `127.0.0.1`.
+* `--port` Port of the CDP server, default `9222`.
+* `--timeout` Inactivity timeout in seconds before disconnecting clients. Default `10` seconds.
+* `--log_level` change the log level, default is `info`. `--log_level debug`.
+* `--http_proxy` The HTTP proxy to use for all HTTP requests. A username:password can be included for basic authentication. `--http_proxy http://user:password@127.0.0.1:3000`.
+* `--http_timeout` The maximum time, in milliseconds, the transfer is allowedto complete. 0 means it never times out. Defaults to `10000`.
+
+See also [how to configure proxy](/open-source/guides/configure-a-proxy).
+
+### Connect with Puppeteer
+
+Once the CDP server started, you can run a [Puppeteer](https://playwright.dev/)
+script by configuring the `browserWSEndpoint`.
+
+```js copy
+'use strict'
+
+import puppeteer from 'puppeteer-core'
+
+// use browserWSEndpoint to pass the Lightpanda's CDP server address.
+const browser = await puppeteer.connect({
+  browserWSEndpoint: "ws://127.0.0.1:9222",
+})
+
+// The rest of your script remains the same.
+const context = await browser.createBrowserContext()
+const page = await context.newPage()
+
+// Dump all the links from the page.
+await page.goto('https://wikipedia.com/')
+
+const links = await page.evaluate(() => {
+  return Array.from(document.querySelectorAll('a')).map(row => {
+    return row.getAttribute('href')
+  })
+})
+
+console.log(links)
+
+await page.close()
+await context.close()
+await browser.disconnect()
+```
+
+### Connect with Playwright
+
+Try Lightpanda with [Playwright](https://playwright.dev/) by using
+`chromium.connectOverCDP` to connect.
+
+```js copy
+import { chromium } from 'playwright';
+
+// use connectOverCDP to pass the Lightpanda's CDP server address.
+const browser = await chromium.connectOverCDP('ws://127.0.0.1:9222');
+
+// The rest of your script remains the same.
+const context = await browser.newContext({});
+const page = await context.newPage();
+
+await page.goto('https://wikipedia.com/');
+
+const title = await page.locator('h1').textContent();
+console.log(title);
+
+await page.close();
+await context.close();
+await browser.close();
+```
+
+### Connect with Chromedp
+
+Use Lightpanda with [Chromedp](https://github.com/chromedp/chromedp), a Golang
+client for CDP servers.
+
+```go copy
+package main
+
+import (
+    "context"
+    "flag"
+    "log"
+
+    "github.com/chromedp/chromedp"
+)
+
+func main() {
+    ctx, cancel = chromedp.NewRemoteAllocator(ctx,
+        "ws://127.0.0.1:9222", chromedp.NoModifyURL,
+    )
+    defer cancel()
+
+    ctx, cancel := chromedp.NewContext(allocatorContext)
+    defer cancel()
+
+    var title string
+    if err := chromedp.Run(ctx,
+        chromedp.Navigate("https://wikipedia.com/"),
+        chromedp.Title(&title),
+    ); err != nil {
+        log.Fatalf("Failed getting page's title: %v", err)
+    }
+
+    log.Println("Got title of:", title)
+}
+```
