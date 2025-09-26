@@ -5,38 +5,78 @@ description: You can dump an URL manually or start a CDP server.
 
 # Usage
 
-## Dump a URL
+Use `./lightpanda help` for all options.
+
+## Dump an URL
 
 ```sh copy
-./lightpanda fetch --dump https://lightpanda.io
+./lightpanda fetch --dump https://demo-browser.lightpanda.io/campfire-commerce/
 ```
 ```sh
-info(browser): GET https://lightpanda.io/ http.Status.ok
-info(browser): fetch script https://api.website.lightpanda.io/js/script.js: http.Status.ok
-info(browser): eval remote https://api.website.lightpanda.io/js/script.js: TypeError: Cannot read properties of undefined (reading 'pushState')
+INFO  http : navigate . . . . . . . . . . . . . . . . . . . . [+0ms]
+      url = https://demo-browser.lightpanda.io/campfire-commerce/
+      method = GET
+      reason = address_bar
+      body = false
+
+INFO  browser : executing script . . . . . . . . . . . . . .  [+196ms]
+      src = https://demo-browser.lightpanda.io/campfire-commerce/script.js
+      kind = javascript
+      cacheable = true
+
+INFO  http : request complete . . . . . . . . . . . . . . . . [+223ms]
+      source = xhr
+      url = https://demo-browser.lightpanda.io/campfire-commerce/json/product.json
+      status = 200
+
+INFO  http : request complete . . . . . . . . . . . . . . . . [+234ms]
+      source = xhr
+      url = https://demo-browser.lightpanda.io/campfire-commerce/json/reviews.json
+      status = 200
 <!DOCTYPE html>
 ```
 
+### Options
+
+The fetch command accepts options:
+* `--dump` Dumps document to stdout.
+* `--with_base` Add a `<base>` tag in dump
+* `--log_level` change the log level, default is `info`. `--log_level debug`.
+* `--http_proxy` The HTTP proxy to use for all HTTP requests. A username:password can be included for basic authentication. `--http_proxy http://user:password@127.0.0.1:3000`.
+* `--http_timeout` The maximum time, in milliseconds, the transfer is allowedto complete. 0 means it never times out. Defaults to `10000`.
+
+See also [how to configure proxy](/open-source/guides/configure-a-proxy).
+
 ## Start a CDP server
 
-To control Lightpanda with CDP clients like
-[Playwright](https://playwright.dev/) or [Puppeteer](https://pptr.dev/), you
+To control Lightpanda with [Chrome Devtool Protocol](https://chromedevtools.github.io/devtools-protocol/) (CDP) clients like [Playwright](https://playwright.dev/) or [Puppeteer](https://pptr.dev/), you
 need to start the browser as a CDP server.
 
 ```sh copy
 ./lightpanda serve --host 127.0.0.1 --port 9222
 ```
 ```sh
-info(websocket): starting blocking worker to listen on 127.0.0.1:9222
-info(server): accepting new conn...
+INFO  app : server running . . . . . . . . . . . . . . . . .  [+0ms]
+      address = 127.0.0.1:9222
 ```
+### Options
+
+The fetch command accepts options:
+* `--host` Host of the CDP server, default `127.0.0.1`.
+* `--port` Port of the CDP server, default `9222`.
+* `--timeout` Inactivity timeout in seconds before disconnecting clients. Default `10` seconds.
+* `--log_level` change the log level, default is `info`. `--log_level debug`.
+* `--http_proxy` The HTTP proxy to use for all HTTP requests. A username:password can be included for basic authentication. `--http_proxy http://user:password@127.0.0.1:3000`.
+* `--http_timeout` The maximum time, in milliseconds, the transfer is allowedto complete. 0 means it never times out. Defaults to `10000`.
+
+See also [how to configure proxy](/open-source/guides/configure-a-proxy).
 
 ### Connect with Puppeteer
 
 Once the CDP server started, you can run a [Puppeteer](https://playwright.dev/)
 script by configuring the `browserWSEndpoint`.
 
-```javascript copy
+```js copy
 'use strict'
 
 import puppeteer from 'puppeteer-core'
@@ -71,7 +111,7 @@ await browser.disconnect()
 Try Lightpanda with [Playwright](https://playwright.dev/) by using
 `chromium.connectOverCDP` to connect.
 
-```javascript copy
+```js copy
 import { chromium } from 'playwright';
 
 // use connectOverCDP to pass the Lightpanda's CDP server address.
@@ -91,7 +131,7 @@ await context.close();
 await browser.close();
 ```
 
-### Connect with ChromeDP
+### Connect with Chromedp
 
 Use Lightpanda with [Chromedp](https://github.com/chromedp/chromedp), a Golang
 client for CDP servers.

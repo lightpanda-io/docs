@@ -13,7 +13,7 @@ Most of existing tools to control a browser like Puppeteer, Playwright or chrome
 You can connect to the CDP using the url `wss://cloud.lightpanda.io/ws`.
 You have to add your token as query string parameter: `token=YOUR_TOKEN`.
 
-```
+```text copy
 wss://cloud.lightpanda.io/ws?token=TOKEN
 ```
 
@@ -27,7 +27,7 @@ By default, the CDP serves [Lightpanda browsers](https://github.com/lightpanda-i
 But you can select Google Chrome browser using `browser=chrome` parameter in the url.
 `browser=lightpanda` forces the usage of Lightpanda browser.
 
-```
+```text copy
 wss://cloud.lightpanda.io/ws?browser=chrome&token=TOKEN
 ```
 #### Proxies
@@ -45,7 +45,7 @@ Set `datacenter` proxy to use a pool of shared datacenter IPs. The IPs rotate au
 
 Example using a german IP with a lightpanda browser.
 
-```
+```text copy
 wss://cloud.lightpanda.io/ws?proxy=datacenter&country=de&token=TOKEN
 ```
 
@@ -63,7 +63,7 @@ You can find more script examples in the [demo](https://github.com/lightpanda-io
 Use Lightpanda CDP with [Playwright](https://playwright.dev/).
 
 
-```Javascript
+```js copy
 import playwright from "playwright";
 
 const browser = await playwright.chromium.connectOverCDP(
@@ -85,7 +85,7 @@ More examples in [demo/playwright](https://github.com/lightpanda-io/demo/tree/ma
 
 Use Lightpanda CDP with [Puppeteer](https://pptr.dev/).
 
-```Javascript
+```js copy
 import playwright from "playwright";
 
 const browser = await playwright.chromium.connectOverCDP(
@@ -106,7 +106,7 @@ More examples in [demo/puppeteer](https://github.com/lightpanda-io/demo/tree/mai
 
 Use Lightpanda CDP with [Chromedp](https://github.com/chromedp/chromedp).
 
-```go
+```go copy
 package main
 
 import (
