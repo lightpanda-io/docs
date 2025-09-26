@@ -28,6 +28,12 @@ const browser = await playwright.chromium.connectOverCDP(
 );
 const context = await browser.newContext();
 const page = await context.newPage();
+
+//...
+
+await page.close();
+await context.close();
+await browser.close();
 ```
 
 You have access to Lightpanda and Chromium browsers.

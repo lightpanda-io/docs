@@ -1,0 +1,39 @@
+---
+title: MCP
+description: Control Lightpanda cloud offer using Model Context Protocol
+---
+
+# Model Context Protocol
+
+Use the [Model Context Protocol](https://modelcontextprotocol.io) (MCP) to
+easily control Lightpanda browser with your AI applications.
+
+## Usage
+
+The Lightpanda MCP service supports only [SSE](https://modelcontextprotocol.io/specification/2024-11-05/basic/transports#http-with-sse) transport.
+
+Use the url `https://cloud.lightpanda.io/mcp/sse` to connect.
+
+### Authentication
+
+An authentication is required, you can either pass your token with the `token` query string parameter in the url, or use the `Authorization: Bearer` HTTP header.
+
+Example with the query string.
+```
+https://cloud.lightpanda.io/mcp/sse?token=TOKEN
+```
+
+Example with the Bearer HTTP header.
+```
+https://cloud.lightpanda.io/mcp/sse
+Authorization: Bearer TOKEN
+```
+
+## Tools
+
+* `search` Search a term on web search engine and get the search results.
+* `goto` Navigate to a specified URL and load the page inmemory so it can be reused later for info extraction.
+* `markdown` Get the page in memory content in markdown format.Run a goto before getting markdown.
+* `links` Extract all links from the page in memory.Run a goto before getting links.
+
+For more advanced use cases, you can use [CDP](/cloud-offer/services/cdp) connection with [Playwright MCP](https://github.com/microsoft/playwright-mcp).

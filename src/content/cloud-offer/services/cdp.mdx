@@ -1,0 +1,140 @@
+---
+title: CDP
+description: Connect to Lightpanda Cloud Offer using Chrome Devtool Protocol.
+---
+
+# Chrome Devtool Protocol
+
+Use the [Chrome Devtool Protocol](https://chromedevtools.github.io/devtools-protocol/) (CDP) to connect to browsers.
+Most of existing tools to control a browser like Puppeteer, Playwright or chromedp are compatible with CDP.
+
+## Usage
+
+You can connect to the CDP using the url `wss://cloud.lightpanda.io/ws`.
+You have to add your token as query string parameter: `token=YOUR_TOKEN`.
+
+```
+wss://cloud.lightpanda.io/ws?token=TOKEN
+```
+
+### Options
+
+The CDP url takes options to configure the browser as query string parameters.
+
+#### Browser
+
+By default, the CDP serves [Lightpanda browsers](https://github.com/lightpanda-io/browser).
+But you can select Google Chrome browser using `browser=chrome` parameter in the url.
+`browser=lightpanda` forces the usage of Lightpanda browser.
+
+```
+wss://cloud.lightpanda.io/ws?browser=chrome&token=TOKEN
+```
+#### Proxies
+
+**fast_dc**
+
+You can configure proxies for your browser with `proxy` query string parameter.
+By default, the proxy used is `fast_dc`, a single shared datacenter IP.
+
+**datacenter**
+
+Set `datacenter` proxy to use a pool of shared datacenter IPs. The IPs rotate automatically.
+
+`datacenter` proxy accepts an optional `country` query string parameter, a two letter country code.
+
+Example using a german IP with a lightpanda browser.
+
+```
+wss://cloud.lightpanda.io/ws?proxy=datacenter&country=de&token=TOKEN
+```
+
+Please [contact us](mailto:hello@lightpanda.io) to get access to additional proxies for your specificc use case or to configure your own proxy with Lightpanda Cloud Offer.
+
+
+The service
+
+## Connection examples
+
+You can find more script examples in the [demo](https://github.com/lightpanda-io/demo/) repository.
+
+### Playwright
+
+Use Lightpanda CDP with [Playwright](https://playwright.dev/).
+
+
+```Javascript
+import playwright from "playwright";
+
+const browser = await playwright.chromium.connectOverCDP(
+  "wss://cloud.lightpanda.io/ws?token=TOKEN",
+);
+const context = await browser.newContext();
+const page = await context.newPage();
+
+//...
+
+await page.close();
+await context.close();
+await browser.close();
+```
+
+More examples in [demo/playwright](https://github.com/lightpanda-io/demo/tree/main/playwright).
+
+### Puppeteer
+
+Use Lightpanda CDP with [Puppeteer](https://pptr.dev/).
+
+```Javascript
+import playwright from "playwright";
+
+const browser = await playwright.chromium.connectOverCDP(
+  "wss://cloud.lightpanda.io/ws?token=TOKEN",
+);
+const context = await browser.newContext();
+const page = await context.newPage();
+
+//...
+
+await page.close();
+await context.close();
+await browser.disconnect();
+```
+More examples in [demo/puppeteer](https://github.com/lightpanda-io/demo/tree/main/puppeteer).
+
+### Chromedp
+
+Use Lightpanda CDP with [Chromedp](https://github.com/chromedp/chromedp).
+
+```go
+package main
+
+import (
+    "context"
+    "flag"
+    "log"
+
+    "github.com/chromedp/chromedp"
+)
+
+func main() {
+    ctx, cancel = chromedp.NewRemoteAllocator(ctx,
+        "wss://cloud.lightpanda.io/ws?token=TOKEN", chromedp.NoModifyURL,
+    )
+    defer cancel()
+
+    ctx, cancel := chromedp.NewContext(allocatorContext)
+    defer cancel()
+
+    var title string
+    if err := chromedp.Run(ctx,
+        chromedp.Navigate("https://lightpanda.io"),
+        chromedp.Title(&title),
+    ); err != nil {
+        log.Fatalf("Failed getting title of lightpanda.io: %v", err)
+    }
+
+    log.Println("Got title of:", title)
+}
+```
+More examples in [demo/chromedp](https://github.com/lightpanda-io/demo/tree/main/chromedp).
