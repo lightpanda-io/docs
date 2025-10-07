@@ -24,7 +24,7 @@ Example using [Playwright](https://playwright.dev/).
 import playwright from "playwright";
 
 const browser = await playwright.chromium.connectOverCDP(
-  "wss://cloud.lightpanda.io/ws?token=TOKEN",
+  "wss://euwest.cloud.lightpanda.io/ws?token=TOKEN",
 );
 const context = await browser.newContext();
 const page = await context.newPage();
