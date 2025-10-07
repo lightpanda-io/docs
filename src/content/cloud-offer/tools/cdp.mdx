@@ -10,11 +10,11 @@ Most of existing tools to control a browser like Puppeteer, Playwright or chrome
 
 ## Usage
 
-You can connect to the CDP using the url `wss://cloud.lightpanda.io/ws`.
+You can connect to the CDP using the url `wss://euwest.cloud.lightpanda.io/ws`.
 You have to add your token as query string parameter: `token=YOUR_TOKEN`.
 
 ```text copy
-wss://cloud.lightpanda.io/ws?token=TOKEN
+wss://euwest.cloud.lightpanda.io/ws?token=TOKEN
 ```
 
 ### Options
@@ -28,7 +28,7 @@ But you can select Google Chrome browser using `browser=chrome` parameter in the
 `browser=lightpanda` forces the usage of Lightpanda browser.
 
 ```text copy
-wss://cloud.lightpanda.io/ws?browser=chrome&token=TOKEN
+wss://euwest.cloud.lightpanda.io/ws?browser=chrome&token=TOKEN
 ```
 #### Proxies
 
@@ -46,7 +46,7 @@ Set `datacenter` proxy to use a pool of shared datacenter IPs. The IPs rotate au
 Example using a german IP with a lightpanda browser.
 
 ```text copy
-wss://cloud.lightpanda.io/ws?proxy=datacenter&country=de&token=TOKEN
+wss://euwest.cloud.lightpanda.io/ws?proxy=datacenter&country=de&token=TOKEN
 ```
 
 Please [contact us](mailto:hello@lightpanda.io) to get access to additional proxies for your specificc use case or to configure your own proxy with Lightpanda Cloud offer.
@@ -67,7 +67,7 @@ Use Lightpanda CDP with [Playwright](https://playwright.dev/).
 import playwright from "playwright";
 
 const browser = await playwright.chromium.connectOverCDP(
-  "wss://cloud.lightpanda.io/ws?token=TOKEN",
+  "wss://euwest.cloud.lightpanda.io/ws?token=TOKEN",
 );
 const context = await browser.newContext();
 const page = await context.newPage();
@@ -89,7 +89,7 @@ Use Lightpanda CDP with [Puppeteer](https://pptr.dev/).
 import playwright from "playwright";
 
 const browser = await playwright.chromium.connectOverCDP(
-  "wss://cloud.lightpanda.io/ws?token=TOKEN",
+  "wss://euwest.cloud.lightpanda.io/ws?token=TOKEN",
 );
 const context = await browser.newContext();
 const page = await context.newPage();
@@ -119,7 +119,7 @@ import (
 
 func main() {
     ctx, cancel = chromedp.NewRemoteAllocator(ctx,
-        "wss://cloud.lightpanda.io/ws?token=TOKEN", chromedp.NoModifyURL,
+        "wss://euwest.cloud.lightpanda.io/ws?token=TOKEN", chromedp.NoModifyURL,
     )
     defer cancel()
 
