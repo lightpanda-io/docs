@@ -1,0 +1,182 @@
+---
+title: Build your first scraper
+description: Learn how to scrape Hackernews search page.
+---
+
+# Build your first scraper
+
+We will now use the browser to run a search on the [HackerNews
+website](https://news.ycombinator.com/). We need Lightpanda here because the
+website uses XHR requests to display search results. We will also run query
+selectors directly in the browser to extract
+and structure the data.
+
+![HackerNews](https://cdn.lightpanda.io/website/assets/images/docs/hn.png)
+
+## Navigate and search
+
+Similar to the Wikipedia example, edit `index.js` to navigate to HackerNews:
+
+```javascript copy
+  await page.goto("https://news.ycombinator.com/");
+```
+
+Type the term lightpanda in the search input at the bottom of the page and
+press the Enter key to submit the search:
+
+```javascript copy
+  await page.type('input[name="q"]','lightpanda');
+  await page.keyboard.press('Enter');
+```
+
+Wait for the search results to be displayed, with a timeout limit of 5 seconds:
+
+```javascript copy
+  await page.waitForFunction(() => {
+      return document.querySelector('.Story_container') != null;
+  }, {timeout: 5000});
+```
+
+## Extract the data
+
+We will loop over the search results to extract the title, the URL, and a list
+of metadata including the author, the number of points, and comments:
+
+```javascript copy
+ // Loop over search results to extract data.
+  const res = await page.evaluate(() => {
+    return Array.from(document.querySelectorAll('.Story_container')).map(row => {
+      return {
+        // Extract the title.
+        title: row.querySelector('.Story_title span').textContent,
+        // Extract the URL.
+        url: row.querySelector('.Story_title a').getAttribute('href'),
+        // Extract the list of meta data.
+        meta: Array.from(row.querySelectorAll('.Story_meta > span:not(.Story_separator, .Story_comment)')).map(row => {
+          return row.textContent;
+        }),
+      }
+    });
+  });
+```
+
+## The final script
+
+Here is the full version of index.js updated to run the search and extract
+results:
+
+```javascript copy
+'use strict'
+
+const { lightpanda } = require('@lightpanda/browser');
+const puppeteer = require('puppeteer-core');
+
+const lpdopts = {
+  host: '127.0.0.1',
+  port: 9222,
+};
+
+const puppeteeropts = {
+  browserWSEndpoint: 'ws://' + lpdopts.host + ':' + lpdopts.port,
+};
+
+(async () => {
+  // Start Lightpanda browser in a separate process.
+  const proc = await lightpanda.serve(lpdopts);
+
+  // Connect Puppeteer to the browser.
+  const browser = await puppeteer.connect(puppeteeropts);
+  const context = await browser.createBrowserContext();
+  const page = await context.newPage();
+
+  // Go to hackernews home page.
+  await page.goto("https://news.ycombinator.com/");
+
+  // Find the search box at the bottom of the page and type the term lightpanda
+  // to search.
+  await page.type('input[name="q"]','lightpanda');
+  // Press enter key to run the search.
+  await page.keyboard.press('Enter');
+
+  // Wait until the search results are loaded on the page, with a 5 seconds
+  // timeout limit.
+  await page.waitForFunction(() => {
+      return document.querySelector('.Story_container') != null;
+  }, {timeout: 5000});
+
+  // Loop over search results to extract data.
+  const res = await page.evaluate(() => {
+    return Array.from(document.querySelectorAll('.Story_container')).map(row => {
+      return {
+        // Extract the title.
+        title: row.querySelector('.Story_title span').textContent,
+        // Extract the URL.
+        url: row.querySelector('.Story_title a').getAttribute('href'),
+        // Extract the list of meta data.
+        meta: Array.from(row.querySelectorAll('.Story_meta > span:not(.Story_separator, .Story_comment)')).map(row => {
+          return row.textContent;
+        }),
+      }
+    });
+  });
+
+  // Display the result.
+  console.log(res);
+
+  // Disconnect Puppeteer.
+  await page.close();
+  await context.close();
+  await browser.disconnect();
+
+  // Stop Lightpanda browser process.
+  proc.stdout.destroy();
+  proc.stderr.destroy();
+  proc.kill();
+})();
+```
+
+## Run the scraping script
+
+You can run it to see the result immediately:
+
+```sh copy
+node index.js
+```
+```sh
+$ node index.js
+🐼 Running Lightpanda's CDP server… { pid: 598201 }
+[
+  {
+    title: 'Show HN: Lightpanda, an open-source headless browser in Zig',
+    url: 'https://news.ycombinator.com/item?id=42817439',
+    meta: [ '319 points', 'fbouvier', '9 months ago', '137 comments' ]
+  },
+  {
+    title: 'Lightpanda: Headless browser designed for AI and automation',
+    url: 'https://news.ycombinator.com/item?id=42812859',
+    meta: [ '154 points', 'tosh', '9 months ago', '1 comments' ]
+  },
+  {
+    title: 'Show HN: Lightpanda, an open-source headless browser in Zig',
+    url: 'https://news.ycombinator.com/item?id=42430629',
+    meta: [ '7 points', 'fbouvier', '10 months ago', '0 comments' ]
+  },
+  {
+    title: 'Lightpanda: Fast headless browser from scratch in Zig for AI and automation',
+    url: 'https://news.ycombinator.com/item?id=44900394',
+    meta: [ '5 points', 'lioeters', '2 months ago', '0 comments' ]
+  },
+  {
+    title: 'Lightpanda – The Headless Browser',
+    url: 'https://news.ycombinator.com/item?id=42745150',
+    meta: [ '4 points', 'vladkens', '9 months ago', '2 comments' ]
+  },
+  {
+    title: 'Lightpanda raises pre-seed to develop first browser built for machines and AI',
+    url: 'https://news.ycombinator.com/item?id=44263271',
+    meta: [ '1 points', 'cpeterso', '4 months ago', '0 comments' ]
+  }
+]
+```
+
+Next step: [Go to production with Lightpanda cloud](/quickstart/go-to-production-with-lightpanda-cloud)

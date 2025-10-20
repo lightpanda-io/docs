@@ -1,0 +1,78 @@
+---
+title: Installation and setup
+description: Learn how to initialize a new Puppeteer project using Lightpanda browser.
+---
+
+# Installation and setup
+
+Learn how to initialize a new [node.js](https://nodejs.org) project using
+[Lightpanda browser](https://lightpanda.io).
+
+**Prerequisites**: You'll need [node.js](https://nodejs.org) installed on your
+computer.
+
+## Initialize the node.js project
+
+Create a `hn-scraper` directory and initialize a new node.js project.
+
+```sh copy
+mkdir hn-scraper && \
+  cd hn-scraper && \
+  npm init
+```
+
+You can accept all the default values in the npm init prompts. When done, your
+directory should look like this:
+
+```sh
+$ tree .
+.
+└── package.json
+1 directory, 1 file
+```
+
+## Install Lightpanda dependency
+
+Install Lightpanda by using the [official npm package](https://www.npmjs.com/package/@lightpanda/browser).
+
+```sh copy
+npm install --save @lightpanda/browser
+```
+
+Create an `index.js` file with the following content:
+
+```javascript copy
+'use strict'
+
+const { lightpanda } = require('@lightpanda/browser');
+
+const lpdopts = {
+  host: '127.0.0.1',
+  port: 9222,
+};
+
+(async () => {
+  // Start Lightpanda browser in a separate process.
+  const proc = await lightpanda.serve(lpdopts);
+
+  // Do your magic ✨
+
+  // Stop Lightpanda browser process.
+  proc.stdout.destroy();
+  proc.stderr.destroy();
+  proc.kill();
+})();
+```
+
+Run your script to start and stop a Lightpanda browser.
+
+```sh copy
+node index.js
+```
+Starting and stopping the browser is almost instant.
+```sh
+$ node index.js
+🐼 Running Lightpanda's CDP server... { pid: 4084512 }
+```
+
+Next step: [What is lightpanda and your first test](/quickstart/what-is-lightpanda-and-your-first-test)

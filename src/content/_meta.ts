@@ -13,7 +13,14 @@ const meta: MetaRecord = {
       breadcrumb: false,
     },
   },
+  quickstart: {
+    title: 'Quickstart',
+    theme: {
+      breadcrumb: false,
+    },
+  },
   'open-source': 'Open source edition',
+  'cloud-offer': 'Cloud offer',
 }
 
 export default meta

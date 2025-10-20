@@ -1,0 +1,179 @@
+---
+title: What is lightpanda and your first test
+description: Learn what is Lightpanda browser and run your first scrapping script.
+---
+
+import { Callout } from 'nextra/components'
+
+# what is lightpanda & your first test
+
+Lightpanda is a headless browser built from scratch. Unlike Headless Chrome, it
+has no UI or graphical rendering for humans, which allows it to start instantly
+and execute pages up to 10x faster.
+
+Unlike [curl](https://curl.se/), which only fetches raw HTML, Lightpanda can
+execute JavaScript and run query selectors directly in the browser.
+
+It's ideal for crawling, testing, and running AI agents that need to interact
+with dynamic web pages, and it’s fully compatible with libraries like
+[Puppeteer](https://pptr.dev/) and [Playwright](https://playwright.dev/).
+
+In this example, you’ll connect [Puppeteer](https://pptr.dev/) to Lightpanda
+and extract all reference links from a [Wikipedia
+page](https://www.wikipedia.org/).
+
+## Connect Puppeteer to Lightpanda
+
+Install the [`puppeteer-core`](https://www.npmjs.com/package/puppeteer-core)
+npm package.
+
+<Callout type="info" emoji="">
+  Unlike `puppeteer` npm package,
+  `puppeteer-core` doesn't download a Chromium browser.
+</Callout>
+
+```sh copy
+npm install -save puppeteer-core
+```
+
+Edit your `index.js` to include Puppeteer and connect it to Lightpanda:
+
+```javascript copy
+'use strict'
+
+const { lightpanda } = require('@lightpanda/browser');
+const puppeteer = require('puppeteer-core');
+
+const lpdopts = {
+  host: '127.0.0.1',
+  port: 9222,
+};
+
+const puppeteeropts = {
+  browserWSEndpoint: 'ws://' + lpdopts.host + ':' + lpdopts.port,
+};
+
+(async () => {
+  // Start Lightpanda browser in a separate process.
+  const proc = await lightpanda.serve(lpdopts);
+
+  // Connect Puppeteer to the browser.
+  const browser = await puppeteer.connect(puppeteeropts);
+  const context = await browser.createBrowserContext();
+  const page = await context.newPage();
+
+  // Do your magic ✨
+  console.log("CDP connection is working");
+
+  // Disconnect Puppeteer.
+  await page.close();
+  await context.close();
+  await browser.disconnect();
+
+  // Stop Lightpanda browser process.
+  proc.stdout.destroy();
+  proc.stderr.destroy();
+  proc.kill();
+})();
+```
+Run the script to test the connection between Puppeteer and Lightpanda:
+
+```sh copy
+node index.js
+```
+```sh
+$ node index.js
+🐼 Running Lightpanda's CDP server... { pid: 31371 }
+CDP connection is working
+```
+
+## Extract all reference links from Wikipedia
+
+Update `index.js` using `page.goto` to navigate to a Wikipedia page and extract
+all the reference links:
+
+```javascript copy
+  / Go to Wikipedia page.
+  wait page.goto("https://en.wikipedia.org/wiki/Web_browser");
+```
+
+Execute a query selector on the browser to extract the links:
+
+```javascript copy
+  // Extract all links from the references list of the page.
+  const reflist = await page.evaluate(() => {
+    return Array.from(document.querySelectorAll('.reflist a.external')).map(row => {
+      return row.getAttribute('href');
+    });
+  });
+```
+Here’s the full `index.js` file:
+
+```javascript copy
+'use strict'
+
+const { lightpanda } = require('@lightpanda/browser');
+const puppeteer = require('puppeteer-core');
+
+const lpdopts = {
+  host: '127.0.0.1',
+  port: 9222,
+};
+
+const puppeteeropts = {
+  browserWSEndpoint: 'ws://' + lpdopts.host + ':' + lpdopts.port,
+};
+
+(async () => {
+  // Start Lightpanda browser in a separate process.
+  const proc = await lightpanda.serve(lpdopts);
+
+  // Connect Puppeteer to the browser.
+  const browser = await puppeteer.connect(puppeteeropts);
+  const context = await browser.createBrowserContext();
+  const page = await context.newPage();
+
+  // Go to Wikipedia page.
+  await page.goto("https://en.wikipedia.org/wiki/Web_browser");
+
+  // Extract all links from the references list of the page.
+  const reflist = await page.evaluate(() => {
+    return Array.from(document.querySelectorAll('.reflist a.external')).map(row => {
+      return row.getAttribute('href');
+    });
+  });
+
+  // Display the result.
+  console.log("all reference links", reflist);
+
+  // Disconnect Puppeteer.
+  await page.close();
+  await context.close();
+  await browser.disconnect();
+
+  // Stop Lightpanda browser process.
+  proc.stdout.destroy();
+  proc.stderr.destroy();
+  proc.kill();
+})();
+```
+
+## Execute the link extraction
+
+Execute index.js to see the links directly in your console:
+```sh copy
+node index.js
+```
+
+```sh
+$ node index.js
+🐼 Running Lightpanda's CDP server... { pid: 34389 }
+all reference links [
+  'https://gs.statcounter.com/browser-market-share',
+  'https://radar.cloudflare.com/reports/browser-market-share-2024-q1',
+  'https://web.archive.org/web/20240523140912/https://www.internetworldstats.com/stats.htm',
+  'https://www.internetworldstats.com/stats.htm',
+  'https://www.reference.com/humanities-culture/purpose-browser-e61874e41999ede',
+```
+
+Next step: [Build your first scraper](/quickstart/build-your-first-scraper)

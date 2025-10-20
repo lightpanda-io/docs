@@ -1,14 +1,10 @@
 import type { MetaRecord } from 'nextra'
 
 const meta: MetaRecord = {
-  'getting-started': 'Getting started',
+  installation: 'Installation',
+  usage: 'Usage',
   guides: 'Guides',
-  'systems-requirements': {
-    title: 'Systems requirements',
-    theme: {
-      breadcrumb: false,
-    },
-  },
+  'systems-requirements': 'Systems requirements',
 }
 
 export default meta
