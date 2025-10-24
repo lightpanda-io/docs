@@ -2,6 +2,7 @@
 title: Installation and setup
 description: Learn how to initialize a new Puppeteer project using Lightpanda browser.
 ---
+import { Tabs } from 'nextra/components'
 
 # Quickstart
 
@@ -47,9 +48,23 @@ $ tree .
 
 Install Lightpanda by using the [official npm package](https://www.npmjs.com/package/@lightpanda/browser).
 
-```sh copy
-npm install --save @lightpanda/browser
-```
+<Tabs items={['npm', 'yarn', 'pnpm']} className="-mb-4">
+  <Tabs.Tab id="npm" className="m-0">
+    ```sh copy
+    npm install --save @lightpanda/browser
+    ```
+  </Tabs.Tab>
+  <Tabs.Tab id="yarn" className="m-0">
+    ```sh copy
+    yarn add @lightpanda/browser
+    ```
+  </Tabs.Tab>
+  <Tabs.Tab id="pnpm" className="m-0">
+  ```sh copy
+  pnpm add @lightpanda/browser
+  ```
+  </Tabs.Tab>
+</Tabs>
 
 Create an `index.js` file with the following content:
 
