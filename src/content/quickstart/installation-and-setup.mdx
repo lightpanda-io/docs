@@ -2,6 +2,7 @@
 title: Installation and setup
 description: Learn how to initialize a new Puppeteer project using Lightpanda browser.
 ---
+import { FileTree } from 'nextra/components'
 import { Tabs } from 'nextra/components'
 
 # Quickstart
@@ -37,12 +38,12 @@ mkdir hn-scraper && \
 You can accept all the default values in the npm init prompts. When done, your
 directory should look like this:
 
-```sh
-$ tree .
-.
-└── package.json
-1 directory, 1 file
-```
+<FileTree>
+  <FileTree.Folder name="hn-scraper" defaultOpen>
+    <FileTree.File name="package.json" />
+  </FileTree.Folder>
+</FileTree>
+
 
 ## Install Lightpanda dependency
 
