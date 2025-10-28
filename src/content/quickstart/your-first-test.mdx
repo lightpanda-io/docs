@@ -2,7 +2,7 @@
 title: Your first test
 description: Learn what is Lightpanda browser and run your first scrapping script.
 ---
-
+import { Tabs } from 'nextra/components'
 import { Callout } from 'nextra/components'
 
 # 2. Your first test
@@ -18,26 +18,36 @@ It's ideal for crawling, testing, and running AI agents that need to interact
 with dynamic web pages, and it’s fully compatible with libraries like
 [Puppeteer](https://pptr.dev/) and [Playwright](https://playwright.dev/).
 
-In this example, you’ll connect [Puppeteer](https://pptr.dev/) to Lightpanda
+In this example, you’ll connect cd CDP client, [Puppeteer](https://pptr.dev/) or [Playwright](https://playwright.dev/) to Lightpanda
 and extract all reference links from a [Wikipedia
 page](https://www.wikipedia.org/).
 
-## Connect Puppeteer to Lightpanda
+## Connect CDP Client to Lightpanda
 
-Install the [`puppeteer-core`](https://www.npmjs.com/package/puppeteer-core)
-npm package.
+Install the [`puppeteer-core`](https://www.npmjs.com/package/puppeteer-core) *or* [`playwright-core`](https://www.npmjs.com/package/playwright-core) npm package.
 
 <Callout type="info" emoji="">
-  Unlike `puppeteer` npm package,
-  `puppeteer-core` doesn't download a Chromium browser.
+  Unlike `puppeteer` and `playwright` npm packages,
+  `puppeteer-core` and `playwright-core` don't download a Chromium browser.
 </Callout>
 
+<Tabs items={['puppeteer', 'playwright']} className="-mb-4">
+  <Tabs.Tab id="puppeteer" className="m-0">
 ```sh copy
 npm install -save puppeteer-core
 ```
+  </Tabs.Tab>
+  <Tabs.Tab id="playwright" className="m-0">
+```sh copy
+npm install -save playwright-core
+```
+  </Tabs.Tab>
+</Tabs>
 
-Edit your `index.js` to include Puppeteer and connect it to Lightpanda:
+Edit your `index.js` to connect to Lightpanda:
 
+<Tabs items={['puppeteer', 'playwright']} className="-mb-4">
+  <Tabs.Tab id="puppeteer" className="m-0">
 ```javascript copy
 'use strict'
 
@@ -76,7 +86,50 @@ const puppeteeropts = {
   proc.kill();
 })();
 ```
-Run the script to test the connection between Puppeteer and Lightpanda:
+  </Tabs.Tab>
+  <Tabs.Tab id="playwright" className="m-0">
+```javascript copy
+'use strict'
+
+const { lightpanda } = require('@lightpanda/browser');
+const { chromium } = require('playwright-core');
+
+const lpdopts = {
+  host: '127.0.0.1',
+  port: 9222,
+};
+
+const playwrightopts = {
+  endpointURL: 'ws://' + lpdopts.host + ':' + lpdopts.port,
+};
+
+(async () => {
+  // Start Lightpanda browser in a separate process.
+  const proc = await lightpanda.serve(lpdopts);
+
+  // Connect Playwright's chromium driver to the browser.
+  const browser = await chromium.connectOverCDP(playwrightopts);
+  const context = await browser.newContext({});
+  const page = await context.newPage();
+
+  // Do your magic ✨
+  console.log("CDP connection is working");
+
+  // Disconnect Puppeteer.
+  await page.close();
+  await context.close();
+  await browser.close();
+
+  // Stop Lightpanda browser process.
+  proc.stdout.destroy();
+  proc.stderr.destroy();
+  proc.kill();
+})();
+```
+  </Tabs.Tab>
+</Tabs>
+
+Run the script to test the connection between Puppeteer or Playwright and Lightpanda:
 
 ```sh copy
 node index.js
@@ -92,13 +145,25 @@ CDP connection is working
 Update `index.js` using `page.goto` to navigate to a Wikipedia page and extract
 all the reference links:
 
+<Tabs items={['puppeteer', 'playwright']} className="-mb-4">
+  <Tabs.Tab id="puppeteer" className="m-0">
 ```javascript copy
-  / Go to Wikipedia page.
-  wait page.goto("https://en.wikipedia.org/wiki/Web_browser");
+  // Go to Wikipedia page.
+  await page.goto("https://en.wikipedia.org/wiki/Web_browser");
 ```
+  </Tabs.Tab>
+  <Tabs.Tab id="playwright" className="m-0">
+```javascript copy
+  // Go to Wikipedia page.
+  await page.goto("https://en.wikipedia.org/wiki/Web_browser");
+```
+  </Tabs.Tab>
+</Tabs>
 
 Execute a query selector on the browser to extract the links:
 
+<Tabs items={['puppeteer', 'playwright']} className="-mb-4">
+  <Tabs.Tab id="puppeteer" className="m-0">
 ```javascript copy
   // Extract all links from the references list of the page.
   const reflist = await page.evaluate(() => {
@@ -107,8 +172,21 @@ Execute a query selector on the browser to extract the links:
     });
   });
 ```
+  </Tabs.Tab>
+  <Tabs.Tab id="playwright" className="m-0">
+```javascript copy
+  // Extract all links from the references list of the page.
+  const reflist = await page.locator('.reflist a.external').evaluateAll(links =>
+    links.map(link => link.getAttribute('href'))
+  );
+```
+  </Tabs.Tab>
+</Tabs>
+
 Here’s the full `index.js` file:
 
+<Tabs items={['puppeteer', 'playwright']} className="-mb-4">
+  <Tabs.Tab id="puppeteer" className="m-0">
 ```javascript copy
 'use strict'
 
@@ -157,6 +235,56 @@ const puppeteeropts = {
   proc.kill();
 })();
 ```
+  </Tabs.Tab>
+  <Tabs.Tab id="playwright" className="m-0">
+```javascript copy
+'use strict'
+
+const { lightpanda } = require('@lightpanda/browser');
+const { chromium } = require('playwright-core');
+
+const lpdopts = {
+  host: '127.0.0.1',
+  port: 9222,
+};
+
+const playwrightopts = {
+  endpointURL: 'ws://' + lpdopts.host + ':' + lpdopts.port,
+};
+
+(async () => {
+  // Start Lightpanda browser in a separate process.
+  const proc = await lightpanda.serve(lpdopts);
+
+  // Connect using Playwright's chromium driver to the browser.
+  const browser = await chromium.connectOverCDP(playwrightopts);
+  const context = await browser.newContext({});
+  const page = await context.newPage();
+
+  // Go to Wikipedia page.
+  await page.goto("https://en.wikipedia.org/wiki/Web_browser");
+
+  // Extract all links from the references list of the page.
+  const reflist = await page.locator('.reflist a.external').evaluateAll(links =>
+    links.map(link => link.getAttribute('href'))
+  );
+
+  // Display the result.
+  console.log("all reference links", reflist);
+
+  // Disconnect Playwright.
+  await page.close();
+  await context.close();
+  await browser.close();
+
+  // Stop Lightpanda browser process.
+  proc.stdout.destroy();
+  proc.stderr.destroy();
+  proc.kill();
+})();
+```
+  </Tabs.Tab>
+</Tabs>
 
 ## Execute the link extraction
 
