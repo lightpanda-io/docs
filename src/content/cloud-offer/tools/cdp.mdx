@@ -86,20 +86,21 @@ More examples in [demo/playwright](https://github.com/lightpanda-io/demo/tree/ma
 Use Lightpanda CDP with [Puppeteer](https://pptr.dev/).
 
 ```js copy
-import playwright from "playwright";
+import puppeteer from 'puppeteer-core';
 
-const browser = await playwright.chromium.connectOverCDP(
-  "wss://euwest.cloud.lightpanda.io/ws?token=TOKEN",
-);
-const context = await browser.newContext();
+const browser = await puppeteer.connect({
+    browserWSEndpoint: "wss://euwest.cloud.lightpanda.io/ws?token=TOKEN",
+});
+const context = await browser.createBrowserContext();
 const page = await context.newPage();
 
-//...
+// ...
 
 await page.close();
 await context.close();
 await browser.disconnect();
 ```
+
 More examples in [demo/puppeteer](https://github.com/lightpanda-io/demo/tree/main/puppeteer).
 
 ### Chromedp
