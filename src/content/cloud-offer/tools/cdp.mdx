@@ -64,7 +64,7 @@ Use Lightpanda CDP with [Playwright](https://playwright.dev/).
 
 
 ```js copy
-import playwright from "playwright";
+import playwright from "playwright-core";
 
 const browser = await playwright.chromium.connectOverCDP(
   "wss://euwest.cloud.lightpanda.io/ws?token=TOKEN",
@@ -86,20 +86,21 @@ More examples in [demo/playwright](https://github.com/lightpanda-io/demo/tree/ma
 Use Lightpanda CDP with [Puppeteer](https://pptr.dev/).
 
 ```js copy
-import playwright from "playwright";
+import puppeteer from 'puppeteer-core';
 
-const browser = await playwright.chromium.connectOverCDP(
-  "wss://euwest.cloud.lightpanda.io/ws?token=TOKEN",
-);
-const context = await browser.newContext();
+const browser = await puppeteer.connect({
+    browserWSEndpoint: "wss://euwest.cloud.lightpanda.io/ws?token=TOKEN",
+});
+const context = await browser.createBrowserContext();
 const page = await context.newPage();
 
-//...
+// ...
 
 await page.close();
 await context.close();
 await browser.disconnect();
 ```
+
 More examples in [demo/puppeteer](https://github.com/lightpanda-io/demo/tree/main/puppeteer).
 
 ### Chromedp
@@ -110,31 +111,30 @@ Use Lightpanda CDP with [Chromedp](https://github.com/chromedp/chromedp).
 package main
 
 import (
-    "context"
-    "flag"
-    "log"
+	"context"
+	"log"
 
-    "github.com/chromedp/chromedp"
+	"github.com/chromedp/chromedp"
 )
 
 func main() {
-    ctx, cancel = chromedp.NewRemoteAllocator(ctx,
-        "wss://euwest.cloud.lightpanda.io/ws?token=TOKEN", chromedp.NoModifyURL,
-    )
-    defer cancel()
+	ctx, cancel := chromedp.NewRemoteAllocator(context.Background(),
+		"wss://euwest.cloud.lightpanda.io/ws?token=TOKEN", chromedp.NoModifyURL,
+	)
+	defer cancel()
 
-    ctx, cancel := chromedp.NewContext(allocatorContext)
-    defer cancel()
+	ctx, cancel = chromedp.NewContext(ctx)
+	defer cancel()
 
-    var title string
-    if err := chromedp.Run(ctx,
-        chromedp.Navigate("https://lightpanda.io"),
-        chromedp.Title(&title),
-    ); err != nil {
-        log.Fatalf("Failed getting title of lightpanda.io: %v", err)
-    }
+	var title string
+	if err := chromedp.Run(ctx,
+		chromedp.Navigate("https://lightpanda.io"),
+		chromedp.Title(&title),
+	); err != nil {
+		log.Fatalf("Failed getting title of lightpanda.io: %v", err)
+	}
 
-    log.Println("Got title of:", title)
+	log.Println("Got title of:", title)
 }
 ```
 More examples in [demo/chromedp](https://github.com/lightpanda-io/demo/tree/main/chromedp).
