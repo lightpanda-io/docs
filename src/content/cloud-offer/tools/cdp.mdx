@@ -111,31 +111,30 @@ Use Lightpanda CDP with [Chromedp](https://github.com/chromedp/chromedp).
 package main
 
 import (
-    "context"
-    "flag"
-    "log"
+	"context"
+	"log"
 
-    "github.com/chromedp/chromedp"
+	"github.com/chromedp/chromedp"
 )
 
 func main() {
-    ctx, cancel = chromedp.NewRemoteAllocator(ctx,
-        "wss://euwest.cloud.lightpanda.io/ws?token=TOKEN", chromedp.NoModifyURL,
-    )
-    defer cancel()
+	ctx, cancel := chromedp.NewRemoteAllocator(context.Background(),
+		"wss://euwest.cloud.lightpanda.io/ws?token=TOKEN", chromedp.NoModifyURL,
+	)
+	defer cancel()
 
-    ctx, cancel := chromedp.NewContext(allocatorContext)
-    defer cancel()
+	ctx, cancel = chromedp.NewContext(ctx)
+	defer cancel()
 
-    var title string
-    if err := chromedp.Run(ctx,
-        chromedp.Navigate("https://lightpanda.io"),
-        chromedp.Title(&title),
-    ); err != nil {
-        log.Fatalf("Failed getting title of lightpanda.io: %v", err)
-    }
+	var title string
+	if err := chromedp.Run(ctx,
+		chromedp.Navigate("https://lightpanda.io"),
+		chromedp.Title(&title),
+	); err != nil {
+		log.Fatalf("Failed getting title of lightpanda.io: %v", err)
+	}
 
-    log.Println("Got title of:", title)
+	log.Println("Got title of:", title)
 }
 ```
 More examples in [demo/chromedp](https://github.com/lightpanda-io/demo/tree/main/chromedp).
