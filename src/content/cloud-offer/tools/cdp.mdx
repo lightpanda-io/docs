@@ -10,11 +10,19 @@ Most of existing tools to control a browser like Puppeteer, Playwright or chrome
 
 ## Usage
 
-You can connect to the CDP using the url `wss://euwest.cloud.lightpanda.io/ws`.
+Depending on your location, you can connect to the CDP using the url
+`wss://euwest.cloud.lightpanda.io/ws` or `wss//uswest.cloud.lightpanda.io/ws`.
+
 You have to add your token as query string parameter: `token=YOUR_TOKEN`.
 
 ```text copy
+// Server in west europe
 wss://euwest.cloud.lightpanda.io/ws?token=TOKEN
+```
+
+```text copy
+// Server in west US
+wss://uswest.cloud.lightpanda.io/ws?token=TOKEN
 ```
 
 ### Options
