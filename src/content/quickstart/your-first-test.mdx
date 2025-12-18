@@ -167,7 +167,7 @@ Execute a query selector on the browser to extract the links:
 ```javascript copy
   // Extract all links from the references list of the page.
   const reflist = await page.evaluate(() => {
-    return Array.from(document.querySelectorAll('.reflist a.external')).map(row => {
+    return Array.from(document.querySelectorAll('.references a.external')).map(row => {
       return row.getAttribute('href');
     });
   });
@@ -176,7 +176,7 @@ Execute a query selector on the browser to extract the links:
   <Tabs.Tab id="playwright" className="m-0">
 ```javascript copy
   // Extract all links from the references list of the page.
-  const reflist = await page.locator('.reflist a.external').evaluateAll(links =>
+  const reflist = await page.locator('.references a.external').evaluateAll(links =>
     links.map(link => link.getAttribute('href'))
   );
 ```
@@ -216,7 +216,7 @@ const puppeteeropts = {
 
   // Extract all links from the references list of the page.
   const reflist = await page.evaluate(() => {
-    return Array.from(document.querySelectorAll('.reflist a.external')).map(row => {
+    return Array.from(document.querySelectorAll('.references a.external')).map(row => {
       return row.getAttribute('href');
     });
   });
@@ -265,7 +265,7 @@ const playwrightopts = {
   await page.goto("https://en.wikipedia.org/wiki/Web_browser");
 
   // Extract all links from the references list of the page.
-  const reflist = await page.locator('.reflist a.external').evaluateAll(links =>
+  const reflist = await page.locator('.references a.external').evaluateAll(links =>
     links.map(link => link.getAttribute('href'))
   );
 
