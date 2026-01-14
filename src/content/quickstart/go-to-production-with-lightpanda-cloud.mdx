@@ -50,7 +50,7 @@ You no longer need to start a local browser process because you are using the
 cloud version. You can remove these parts of the script to simplify it:
 
 ```javascript
-const { lightpanda } = require('@lightpanda/browser')
+import { lightpanda } from '@lightpanda/browser';
 ```
 ```javascript
 const lpdopts = {
@@ -78,7 +78,7 @@ Here is the final script using the cloud browser version:
 ```javascript copy
 'use strict'
 
-const puppeteer = require('puppeteer-core');
+import puppeteer from 'puppeteer-core';
 
 const puppeteeropts = {
   browserWSEndpoint: 'wss://euwest.cloud.lightpanda.io/ws?token=' + process.env.LPD_TOKEN,
@@ -135,7 +135,7 @@ const puppeteeropts = {
 ```javascript copy
 'use strict'
 
-const { chromium } = require('playwright-core');
+import { chromium } from 'playwright-core';
 
 const playwrightopts = {
   endpointURL: 'wss://euwest.cloud.lightpanda.io/ws?token=' + process.env.LPD_TOKEN,

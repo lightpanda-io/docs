@@ -112,7 +112,7 @@ Try Lightpanda with [Playwright](https://playwright.dev/) by using
 `chromium.connectOverCDP` to connect.
 
 ```js copy
-import { chromium } from 'playwright';
+import { chromium } from 'playwright-core';
 
 // use connectOverCDP to pass the Lightpanda's CDP server address.
 const browser = await chromium.connectOverCDP('ws://127.0.0.1:9222');
