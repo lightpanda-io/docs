@@ -122,8 +122,8 @@ results:
 ```javascript copy
 'use strict'
 
-const { lightpanda } = require('@lightpanda/browser');
-const puppeteer = require('puppeteer-core');
+import { lightpanda } from '@lightpanda/browser';
+import puppeteer from 'puppeteer-core';
 
 const lpdopts = {
   host: '127.0.0.1',
@@ -193,8 +193,8 @@ const puppeteeropts = {
 ```javascript copy
 'use strict'
 
-const { lightpanda } = require('@lightpanda/browser');
-const { chromium } = require('playwright-core');
+import { lightpanda } from '@lightpanda/browser';
+import { chromium } from 'playwright-core';
 
 const lpdopts = {
   host: '127.0.0.1',
