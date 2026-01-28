@@ -3,44 +3,38 @@ title: Build from sources
 description: Lightpanda is written with Zig@0.14.0. You will have to install it with the right version in order to build the project.
 ---
 
+import { Callout } from 'nextra/components'
+
 # Build from sources
 
 ## Prerequisites
 
 Lightpanda is written with [Zig](https://ziglang.org/) `0.14.0`. You will have to
 install it with the right version in order to build the project.
+
+You need also to install [Rust](https://rust-lang.org/tools/install/) for building deps.
+
 Lightpanda also depends on
 [zig-js-runtime](https://github.com/lightpanda-io/zig-js-runtime/) (with v8),
-[Netsurf libs](https://www.netsurf-browser.org/) and
-[Mimalloc](https://microsoft.github.io/mimalloc).
+[Libcurl](https://curl.se/libcurl/) and [html5ever](https://github.com/servo/html5ever).
 
 To be able to build the v8 engine for zig-js-runtime, you have to install some libs:
 
 **For Debian/Ubuntu based Linux:**
 
 ```bash copy
-sudo apt install xz-utils \
-    python3 ca-certificates git \
-    pkg-config libglib2.0-dev \
-    gperf libexpat1-dev unzip rsync \
-    cmake clang
+sudo apt install xz-utils ca-certificates \
+        pkg-config libglib2.0-dev \
+        clang make curl git
 ```
 
 **For MacOS, you need [Xcode](https://developer.apple.com/xcode/) and the following pacakges from homebrew:**
 
 ```bash copy
-brew install cmake pkgconf
+brew install cmake
 ```
 
-## Install and build dependencies
-
-### All in one build
-
-You can run `make install` to install deps all in one (or `make install-dev` if you need the development versions).
-
-Be aware that the build task is very long and cpu consuming, as you will build from sources all dependencies, including the v8 Javascript engine.
-
-### Step by step build dependency
+## Install Git submodules
 
 The project uses git submodules for dependencies.
 
@@ -49,44 +43,41 @@ To init or update the submodules in the `vendor/` directory:
 ```bash copy
 make install-submodule
 ```
-#### Netsurf libs
 
-Netsurf libs are used for HTML parsing and DOM tree generation.
+This is an alias for `git submodule init && git submodule update`.
 
-```bash copy
-make install-netsurf
-```
+## Build and run
 
-For dev env, use `make install-netsurf-dev`.
+You an build the entire browser with `make build` or `make build-dev` for debug
+env.
 
-<br />
-#### Mimalloc
-
-Mimalloc is used as a C memory allocator.
+But you can directly use the zig command to run in debug mode:
 
 ```bash copy
-make install-mimalloc
+zig build run
 ```
 
-For dev env, use `make install-mimalloc-dev`.
+<Callout type="info" emoji="ℹ️">
+    The build will download and build V8. It can takes a lot of time, more than
+    1 hour.
+    You can save this part by donwloading manually a
+    [pre-built](https://github.com/lightpanda-io/zig-v8-fork/releases version)
+    and use the `-Dprebuilt_v8_path=` option.
+</Callout>
 
-Note: when Mimalloc is built in dev mode, you can dump memory stats with the
-env var `MIMALLOC_SHOW_STATS=1`. See
-[https://microsoft.github.io/mimalloc/environment.html](https://microsoft.github.io/mimalloc/environment.html).
+### Embed v8 snapshot
 
-<br />
-#### v8
+Lighpanda uses v8 snapshot. By default, it is created on startup but you can
+embed it by using the following commands:
 
-Lightpanda browser depends on v8 Javascript engine.
-
-This build task is very long and cpu consuming, as you will build v8 from sources.
-
+Generate the snapshot.
 ```bash copy
-make get-v8
+zig build snapshot_creator -- src/snapshot.bin
 ```
 
+Build using the snapshot binary.
 ```bash copy
-make build-v8
+zig build -Dsnapshot_path=../../snapshot.bin
 ```
 
-For dev env, use `make build-v8-dev`.
+See [#1279](https://github.com/lightpanda-io/browser/pull/1279) for more details.
