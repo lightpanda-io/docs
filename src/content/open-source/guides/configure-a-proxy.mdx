@@ -45,3 +45,52 @@ This option will add a `Proxy-Authorization` header all the outgoing requests.
 ```sh copy
 ./lightpanda fetch --http_proxy 'http://127.0.0.1:3000' --proxy_bearer_token 'MY-TOKEN' https://lightpanda.io
 ```
+
+## Configure a proxy from your Puppeteer/Playwright script
+
+Instead of configuring your proxy auth on Lightpanda's start, you can pass your
+username and password in flight from your script using request interceptions.
+
+### Puppeteer
+
+With Puppeteer, you have to configure the proxy address when starting
+Lightpanda.
+
+```sh copy
+./lightpanda fetch --http_proxy 'http://127.0.0.1:3000'
+```
+
+Then you can call `page.authenticate` function to inject your authentication
+from your script.
+
+```javascript copy
+const page = await context.newPage();
+
+// Set credentials for HTTP Basic Auth
+await page.authenticate({
+  username: 'my_username',
+  password: 'my_password',
+});
+```
+
+You can find the full example in our
+[demo repository](https://github.com/lightpanda-io/demo/blob/main/puppeteer/proxy_auth.js).
+
+### Playwright
+
+With Playwright, configure the proxy when creating the browser's context.
+
+```javascript copy
+const context = await browser.newContext({
+    baseURL: baseURL,
+    proxy: {
+      server: 'http://127.0.0.1:3000',
+      username: 'my_username',
+      password: 'my_password',
+    },
+});
+
+const page = await context.newPage();
+```
+You can find the full example in our
+[demo repository](https://github.com/lightpanda-io/demo/blob/main/playwright/proxy_auth.js).
