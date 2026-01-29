@@ -1,0 +1,101 @@
+---
+title: Use Stagehand
+description: Here is how to use Stagehand framwork with the Lightpanda browser.
+---
+
+# Use Stagehand with Lightpanda
+
+[Stagehand](https://www.stagehand.dev/) is a popular, [open
+source](https://github.com/browserbase/stagehand) AI Browser Automation
+Framework.
+
+With Stagehand you can use natural language and code to control browser.
+
+Since Lightpanda supports [Accessibilty
+tree](https://github.com/lightpanda-io/browser/pull/1308), you can use it
+instead of Chrome with your Stagehand script.
+
+## Install the Lightanda and Stagehand dependencies
+
+If not set, create a new npm project and install Stagehand depencies.
+
+```sh copy
+npm init
+```
+
+```sh copy
+npm install @browserbasehq/stagehand @lightpanda/browser
+```
+
+## Write your Stagehand script with Lightpanda
+
+Now you can create your Stagehand's. script to connectm by editing `index.js`
+file.
+
+```javascript copy
+'use strict'
+
+import { lightpanda } from '@lightpanda/browser';
+
+import { Stagehand } from "@browserbasehq/stagehand";
+import { z } from "zod/v3";
+
+const lpdopts = { host: '127.0.0.1', port: 9222 };
+
+const stagehandopts = {
+  // Enable LOCAL env to configure the CDP url manually in the launch options.
+  env: "LOCAL",
+  localBrowserLaunchOptions: {
+      cdpUrl: 'ws://' + lpdopts.host + ':' + lpdopts.port,
+  },
+  // You need an ANTHROPIC_API_KEY env var.
+  model: "anthropic/claude-haiku-4-5",
+  verbose: 0,
+};
+
+(async () => {
+  // Start Lightpanda browser in a separate process.
+  const proc = await lightpanda.serve(lpdopts);
+
+  try {
+    // Connect Stagehand to the browser.
+    const stagehand = new Stagehand(stagehandopts);
+
+    await stagehand.init();
+
+    // Impportant: in the official documentation, Stagehand uses the default
+    // existing page. But Lightpanda requires an explicit page's creation
+    // instead.
+    const page = await stagehand.context.newPage();
+
+    await page.goto('https://demo-browser.lightpanda.io/amiibo/', {waitUntil: "networkidle"});
+    const name = await stagehand.extract("Extract character's name", z.string());
+    console.log("===", name);
+
+    await stagehand.close()
+
+  } finally {
+    // Stop Lightpanda browser process.
+    proc.stdout.destroy();
+    proc.stderr.destroy();
+    proc.kill();
+  }
+})();
+```
+
+## Run your script
+
+Before running you script, make sure you have a valid Anthropic api key
+exported into the env var `ANTHROPIC_API_KEY`.
+You can also use [another
+model](https://docs.stagehand.dev/v3/configuration/models) supported by
+Stagehand.
+
+```sh copy
+node index.js
+```
+
+You should see in the following logs:
+```sh
+=== Sandy
+```
