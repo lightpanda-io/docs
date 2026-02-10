@@ -10,7 +10,7 @@ Use `./lightpanda help` for all options.
 ## Dump an URL
 
 ```sh copy
-./lightpanda fetch --dump https://demo-browser.lightpanda.io/campfire-commerce/
+./lightpanda fetch --obey_robots --dump https://demo-browser.lightpanda.io/campfire-commerce/
 ```
 ```sh
 INFO  http : navigate . . . . . . . . . . . . . . . . . . . . [+0ms]
@@ -44,6 +44,7 @@ The fetch command accepts options:
 * `--log_level` change the log level, default is `info`. `--log_level debug`.
 * `--http_proxy` The HTTP proxy to use for all HTTP requests. A username:password can be included for basic authentication. `--http_proxy http://user:password@127.0.0.1:3000`.
 * `--http_timeout` The maximum time, in milliseconds, the transfer is allowedto complete. 0 means it never times out. Defaults to `10000`.
+* `--obey_robots` Fetches and obeys the robots.txt (if available) of the web pages we make requests towards.
 
 See also [how to configure proxy](/open-source/guides/configure-a-proxy).
 
@@ -53,7 +54,7 @@ To control Lightpanda with [Chrome Devtool Protocol](https://chromedevtools.gith
 need to start the browser as a CDP server.
 
 ```sh copy
-./lightpanda serve --host 127.0.0.1 --port 9222
+./lightpanda serve --obey_robots --host 127.0.0.1 --port 9222
 ```
 ```sh
 INFO  app : server running . . . . . . . . . . . . . . . . .  [+0ms]
@@ -68,6 +69,7 @@ The fetch command accepts options:
 * `--log_level` change the log level, default is `info`. `--log_level debug`.
 * `--http_proxy` The HTTP proxy to use for all HTTP requests. A username:password can be included for basic authentication. `--http_proxy http://user:password@127.0.0.1:3000`.
 * `--http_timeout` The maximum time, in milliseconds, the transfer is allowedto complete. 0 means it never times out. Defaults to `10000`.
+* `--obey_robots` Fetches and obeys the robots.txt (if available) of the web pages we make requests towards.
 
 See also [how to configure proxy](/open-source/guides/configure-a-proxy).
 
