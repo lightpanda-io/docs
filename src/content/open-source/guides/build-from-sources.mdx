@@ -34,18 +34,6 @@ sudo apt install xz-utils ca-certificates \
 brew install cmake
 ```
 
-## Install Git submodules
-
-The project uses git submodules for dependencies.
-
-To init or update the submodules in the `vendor/` directory:
-
-```bash copy
-make install-submodule
-```
-
-This is an alias for `git submodule init && git submodule update`.
-
 ## Build and run
 
 You an build the entire browser with `make build` or `make build-dev` for debug
