@@ -1,3 +1,5 @@
+'use client'
+
 import { Logo } from '@lightpanda/common/components/Logo'
 import { siteDetails } from '@lightpanda/common/data/siteDetails'
 import { Navbar as Nextra_Navbar } from 'nextra-theme-docs'

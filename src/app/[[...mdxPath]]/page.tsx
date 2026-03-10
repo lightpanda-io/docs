@@ -2,6 +2,7 @@ import { siteDetails } from '@lightpanda/common/data/siteDetails'
 import type { Metadata } from 'next'
 import { generateStaticParamsFor, importPage } from 'nextra/pages'
 import { useMDXComponents as getMDXComponents } from '../../mdx-components'
+import { DocsAutoJsonLd } from '@/components/lightpanda/DocsAutoJsonLd'
 
 type PageProps = {
   params: Promise<{
@@ -42,9 +43,19 @@ export default async function Page(props: PageProps) {
   const params = await props.params
   const result = await importPage(params.mdxPath)
   const { default: MDXContent, toc, metadata } = result
+  const filePath = (metadata.filePath as string) ?? ''
   return (
-    <Wrapper toc={toc} metadata={metadata}>
-      <MDXContent {...props} params={params} />
-    </Wrapper>
+    <>
+      {filePath && (
+        <DocsAutoJsonLd
+          title={metadata.title?.toString() ?? ''}
+          description={metadata.description?.toString() ?? ''}
+          filePath={filePath}
+        />
+      )}
+      <Wrapper toc={toc} metadata={metadata}>
+        <MDXContent {...props} params={params} />
+      </Wrapper>
+    </>
   )
 }

@@ -30,7 +30,7 @@ function filePathToDocsPath(filePath: string): string {
     .replace(/\/index$/, '')
 }
 
-export const DocsAutoJsonLd = ({ title, description, filePath }: DocsAutoJsonLdProps) => {
+export function buildDocsSchema({ title, description, filePath }: DocsAutoJsonLdProps) {
   const docsPath = filePathToDocsPath(filePath)
   const url = `https://lightpanda.io/docs/${docsPath}`
   const isGuide = isGuidePage(filePath)
@@ -66,7 +66,7 @@ export const DocsAutoJsonLd = ({ title, description, filePath }: DocsAutoJsonLdP
     },
   }
 
-  const schema = isGuide
+  return isGuide
     ? {
         ...baseSchema,
         '@type': 'HowTo' as const,
@@ -80,6 +80,10 @@ export const DocsAutoJsonLd = ({ title, description, filePath }: DocsAutoJsonLdP
         description,
         proficiencyLevel: 'Expert',
       }
+}
+
+export const DocsAutoJsonLd = ({ title, description, filePath }: DocsAutoJsonLdProps) => {
+  const schema = buildDocsSchema({ title, description, filePath })
 
   return (
     <script
