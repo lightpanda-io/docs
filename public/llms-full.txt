@@ -1,0 +1,1703 @@
+# Lightpanda Documentation — Full Content
+
+> This file contains the full text of all 14 Lightpanda docs pages for LLM context.
+> Generated at build time. Last updated: 2026-03-10
+
+---
+
+## What is Lightpanda?
+
+**URL:** https://lightpanda.io/docs/
+**Section:** Overview
+
+
+## What is Lightpanda?
+
+Lightpanda is an AI-native web browser built from scratch for machines. Fast,
+scalable web automation with a minimal memory footprint.
+
+Made for headless usage:
+    - Javascript execution
+    - Support of Web APIs
+    - Compatible with [Playwright](https://playwright.dev/), [Puppeteer](https://pptr.dev/) through CDP
+
+Fast web automation for AI agents, LLM training, scraping and testing:
+    - Ultra-low memory footprint (10x less than Chrome)
+    - Exceptionally fast execution (10x faster than Chrome)
+    - Instant startup
+
+  When using Lightpanda, we recommend that you respect `robots.txt` files and
+  avoid high frequency requesting websites. DDOS could happen fast for small
+  infrastructures.
+
+  Lightpanda can follow `robots.txt` for you, just pass the `--obey_robots`
+  option.
+</Callout>
+
+Next step: [Installation and setup](/quickstart/installation-and-setup)
+
+---
+
+## Build your first data extraction script
+
+**URL:** https://lightpanda.io/docs/quickstart/build-your-first-extraction-script
+**Section:** Quickstart
+**Description:** Learn how to scrape Hackernews search page.
+
+# 3. Extract data
+
+We will now use the browser to run a search on the [HackerNews
+website](https://news.ycombinator.com/). We need Lightpanda here because the
+website uses XHR requests to display search results. We will also run query
+selectors directly in the browser to extract
+and structure the data.
+
+![HackerNews](https://cdn.lightpanda.io/website/assets/images/docs/hn.png)
+
+## Navigate and search
+
+Similar to the Wikipedia example, edit `index.js` to navigate to HackerNews:
+
+  <Tabs.Tab id="puppeteer" className="m-0">
+```javascript copy
+  await page.goto("https://news.ycombinator.com/");
+```
+  </Tabs.Tab>
+  <Tabs.Tab id="playwright" className="m-0">
+```javascript copy
+  await page.goto("https://news.ycombinator.com/");
+```
+  </Tabs.Tab>
+</Tabs>
+
+Type the term lightpanda in the search input at the bottom of the page and
+press the Enter key to submit the search:
+
+  <Tabs.Tab id="puppeteer" className="m-0">
+```javascript copy
+  await page.type('input[name="q"]','lightpanda');
+  await page.keyboard.press('Enter');
+```
+  </Tabs.Tab>
+  <Tabs.Tab id="playwright" className="m-0">
+```javascript copy
+  await page.locator('input[name="q"]').fill('lightpanda');
+  await page.keyboard.press('Enter');
+```
+  </Tabs.Tab>
+</Tabs>
+
+Wait for the search results to be displayed, with a timeout limit of 5 seconds:
+
+  <Tabs.Tab id="puppeteer" className="m-0">
+```javascript copy
+  await page.waitForFunction(() => {
+      return document.querySelector('.Story_container') != null;
+  }, {timeout: 5000});
+```
+  </Tabs.Tab>
+  <Tabs.Tab id="playwright" className="m-0">
+```javascript copy
+  await page.waitForSelector('.Story_container', { timeout: 5000 });
+```
+  </Tabs.Tab>
+</Tabs>
+
+## Extract the data
+
+We will loop over the search results to extract the title, the URL, and a list
+of metadata including the author, the number of points, and comments:
+
+  <Tabs.Tab id="puppeteer" className="m-0">
+```javascript copy
+  // Loop over search results to extract data.
+  const res = await page.evaluate(() => {
+    return Array.from(document.querySelectorAll('.Story_container')).map(row => {
+      return {
+        // Extract the title.
+        title: row.querySelector('.Story_title span').textContent,
+        // Extract the URL.
+        url: row.querySelector('.Story_title a').getAttribute('href'),
+        // Extract the list of meta data.
+        meta: Array.from(row.querySelectorAll('.Story_meta > span:not(.Story_separator, .Story_comment)')).map(row => {
+          return row.textContent;
+        }),
+      }
+    });
+  });
+```
+  </Tabs.Tab>
+  <Tabs.Tab id="playwright" className="m-0">
+```javascript copy
+  // Loop over search results to extract data.
+  const res = await page.evaluate(() => {
+    return Array.from(document.querySelectorAll('.Story_container')).map(row => {
+      return {
+        // Extract the title.
+        title: row.querySelector('.Story_title span').textContent,
+        // Extract the URL.
+        url: row.querySelector('.Story_title a').getAttribute('href'),
+        // Extract the list of meta data.
+        meta: Array.from(row.querySelectorAll('.Story_meta > span:not(.Story_separator, .Story_comment)')).map(row => {
+          return row.textContent;
+        }),
+      }
+    });
+  });
+```
+  </Tabs.Tab>
+</Tabs>
+
+## The final script
+
+Here is the full version of index.js updated to run the search and extract
+results:
+
+  <Tabs.Tab id="puppeteer" className="m-0">
+```javascript copy
+'use strict'
+
+const lpdopts = {
+  host: '127.0.0.1',
+  port: 9222,
+};
+
+const puppeteeropts = {
+  browserWSEndpoint: 'ws://' + lpdopts.host + ':' + lpdopts.port,
+};
+
+(async () => {
+  // Start Lightpanda browser in a separate process.
+  const proc = await lightpanda.serve(lpdopts);
+
+  // Connect Puppeteer to the browser.
+  const browser = await puppeteer.connect(puppeteeropts);
+  const context = await browser.createBrowserContext();
+  const page = await context.newPage();
+
+  // Go to hackernews home page.
+  await page.goto("https://news.ycombinator.com/");
+
+  // Find the search box at the bottom of the page and type the term lightpanda
+  // to search.
+  await page.type('input[name="q"]','lightpanda');
+  // Press enter key to run the search.
+  await page.keyboard.press('Enter');
+
+  // Wait until the search results are loaded on the page, with a 5 seconds
+  // timeout limit.
+  await page.waitForFunction(() => {
+      return document.querySelector('.Story_container') != null;
+  }, {timeout: 5000});
+
+  // Loop over search results to extract data.
+  const res = await page.evaluate(() => {
+    return Array.from(document.querySelectorAll('.Story_container')).map(row => {
+      return {
+        // Extract the title.
+        title: row.querySelector('.Story_title span').textContent,
+        // Extract the URL.
+        url: row.querySelector('.Story_title a').getAttribute('href'),
+        // Extract the list of meta data.
+        meta: Array.from(row.querySelectorAll('.Story_meta > span:not(.Story_separator, .Story_comment)')).map(row => {
+          return row.textContent;
+        }),
+      }
+    });
+  });
+
+  // Display the result.
+  console.log(res);
+
+  // Disconnect Puppeteer.
+  await page.close();
+  await context.close();
+  await browser.disconnect();
+
+  // Stop Lightpanda browser process.
+  proc.stdout.destroy();
+  proc.stderr.destroy();
+  proc.kill();
+})();
+```
+  </Tabs.Tab>
+  <Tabs.Tab id="playwright" className="m-0">
+```javascript copy
+'use strict'
+
+const lpdopts = {
+  host: '127.0.0.1',
+  port: 9222,
+};
+
+const playwrightopts = {
+  endpointURL: 'ws://' + lpdopts.host + ':' + lpdopts.port,
+};
+
+(async () => {
+  // Start Lightpanda browser in a separate process.
+  const proc = await lightpanda.serve(lpdopts);
+
+  // Connect using Playwright's chromium driver to the browser.
+  const browser = await chromium.connectOverCDP(playwrightopts);
+  const context = await browser.newContext({});
+  const page = await context.newPage();
+
+  // Go to hackernews home page.
+  await page.goto("https://news.ycombinator.com/");
+
+  // Find the search box at the bottom of the page and type the term lightpanda
+  // to search.
+  await page.locator('input[name="q"]').fill('lightpanda');
+  // Press enter key to run the search.
+  await page.keyboard.press('Enter');
+
+  // Wait until the search results are loaded on the page, with a 5 seconds
+  // timeout limit.
+  await page.waitForSelector('.Story_container', { timeout: 5000 });
+
+  // Loop over search results to extract data.
+  const res = await page.evaluate(() => {
+    return Array.from(document.querySelectorAll('.Story_container')).map(row => {
+      return {
+        // Extract the title.
+        title: row.querySelector('.Story_title span').textContent,
+        // Extract the URL.
+        url: row.querySelector('.Story_title a').getAttribute('href'),
+        // Extract the list of meta data.
+        meta: Array.from(row.querySelectorAll('.Story_meta > span:not(.Story_separator, .Story_comment)')).map(row => {
+          return row.textContent;
+        }),
+      }
+    });
+  });
+
+  // Display the result.
+  console.log(res);
+
+  // Disconnect Playwright.
+  await page.close();
+  await context.close();
+  await browser.close();
+
+  // Stop Lightpanda browser process.
+  proc.stdout.destroy();
+  proc.stderr.destroy();
+  proc.kill();
+})();
+```
+  </Tabs.Tab>
+</Tabs>
+
+## Run the script
+
+You can run it to see the result immediately:
+
+```sh copy
+node index.js
+```
+```sh
+$ node index.js
+🐼 Running Lightpanda's CDP server… { pid: 598201 }
+[
+  {
+    title: 'Show HN: Lightpanda, an open-source headless browser in Zig',
+    url: 'https://news.ycombinator.com/item?id=42817439',
+    meta: [ '319 points', 'fbouvier', '9 months ago', '137 comments' ]
+  },
+  {
+    title: 'Lightpanda: Headless browser designed for AI and automation',
+    url: 'https://news.ycombinator.com/item?id=42812859',
+    meta: [ '154 points', 'tosh', '9 months ago', '1 comments' ]
+  },
+  {
+    title: 'Show HN: Lightpanda, an open-source headless browser in Zig',
+    url: 'https://news.ycombinator.com/item?id=42430629',
+    meta: [ '7 points', 'fbouvier', '10 months ago', '0 comments' ]
+  },
+  {
+    title: 'Lightpanda: Fast headless browser from scratch in Zig for AI and automation',
+    url: 'https://news.ycombinator.com/item?id=44900394',
+    meta: [ '5 points', 'lioeters', '2 months ago', '0 comments' ]
+  },
+  {
+    title: 'Lightpanda – The Headless Browser',
+    url: 'https://news.ycombinator.com/item?id=42745150',
+    meta: [ '4 points', 'vladkens', '9 months ago', '2 comments' ]
+  },
+  {
+    title: 'Lightpanda raises pre-seed to develop first browser built for machines and AI',
+    url: 'https://news.ycombinator.com/item?id=44263271',
+    meta: [ '1 points', 'cpeterso', '4 months ago', '0 comments' ]
+  }
+]
+```
+
+### Step 4: [Go to production](/quickstart/go-to-production-with-lightpanda-cloud)
+
+---
+
+## Go to production with Lightpanda cloud
+
+**URL:** https://lightpanda.io/docs/quickstart/go-to-production-with-lightpanda-cloud
+**Section:** Quickstart
+**Description:** Learn how to use a remote Lightpanda browser
+
+# 4. Go to production
+
+Use [Lightpanda's cloud offer](https://lightpanda.io/#cloud-offer) to switch from
+a local browser to a remotely managed version.
+
+Create a new account and an API token [here](https://console.lightpanda.io/signup).
+
+To connect, the script will use an environment variable named `LPD_TOKEN`.
+First export the variable with your token.
+
+```sh copy
+export LPD_TOKEN="paste your token here"
+```
+
+Edit `index.js` to change the Puppeteer connection options:
+
+  <Tabs.Tab id="puppeteer" className="m-0">
+```javascript copy
+const puppeteeropts = {
+  browserWSEndpoint: 'wss://euwest.cloud.lightpanda.io/ws?token=' + process.env.LPD_TOKEN,
+};
+```
+  </Tabs.Tab>
+  <Tabs.Tab id="playwright" className="m-0">
+```javascript copy
+const playwrightopts = {
+  endpointURL: 'wss://euwest.cloud.lightpanda.io/ws?token=' + process.env.LPD_TOKEN,
+};
+```
+  </Tabs.Tab>
+</Tabs>
+
+Depending on your location, you can connect using the url
+`wss://euwest.cloud.lightpanda.io/ws` or `wss//uswest.cloud.lightpanda.io/ws`.
+</Callout>
+
+## Clean up local-only lines
+
+You no longer need to start a local browser process because you are using the
+cloud version. You can remove these parts of the script to simplify it:
+
+```javascript
+```
+```javascript
+const lpdopts = {
+  host: '127.0.0.1',
+  port: 9222,
+};
+```
+```javascript
+  // Start Lightpanda browser in a separate process.
+  const proc = await lightpanda.serve(lpdopts);
+```
+```javascript
+  // Stop Lightpanda browser process.
+  proc.stdout.destroy();
+  proc.stderr.destroy();
+  proc.kill();
+```
+
+## Final version
+
+Here is the final script using the cloud browser version:
+
+  <Tabs.Tab id="puppeteer" className="m-0">
+```javascript copy
+'use strict'
+
+const puppeteeropts = {
+  browserWSEndpoint: 'wss://euwest.cloud.lightpanda.io/ws?token=' + process.env.LPD_TOKEN,
+};
+
+(async () => {
+  // Connect Puppeteer to the browser.
+  const browser = await puppeteer.connect(puppeteeropts);
+  const context = await browser.createBrowserContext();
+  const page = await context.newPage();
+
+  // Go to hackernews home page.
+  await page.goto("https://news.ycombinator.com/");
+
+  // Find the search box at the bottom of the page and type the term lightpanda
+  // to search.
+  await page.type('input[name="q"]','lightpanda');
+  // Press enter key to run the search.
+  await page.keyboard.press('Enter');
+
+  // Wait until the search results are loaded on the page, with a 5 seconds
+  // timeout limit.
+  await page.waitForFunction(() => {
+      return document.querySelector('.Story_container') != null;
+  }, {timeout: 5000});
+
+  // Loop over search results to extract data.
+  const res = await page.evaluate(() => {
+    return Array.from(document.querySelectorAll('.Story_container')).map(row => {
+      return {
+        // Extract the title.
+        title: row.querySelector('.Story_title span').textContent,
+        // Extract the URL.
+        url: row.querySelector('.Story_title a').getAttribute('href'),
+        // Extract the list of meta data.
+        meta: Array.from(row.querySelectorAll('.Story_meta > span:not(.Story_separator, .Story_comment)')).map(row => {
+          return row.textContent;
+        }),
+      }
+    });
+  });
+
+  // Display the result.
+  console.log(res);
+
+  // Disconnect Puppeteer.
+  await page.close();
+  await context.close();
+  await browser.disconnect();
+})();
+```
+  </Tabs.Tab>
+  <Tabs.Tab id="playwright" className="m-0">
+```javascript copy
+'use strict'
+
+const playwrightopts = {
+  endpointURL: 'wss://euwest.cloud.lightpanda.io/ws?token=' + process.env.LPD_TOKEN,
+};
+
+(async () => {
+  // Connect using Playwright's chromium driver to the browser.
+  const browser = await chromium.connectOverCDP(playwrightopts);
+  const context = await browser.newContext({});
+  const page = await context.newPage();
+
+  // Go to hackernews home page.
+  await page.goto("https://news.ycombinator.com/");
+
+  // Find the search box at the bottom of the page and type the term lightpanda
+  // to search.
+  await page.locator('input[name="q"]').fill('lightpanda');
+  // Press enter key to run the search.
+  await page.keyboard.press('Enter');
+
+  // Wait until the search results are loaded on the page, with a 5 seconds
+  // timeout limit.
+  await page.waitForSelector('.Story_container', { timeout: 5000 });
+
+  // Loop over search results to extract data.
+  const res = await page.evaluate(() => {
+    return Array.from(document.querySelectorAll('.Story_container')).map(row => {
+      return {
+        // Extract the title.
+        title: row.querySelector('.Story_title span').textContent,
+        // Extract the URL.
+        url: row.querySelector('.Story_title a').getAttribute('href'),
+        // Extract the list of meta data.
+        meta: Array.from(row.querySelectorAll('.Story_meta > span:not(.Story_separator, .Story_comment)')).map(row => {
+          return row.textContent;
+        }),
+      }
+    });
+  });
+
+  // Display the result.
+  console.log(res);
+
+  // Disconnect Playwright.
+  await page.close();
+  await context.close();
+  await browser.close();
+})();
+```
+  </Tabs.Tab>
+</Tabs>
+
+## Interested in on premise deployment?
+
+The core Lightpanda browser will always remain open source, including
+JavaScript execution, CDP compatibility, proxy support, and request
+interception.
+
+If you require on premise deployment, proprietary licensing, or enterprise
+features such as multi-context tabs and sandboxing, reach out to us at
+[hello@lightpanda.io](mailto:hello@lightpanda.io).
+
+## Need help?
+
+Stuck or have questions about your use case? Book a 15-minute technical call with our team.
+<br />
+
+---
+
+## Installation and setup
+
+**URL:** https://lightpanda.io/docs/quickstart/installation-and-setup
+**Section:** Quickstart
+**Description:** Learn how to initialize a Node.js project using Lightpanda browser.
+
+# Quickstart
+
+In this Quickstart, you’ll set up your first project with [Lightpanda browser](https://lightpanda.io) and run it locally in under 10 minutes.
+By the end of this guide, you’ll have:
+* A working [Node.js](https://nodejs.org) project configured with Lightpanda
+* A browser instance that starts and stops programmatically
+* The foundation for running automated scripts using either [Puppeteer](https://pptr.dev) or [Playwright](https://playwright.dev/) to control the browser
+
+1. [Installation and setup](/quickstart/installation-and-setup)
+2. [Your first test](/quickstart/your-first-test)
+3. [Extract data](/quickstart/build-your-first-extraction-script)
+4. [Go to production with Lightpanda cloud](/quickstart/go-to-production-with-lightpanda-cloud)
+
+# 1. Installation and setup
+
+## Prerequisites
+
+You'll need [Node.js](https://nodejs.org/en/download) installed on your computer.
+
+## Initialize the Node.js project
+
+Create a `hn-scraper` directory and initialize a new Node.js project.
+
+```sh copy
+mkdir hn-scraper && \
+  cd hn-scraper && \
+  npm init
+```
+
+You can accept all the default values in the npm init prompts. When done, your
+directory should look like this:
+
+  <FileTree.Folder name="hn-scraper" defaultOpen>
+    <FileTree.File name="package.json" />
+  </FileTree.Folder>
+</FileTree>
+
+## Install Lightpanda dependency
+
+Install Lightpanda by using the [official npm package](https://www.npmjs.com/package/@lightpanda/browser).
+
+  <Tabs.Tab id="npm" className="m-0">
+    ```sh copy
+    npm install --save @lightpanda/browser
+    ```
+  </Tabs.Tab>
+  <Tabs.Tab id="yarn" className="m-0">
+    ```sh copy
+    yarn add @lightpanda/browser
+    ```
+  </Tabs.Tab>
+  <Tabs.Tab id="pnpm" className="m-0">
+  ```sh copy
+  pnpm add @lightpanda/browser
+  ```
+  </Tabs.Tab>
+</Tabs>
+
+Create an `index.js` file with the following content:
+
+```javascript copy
+'use strict'
+
+const lpdopts = {
+  host: '127.0.0.1',
+  port: 9222,
+};
+
+(async () => {
+  // Start Lightpanda browser in a separate process.
+  const proc = await lightpanda.serve(lpdopts);
+
+  // Do your magic ✨
+
+  // Stop Lightpanda browser process.
+  proc.stdout.destroy();
+  proc.stderr.destroy();
+  proc.kill();
+})();
+```
+
+Run your script to start and stop a Lightpanda browser.
+
+```sh copy
+node index.js
+```
+Starting and stopping the browser is almost instant.
+```sh
+$ node index.js
+🐼 Running Lightpanda's CDP server... { pid: 4084512 }
+```
+
+### Step 2: [ Your first test](/quickstart/your-first-test)
+
+---
+
+## Your first test
+
+**URL:** https://lightpanda.io/docs/quickstart/your-first-test
+**Section:** Quickstart
+**Description:** Learn what is Lightpanda browser and run your first scrapping script.
+
+# 2. Your first test
+
+Lightpanda is a headless browser built from scratch. Unlike Headless Chrome, it
+has no UI or graphical rendering for humans, which allows it to start instantly
+and execute pages up to 10x faster.
+
+Unlike [curl](https://curl.se/), which only fetches raw HTML, Lightpanda can
+execute JavaScript and run query selectors directly in the browser.
+
+It's ideal for crawling, testing, and running AI agents that need to interact
+with dynamic web pages, and it’s fully compatible with libraries like
+[Puppeteer](https://pptr.dev/) and [Playwright](https://playwright.dev/).
+
+In this example, you’ll connect cd CDP client, [Puppeteer](https://pptr.dev/) or [Playwright](https://playwright.dev/) to Lightpanda
+and extract all reference links from a [Wikipedia
+page](https://www.wikipedia.org/).
+
+## Connect CDP Client to Lightpanda
+
+Install the [`puppeteer-core`](https://www.npmjs.com/package/puppeteer-core) *or* [`playwright-core`](https://www.npmjs.com/package/playwright-core) npm package.
+
+  Unlike `puppeteer` and `playwright` npm packages,
+  `puppeteer-core` and `playwright-core` don't download a Chromium browser.
+</Callout>
+
+  <Tabs.Tab id="puppeteer" className="m-0">
+```sh copy
+npm install -save puppeteer-core
+```
+  </Tabs.Tab>
+  <Tabs.Tab id="playwright" className="m-0">
+```sh copy
+npm install -save playwright-core
+```
+  </Tabs.Tab>
+</Tabs>
+
+Edit your `index.js` to connect to Lightpanda:
+
+  <Tabs.Tab id="puppeteer" className="m-0">
+```javascript copy
+'use strict'
+
+const lpdopts = {
+  host: '127.0.0.1',
+  port: 9222,
+};
+
+const puppeteeropts = {
+  browserWSEndpoint: 'ws://' + lpdopts.host + ':' + lpdopts.port,
+};
+
+(async () => {
+  // Start Lightpanda browser in a separate process.
+  const proc = await lightpanda.serve(lpdopts);
+
+  // Connect Puppeteer to the browser.
+  const browser = await puppeteer.connect(puppeteeropts);
+  const context = await browser.createBrowserContext();
+  const page = await context.newPage();
+
+  // Do your magic ✨
+  console.log("CDP connection is working");
+
+  // Disconnect Puppeteer.
+  await page.close();
+  await context.close();
+  await browser.disconnect();
+
+  // Stop Lightpanda browser process.
+  proc.stdout.destroy();
+  proc.stderr.destroy();
+  proc.kill();
+})();
+```
+  </Tabs.Tab>
+  <Tabs.Tab id="playwright" className="m-0">
+```javascript copy
+'use strict'
+
+const lpdopts = {
+  host: '127.0.0.1',
+  port: 9222,
+};
+
+const playwrightopts = {
+  endpointURL: 'ws://' + lpdopts.host + ':' + lpdopts.port,
+};
+
+(async () => {
+  // Start Lightpanda browser in a separate process.
+  const proc = await lightpanda.serve(lpdopts);
+
+  // Connect Playwright's chromium driver to the browser.
+  const browser = await chromium.connectOverCDP(playwrightopts);
+  const context = await browser.newContext({});
+  const page = await context.newPage();
+
+  // Do your magic ✨
+  console.log("CDP connection is working");
+
+  // Disconnect Puppeteer.
+  await page.close();
+  await context.close();
+  await browser.close();
+
+  // Stop Lightpanda browser process.
+  proc.stdout.destroy();
+  proc.stderr.destroy();
+  proc.kill();
+})();
+```
+  </Tabs.Tab>
+</Tabs>
+
+Run the script to test the connection between Puppeteer or Playwright and Lightpanda:
+
+```sh copy
+node index.js
+```
+```sh
+$ node index.js
+🐼 Running Lightpanda's CDP server... { pid: 31371 }
+CDP connection is working
+```
+
+## Extract all reference links from Wikipedia
+
+Update `index.js` using `page.goto` to navigate to a Wikipedia page and extract
+all the reference links:
+
+  <Tabs.Tab id="puppeteer" className="m-0">
+```javascript copy
+  // Go to Wikipedia page.
+  await page.goto("https://en.wikipedia.org/wiki/Web_browser");
+```
+  </Tabs.Tab>
+  <Tabs.Tab id="playwright" className="m-0">
+```javascript copy
+  // Go to Wikipedia page.
+  await page.goto("https://en.wikipedia.org/wiki/Web_browser");
+```
+  </Tabs.Tab>
+</Tabs>
+
+Execute a query selector on the browser to extract the links:
+
+  <Tabs.Tab id="puppeteer" className="m-0">
+```javascript copy
+  // Extract all links from the references list of the page.
+  const reflist = await page.evaluate(() => {
+    return Array.from(document.querySelectorAll('.references a.external')).map(row => {
+      return row.getAttribute('href');
+    });
+  });
+```
+  </Tabs.Tab>
+  <Tabs.Tab id="playwright" className="m-0">
+```javascript copy
+  // Extract all links from the references list of the page.
+  const reflist = await page.locator('.references a.external').evaluateAll(links =>
+    links.map(link => link.getAttribute('href'))
+  );
+```
+  </Tabs.Tab>
+</Tabs>
+
+Here’s the full `index.js` file:
+
+  <Tabs.Tab id="puppeteer" className="m-0">
+```javascript copy
+'use strict'
+
+const lpdopts = {
+  host: '127.0.0.1',
+  port: 9222,
+};
+
+const puppeteeropts = {
+  browserWSEndpoint: 'ws://' + lpdopts.host + ':' + lpdopts.port,
+};
+
+(async () => {
+  // Start Lightpanda browser in a separate process.
+  const proc = await lightpanda.serve(lpdopts);
+
+  // Connect Puppeteer to the browser.
+  const browser = await puppeteer.connect(puppeteeropts);
+  const context = await browser.createBrowserContext();
+  const page = await context.newPage();
+
+  // Go to Wikipedia page.
+  await page.goto("https://en.wikipedia.org/wiki/Web_browser");
+
+  // Extract all links from the references list of the page.
+  const reflist = await page.evaluate(() => {
+    return Array.from(document.querySelectorAll('.references a.external')).map(row => {
+      return row.getAttribute('href');
+    });
+  });
+
+  // Display the result.
+  console.log("all reference links", reflist);
+
+  // Disconnect Puppeteer.
+  await page.close();
+  await context.close();
+  await browser.disconnect();
+
+  // Stop Lightpanda browser process.
+  proc.stdout.destroy();
+  proc.stderr.destroy();
+  proc.kill();
+})();
+```
+  </Tabs.Tab>
+  <Tabs.Tab id="playwright" className="m-0">
+```javascript copy
+'use strict'
+
+const lpdopts = {
+  host: '127.0.0.1',
+  port: 9222,
+};
+
+const playwrightopts = {
+  endpointURL: 'ws://' + lpdopts.host + ':' + lpdopts.port,
+};
+
+(async () => {
+  // Start Lightpanda browser in a separate process.
+  const proc = await lightpanda.serve(lpdopts);
+
+  // Connect using Playwright's chromium driver to the browser.
+  const browser = await chromium.connectOverCDP(playwrightopts);
+  const context = await browser.newContext({});
+  const page = await context.newPage();
+
+  // Go to Wikipedia page.
+  await page.goto("https://en.wikipedia.org/wiki/Web_browser");
+
+  // Extract all links from the references list of the page.
+  const reflist = await page.locator('.references a.external').evaluateAll(links =>
+    links.map(link => link.getAttribute('href'))
+  );
+
+  // Display the result.
+  console.log("all reference links", reflist);
+
+  // Disconnect Playwright.
+  await page.close();
+  await context.close();
+  await browser.close();
+
+  // Stop Lightpanda browser process.
+  proc.stdout.destroy();
+  proc.stderr.destroy();
+  proc.kill();
+})();
+```
+  </Tabs.Tab>
+</Tabs>
+
+## Execute the link extraction
+
+Execute index.js to see the links directly in your console:
+```sh copy
+node index.js
+```
+
+```sh
+$ node index.js
+🐼 Running Lightpanda's CDP server... { pid: 34389 }
+all reference links [
+  'https://gs.statcounter.com/browser-market-share',
+  'https://radar.cloudflare.com/reports/browser-market-share-2024-q1',
+  'https://web.archive.org/web/20240523140912/https://www.internetworldstats.com/stats.htm',
+  'https://www.internetworldstats.com/stats.htm',
+  'https://www.reference.com/humanities-culture/purpose-browser-e61874e41999ede',
+```
+
+### Step 3: [Extract data](/quickstart/build-your-first-extraction-script)
+
+---
+
+## Build from sources
+
+**URL:** https://lightpanda.io/docs/open-source/guides/build-from-sources
+**Section:** Open Source
+**Description:** Lightpanda is written with Zig@0.14.0. You will have to install it with the right version in order to build the project.
+
+# Build from sources
+
+## Prerequisites
+
+Lightpanda is written with [Zig](https://ziglang.org/) `0.14.0`. You will have to
+install it with the right version in order to build the project.
+
+You need also to install [Rust](https://rust-lang.org/tools/install/) for building deps.
+
+Lightpanda also depends on
+[zig-js-runtime](https://github.com/lightpanda-io/zig-js-runtime/) (with v8),
+[Libcurl](https://curl.se/libcurl/) and [html5ever](https://github.com/servo/html5ever).
+
+To be able to build the v8 engine for zig-js-runtime, you have to install some libs:
+
+**For Debian/Ubuntu based Linux:**
+
+```bash copy
+sudo apt install xz-utils ca-certificates \
+        pkg-config libglib2.0-dev \
+        clang make curl git
+```
+
+**For MacOS, you need [Xcode](https://developer.apple.com/xcode/) and the following pacakges from homebrew:**
+
+```bash copy
+brew install cmake
+```
+
+## Build and run
+
+You an build the entire browser with `make build` or `make build-dev` for debug
+env.
+
+But you can directly use the zig command to run in debug mode:
+
+```bash copy
+zig build run
+```
+
+    The build will download and build V8. It can takes a lot of time, more than
+    1 hour.
+    You can save this part by donwloading manually a
+    [pre-built](https://github.com/lightpanda-io/zig-v8-fork/releases version)
+    and use the `-Dprebuilt_v8_path=` option.
+</Callout>
+
+### Embed v8 snapshot
+
+Lighpanda uses v8 snapshot. By default, it is created on startup but you can
+embed it by using the following commands:
+
+Generate the snapshot.
+```bash copy
+zig build snapshot_creator -- src/snapshot.bin
+```
+
+Build using the snapshot binary.
+```bash copy
+zig build -Dsnapshot_path=../../snapshot.bin
+```
+
+See [#1279](https://github.com/lightpanda-io/browser/pull/1279) for more details.
+
+---
+
+## Configure a proxy
+
+**URL:** https://lightpanda.io/docs/open-source/guides/configure-a-proxy
+**Section:** Open Source
+**Description:** You can configure a proxy for use with the Lightpanda browser.
+
+# Configure a proxy
+
+Lightpanda supports HTTP and HTTPS proxies with basic or bearer
+authentication. You can configure the proxy when starting the browser.
+
+## Configure HTTP proxy
+
+Use the CLI option `--http_proxy` when starting Lightpanda to configure the
+proxy. Ensure your proxy address starts with `http://` or `https://`.
+
+Use a local proxy with the `fetch` command:
+```sh copy
+./lightpanda fetch --http_proxy http://127.0.0.1:3000 https://lightpanda.io
+```
+Or configure the proxy with `serve` for the CDP server. All outgoing requests will use the proxy.
+```sh copy
+./lightpanda serve --http_proxy http://127.0.0.1:3000
+```
+
+### HTTP proxy with basic auth
+
+You can configure [basic
+auth](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Authentication#basic)
+for the proxy using the `username:password@` format in the proxy address. It
+works for both `fetch` and `serve` commands.
+
+```sh copy
+./lightpanda fetch --http_proxy 'http://me:my-password@127.0.0.1:3000' https://lightpanda.io
+```
+
+### HTTP proxy with bearer auth
+
+Lightpanda supports [bearer
+auth](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Authentication#bearer)
+to authenticate with the `--proxy_bearer_token`. It works for both `fetch` and
+`serve` commands.
+
+This option will add a `Proxy-Authorization` header all the outgoing requests.
+
+```sh copy
+./lightpanda fetch --http_proxy 'http://127.0.0.1:3000' --proxy_bearer_token 'MY-TOKEN' https://lightpanda.io
+```
+
+## Configure a proxy from your Puppeteer/Playwright script
+
+Instead of configuring your proxy auth on Lightpanda's start, you can pass your
+username and password in flight from your script using request interceptions.
+
+### Puppeteer
+
+With Puppeteer, you have to configure the proxy address when starting
+Lightpanda.
+
+```sh copy
+./lightpanda fetch --http_proxy 'http://127.0.0.1:3000'
+```
+
+Then you can call `page.authenticate` function to inject your authentication
+from your script.
+
+```javascript copy
+const page = await context.newPage();
+
+// Set credentials for HTTP Basic Auth
+await page.authenticate({
+  username: 'my_username',
+  password: 'my_password',
+});
+```
+
+You can find the full example in our
+[demo repository](https://github.com/lightpanda-io/demo/blob/main/puppeteer/proxy_auth.js).
+
+### Playwright
+
+With Playwright, configure the proxy when creating the browser's context.
+
+```javascript copy
+const context = await browser.newContext({
+    baseURL: baseURL,
+    proxy: {
+      server: 'http://127.0.0.1:3000',
+      username: 'my_username',
+      password: 'my_password',
+    },
+});
+
+const page = await context.newPage();
+```
+You can find the full example in our
+[demo repository](https://github.com/lightpanda-io/demo/blob/main/playwright/proxy_auth.js).
+
+---
+
+## Use Stagehand
+
+**URL:** https://lightpanda.io/docs/open-source/guides/use-stagehand
+**Section:** Open Source
+**Description:** Here is how to use Stagehand framwork with the Lightpanda browser.
+
+# Use Stagehand with Lightpanda
+
+[Stagehand](https://www.stagehand.dev/) is a popular, [open
+source](https://github.com/browserbase/stagehand) AI Browser Automation
+Framework.
+
+With Stagehand you can use natural language and code to control browser.
+
+Since Lightpanda supports [Accessibilty
+tree](https://github.com/lightpanda-io/browser/pull/1308), you can use it
+instead of Chrome with your Stagehand script.
+
+## Install the Lightanda and Stagehand dependencies
+
+If not set, create a new npm project and install Stagehand depencies.
+
+```sh copy
+npm init
+```
+
+```sh copy
+npm install @browserbasehq/stagehand @lightpanda/browser
+```
+
+## Write your Stagehand script with Lightpanda
+
+Now you can create your Stagehand's. script to connectm by editing `index.js`
+file.
+
+```javascript copy
+'use strict'
+
+const lpdopts = { host: '127.0.0.1', port: 9222 };
+
+const stagehandopts = {
+  // Enable LOCAL env to configure the CDP url manually in the launch options.
+  env: "LOCAL",
+  localBrowserLaunchOptions: {
+      cdpUrl: 'ws://' + lpdopts.host + ':' + lpdopts.port,
+  },
+  // You need an ANTHROPIC_API_KEY env var.
+  model: "anthropic/claude-haiku-4-5",
+  verbose: 0,
+};
+
+(async () => {
+  // Start Lightpanda browser in a separate process.
+  const proc = await lightpanda.serve(lpdopts);
+
+  try {
+    // Connect Stagehand to the browser.
+    const stagehand = new Stagehand(stagehandopts);
+
+    await stagehand.init();
+
+    // Impportant: in the official documentation, Stagehand uses the default
+    // existing page. But Lightpanda requires an explicit page's creation
+    // instead.
+    const page = await stagehand.context.newPage();
+
+    await page.goto('https://demo-browser.lightpanda.io/amiibo/', {waitUntil: "networkidle"});
+    const name = await stagehand.extract("Extract character's name", z.string());
+    console.log("===", name);
+
+    await stagehand.close()
+
+  } finally {
+    // Stop Lightpanda browser process.
+    proc.stdout.destroy();
+    proc.stderr.destroy();
+    proc.kill();
+  }
+})();
+```
+
+## Run your script
+
+Before running you script, make sure you have a valid Anthropic api key
+exported into the env var `ANTHROPIC_API_KEY`.
+You can also use [another
+model](https://docs.stagehand.dev/v3/configuration/models) supported by
+Stagehand.
+
+```sh copy
+node index.js
+```
+
+You should see in the following logs:
+```sh
+=== Sandy
+```
+
+---
+
+## Installation
+
+**URL:** https://lightpanda.io/docs/open-source/installation
+**Section:** Open Source
+**Description:** You can download the last binary from the nightly builds for Linux x86_64 and MacOS aarch64 or use Docker image.
+
+# Installation
+
+## Install from Docker
+
+Lightpanda provides [official Docker
+images](https://hub.docker.com/r/lightpanda/browser) for both Linux amd64 and
+arm64 architectures.
+
+The following command fetches the Docker image and starts a new container exposing Lightpanda's CDP server on port `9222`.
+
+```sh copy
+docker run -d --name lightpanda -p 9222:9222 lightpanda/browser:nightly
+```
+
+## Install from the nightly builds
+
+The latest binary can be downloaded from the [nightly
+builds](https://github.com/lightpanda-io/browser/releases/tag/nightly) for
+Linux and MacOS.
+
+### Linux x86_64
+```bash copy
+curl -L -o lightpanda \
+  https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-x86_64-linux && \
+  chmod a+x ./lightpanda
+```
+
+### Linux aarch64
+```bash copy
+curl -L -o lightpanda \
+  https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-aarch64-linux && \
+  chmod a+x ./lightpanda
+```
+
+### MacOS aarch64
+```sh copy
+curl -L -o lightpanda \
+  https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-aarch64-macos && \
+  chmod a+x ./lightpanda
+```
+
+### MacOS x86_64
+```sh copy
+curl -L -o lightpanda \
+  https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-x86_64-macos && \
+  chmod a+x ./lightpanda
+```
+
+*For Windows + WSL2*
+
+The Lightpanda browser is compatible to run on Windows inside WSL (Windows Subsystem for Linux). If WSL has not been installed before follow these steps (for more information see: [MS Windows install WSL](https://learn.microsoft.com/en-us/windows/wsl/install)).
+Install & open WSL + Ubuntu from an **administrator** shell:
+  1. `wsl --install`
+  2. -- restart --
+  3. `wsl --install -d Ubuntu`
+  4. `wsl`
+
+Once WSL and a Linux distribution have been installed the browser can be installed in the same way it is installed for Linux.
+Inside WSL install the Lightpanda browser:
+```bash copy
+curl -L -o lightpanda https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-x86_64-linux && \
+chmod a+x ./lightpanda
+```
+It is recommended to install clients like Puppeteer on the Windows host.
+
+## Telemetry
+By default, Lightpanda collects and sends usage telemetry. This can be disabled by setting an environment variable `LIGHTPANDA_DISABLE_TELEMETRY=true`. You can read Lightpanda's privacy policy at: [https://lightpanda.io/privacy-policy](https://lightpanda.io/privacy-policy).
+
+---
+
+## Systems requirements
+
+**URL:** https://lightpanda.io/docs/open-source/systems-requirements
+**Section:** Open Source
+**Description:** Debian 12, Ubuntu 22.04, Ubuntu 24.04, on x86-64 and arm64 architecture. macOS 13 Ventura, or later.
+
+# Systems requirements
+
+- Debian 12, Ubuntu 22.04, Ubuntu 24.04, on x86-64 and arm64 architecture.
+- macOS 13 Ventura, or later.
+- Windows 10+, Windows Server 2016+ or Windows Subsystem for Linux (WSL).
+
+---
+
+## Usage
+
+**URL:** https://lightpanda.io/docs/open-source/usage
+**Section:** Open Source
+**Description:** You can dump an URL manually or start a CDP server.
+
+# Usage
+
+Use `./lightpanda help` for all options.
+
+## Dump an URL
+
+```sh copy
+./lightpanda fetch --obey_robots --dump https://demo-browser.lightpanda.io/campfire-commerce/
+```
+```sh
+INFO  http : navigate . . . . . . . . . . . . . . . . . . . . [+0ms]
+      url = https://demo-browser.lightpanda.io/campfire-commerce/
+      method = GET
+      reason = address_bar
+      body = false
+
+INFO  browser : executing script . . . . . . . . . . . . . .  [+196ms]
+      src = https://demo-browser.lightpanda.io/campfire-commerce/script.js
+      kind = javascript
+      cacheable = true
+
+INFO  http : request complete . . . . . . . . . . . . . . . . [+223ms]
+      source = xhr
+      url = https://demo-browser.lightpanda.io/campfire-commerce/json/product.json
+      status = 200
+
+INFO  http : request complete . . . . . . . . . . . . . . . . [+234ms]
+      source = xhr
+      url = https://demo-browser.lightpanda.io/campfire-commerce/json/reviews.json
+      status = 200
+<!DOCTYPE html>
+```
+
+### Options
+
+The fetch command accepts options:
+* `--dump` Dumps document to stdout.
+* `--with_base` Add a `<base>` tag in dump
+* `--log_level` change the log level, default is `info`. `--log_level debug`.
+* `--http_proxy` The HTTP proxy to use for all HTTP requests. A username:password can be included for basic authentication. `--http_proxy http://user:password@127.0.0.1:3000`.
+* `--http_timeout` The maximum time, in milliseconds, the transfer is allowedto complete. 0 means it never times out. Defaults to `10000`.
+* `--obey_robots` Fetches and obeys the robots.txt (if available) of the web pages we make requests towards.
+
+See also [how to configure proxy](/open-source/guides/configure-a-proxy).
+
+## Start a CDP server
+
+To control Lightpanda with [Chrome Devtool Protocol](https://chromedevtools.github.io/devtools-protocol/) (CDP) clients like [Playwright](https://playwright.dev/) or [Puppeteer](https://pptr.dev/), you
+need to start the browser as a CDP server.
+
+```sh copy
+./lightpanda serve --obey_robots --host 127.0.0.1 --port 9222
+```
+```sh
+INFO  app : server running . . . . . . . . . . . . . . . . .  [+0ms]
+      address = 127.0.0.1:9222
+```
+### Options
+
+The fetch command accepts options:
+* `--host` Host of the CDP server, default `127.0.0.1`.
+* `--port` Port of the CDP server, default `9222`.
+* `--timeout` Inactivity timeout in seconds before disconnecting clients. Default `10` seconds.
+* `--log_level` change the log level, default is `info`. `--log_level debug`.
+* `--http_proxy` The HTTP proxy to use for all HTTP requests. A username:password can be included for basic authentication. `--http_proxy http://user:password@127.0.0.1:3000`.
+* `--http_timeout` The maximum time, in milliseconds, the transfer is allowedto complete. 0 means it never times out. Defaults to `10000`.
+* `--obey_robots` Fetches and obeys the robots.txt (if available) of the web pages we make requests towards.
+
+See also [how to configure proxy](/open-source/guides/configure-a-proxy).
+
+### Connect with Puppeteer
+
+Once the CDP server started, you can run a [Puppeteer](https://playwright.dev/)
+script by configuring the `browserWSEndpoint`.
+
+```js copy
+'use strict'
+
+// use browserWSEndpoint to pass the Lightpanda's CDP server address.
+const browser = await puppeteer.connect({
+  browserWSEndpoint: "ws://127.0.0.1:9222",
+})
+
+// The rest of your script remains the same.
+const context = await browser.createBrowserContext()
+const page = await context.newPage()
+
+// Dump all the links from the page.
+await page.goto('https://wikipedia.com/')
+
+const links = await page.evaluate(() => {
+  return Array.from(document.querySelectorAll('a')).map(row => {
+    return row.getAttribute('href')
+  })
+})
+
+console.log(links)
+
+await page.close()
+await context.close()
+await browser.disconnect()
+```
+
+### Connect with Playwright
+
+Try Lightpanda with [Playwright](https://playwright.dev/) by using
+`chromium.connectOverCDP` to connect.
+
+```js copy
+
+// use connectOverCDP to pass the Lightpanda's CDP server address.
+const browser = await chromium.connectOverCDP('ws://127.0.0.1:9222');
+
+// The rest of your script remains the same.
+const context = await browser.newContext({});
+const page = await context.newPage();
+
+await page.goto('https://wikipedia.com/');
+
+const title = await page.locator('h1').textContent();
+console.log(title);
+
+await page.close();
+await context.close();
+await browser.close();
+```
+
+### Connect with Chromedp
+
+Use Lightpanda with [Chromedp](https://github.com/chromedp/chromedp), a Golang
+client for CDP servers.
+
+```go copy
+package main
+
+    "context"
+    "flag"
+    "log"
+
+    "github.com/chromedp/chromedp"
+)
+
+func main() {
+    ctx, cancel = chromedp.NewRemoteAllocator(ctx,
+        "ws://127.0.0.1:9222", chromedp.NoModifyURL,
+    )
+    defer cancel()
+
+    ctx, cancel := chromedp.NewContext(allocatorContext)
+    defer cancel()
+
+    var title string
+    if err := chromedp.Run(ctx,
+        chromedp.Navigate("https://wikipedia.com/"),
+        chromedp.Title(&title),
+    ); err != nil {
+        log.Fatalf("Failed getting page's title: %v", err)
+    }
+
+    log.Println("Got title of:", title)
+}
+```
+
+---
+
+## Getting started
+
+**URL:** https://lightpanda.io/docs/cloud-offer/getting-started
+**Section:** Cloud
+**Description:** Start using remote browsers easily with Lightpanda cloud.
+
+# Getting started
+
+## Create an account
+
+You can create a new account with an email on
+[https://lightpanda.io](https://lightpanda.io/#cloud-offer).
+
+You will receive an invitation by email to generate your token.
+Be careful to save your token, we won't display it again.
+
+## Start using a browser
+
+With your token, you can immediately use a remote browser with your CDP client.
+
+Example using [Playwright](https://playwright.dev/).
+
+```js copy
+
+const browser = await playwright.chromium.connectOverCDP(
+  "wss://euwest.cloud.lightpanda.io/ws?token=TOKEN",
+);
+const context = await browser.newContext();
+const page = await context.newPage();
+
+//...
+
+await page.close();
+await context.close();
+await browser.close();
+```
+
+You have access to Lightpanda and Chromium browsers.
+
+Depending on your location, you can connect using the url
+`wss://euwest.cloud.lightpanda.io/ws` or `wss//uswest.cloud.lightpanda.io/ws`.
+</Callout>
+
+## Sign in to the dashboard
+
+You can access your dashboard on [https://console.lightpanda.io](https://console.lightpanda.io).
+
+Use your email and your token to log in.
+
+In the dashboard, you can review your last browsing sessions.
+
+---
+
+## CDP
+
+**URL:** https://lightpanda.io/docs/cloud-offer/tools/cdp
+**Section:** Cloud
+**Description:** Connect to Lightpanda Cloud offer using Chrome Devtool Protocol.
+
+# Chrome Devtool Protocol
+
+Use the [Chrome Devtool Protocol](https://chromedevtools.github.io/devtools-protocol/) (CDP) to connect to browsers.
+Most of existing tools to control a browser like Puppeteer, Playwright or chromedp are compatible with CDP.
+
+## Usage
+
+Depending on your location, you can connect to the CDP using the url
+`wss://euwest.cloud.lightpanda.io/ws` or `wss//uswest.cloud.lightpanda.io/ws`.
+
+You have to add your token as query string parameter: `token=YOUR_TOKEN`.
+
+```text copy
+// Server in west europe
+wss://euwest.cloud.lightpanda.io/ws?token=TOKEN
+```
+
+```text copy
+// Server in west US
+wss://uswest.cloud.lightpanda.io/ws?token=TOKEN
+```
+
+### Options
+
+The CDP url takes options to configure the browser as query string parameters.
+
+#### Browser
+
+By default, the CDP serves [Lightpanda browsers](https://github.com/lightpanda-io/browser).
+But you can select Google Chrome browser using `browser=chrome` parameter in the url.
+`browser=lightpanda` forces the usage of Lightpanda browser.
+
+```text copy
+wss://euwest.cloud.lightpanda.io/ws?browser=chrome&token=TOKEN
+```
+#### Proxies
+
+**fast_dc**
+
+You can configure proxies for your browser with `proxy` query string parameter.
+By default, the proxy used is `fast_dc`, a single shared datacenter IP.
+
+**datacenter**
+
+Set `datacenter` proxy to use a pool of shared datacenter IPs. The IPs rotate automatically.
+
+`datacenter` proxy accepts an optional `country` query string parameter, a two letter country code.
+
+Example using a german IP with a lightpanda browser.
+
+```text copy
+wss://euwest.cloud.lightpanda.io/ws?proxy=datacenter&country=de&token=TOKEN
+```
+
+Please [contact us](mailto:hello@lightpanda.io) to get access to additional proxies for your specificc use case or to configure your own proxy with Lightpanda Cloud offer.
+
+The service
+
+## Connection examples
+
+You can find more script examples in the [demo](https://github.com/lightpanda-io/demo/) repository.
+
+### Playwright
+
+Use Lightpanda CDP with [Playwright](https://playwright.dev/).
+
+```js copy
+
+const browser = await playwright.chromium.connectOverCDP(
+  "wss://euwest.cloud.lightpanda.io/ws?token=TOKEN",
+);
+const context = await browser.newContext();
+const page = await context.newPage();
+
+//...
+
+await page.close();
+await context.close();
+await browser.close();
+```
+
+More examples in [demo/playwright](https://github.com/lightpanda-io/demo/tree/main/playwright).
+
+### Puppeteer
+
+Use Lightpanda CDP with [Puppeteer](https://pptr.dev/).
+
+```js copy
+
+const browser = await puppeteer.connect({
+    browserWSEndpoint: "wss://euwest.cloud.lightpanda.io/ws?token=TOKEN",
+});
+const context = await browser.createBrowserContext();
+const page = await context.newPage();
+
+// ...
+
+await page.close();
+await context.close();
+await browser.disconnect();
+```
+
+More examples in [demo/puppeteer](https://github.com/lightpanda-io/demo/tree/main/puppeteer).
+
+### Chromedp
+
+Use Lightpanda CDP with [Chromedp](https://github.com/chromedp/chromedp).
+
+```go copy
+package main
+
+	"context"
+	"log"
+
+	"github.com/chromedp/chromedp"
+)
+
+func main() {
+	ctx, cancel := chromedp.NewRemoteAllocator(context.Background(),
+		"wss://euwest.cloud.lightpanda.io/ws?token=TOKEN", chromedp.NoModifyURL,
+	)
+	defer cancel()
+
+	ctx, cancel = chromedp.NewContext(ctx)
+	defer cancel()
+
+	var title string
+	if err := chromedp.Run(ctx,
+		chromedp.Navigate("https://lightpanda.io"),
+		chromedp.Title(&title),
+	); err != nil {
+		log.Fatalf("Failed getting title of lightpanda.io: %v", err)
+	}
+
+	log.Println("Got title of:", title)
+}
+```
+More examples in [demo/chromedp](https://github.com/lightpanda-io/demo/tree/main/chromedp).
+
+---
+
+## MCP
+
+**URL:** https://lightpanda.io/docs/cloud-offer/tools/mcp
+**Section:** Cloud
+**Description:** Control Lightpanda's cloud offer using Model Context Protocol
+
+# Model Context Protocol
+
+Use the [Model Context Protocol](https://modelcontextprotocol.io) (MCP) to
+easily control Lightpanda browser with your AI applications.
+
+## Usage
+
+The Lightpanda MCP service supports only [SSE](https://modelcontextprotocol.io/specification/2024-11-05/basic/transports#http-with-sse) transport.
+
+Depending on your location, you can connect to the MCP using the url
+`wss://euwest.cloud.lightpanda.io/mcp/sse` or `wss//uswest.cloud.lightpanda.io/mcp/sse`.
+
+### Authentication
+
+An authentication is required, you can either pass your token with the `token` query string parameter in the url, or use the `Authorization: Bearer` HTTP header.
+
+Example with the query string.
+```text copy
+https://euwest.cloud.lightpanda.io/mcp/sse?token=TOKEN
+```
+
+Example with the Bearer HTTP header.
+```text copy
+https://euwest.cloud.lightpanda.io/mcp/sse
+Authorization: Bearer TOKEN
+```
+
+## Tools
+
+* `search` Search a term on web search engine and get the search results.
+* `goto` Navigate to a specified URL and load the page inmemory so it can be reused later for info extraction.
+* `markdown` Get the page in memory content in markdown format.Run a goto before getting markdown.
+* `links` Extract all links from the page in memory.Run a goto before getting links.
+
+For more advanced use cases, you can use [CDP](/cloud-offer/tools/cdp) connection with [Playwright MCP](https://github.com/microsoft/playwright-mcp).
