@@ -1,4 +1,6 @@
 'use client'
-import EmbedCalcom from '@calcom/embed-react'
+import dynamic from 'next/dynamic'
 
-export const Calcom = async () => <EmbedCalcom calLink="team/lightpanda/technical-support" />
+const EmbedCalcom = dynamic(() => import('@calcom/embed-react'), { ssr: false })
+
+export const Calcom = () => <EmbedCalcom calLink="team/lightpanda/technical-support" />

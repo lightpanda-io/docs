@@ -1,24 +1,14 @@
-'use client'
-
 import { Fira_Code, Fira_Sans } from 'next/font/google'
-import { Layout } from 'nextra-theme-docs'
 import { Head as NextraHead } from 'nextra/components'
 import { getPageMap } from 'nextra/page-map'
 
-import { DocsJsonLd } from '@/components/lightpanda/DocsJsonLd'
-import { Footer } from '@/components/lightpanda/Footer'
-import { Navbar } from '@/components/lightpanda/Navbar'
+import { DocsClientLayout } from '@/components/lightpanda/DocsClientLayout'
 import { DNSPrefetch } from '@lightpanda/common/components/DNSPrefetch'
 import { Favicon } from '@lightpanda/common/components/Favicon'
-import { Providers } from '@lightpanda/common/components/Providers'
-import { SocialIcons } from '@lightpanda/common/components/SocialIcons'
-import { Version } from '@lightpanda/common/components/Version'
-import { siteDetails } from '@lightpanda/common/data/siteDetails'
 
 import 'nextra-theme-docs/style.css'
 import '@lightpanda/common/styles/variables.css'
 import './globals.css'
-import { Canonical } from '@/components/lightpanda/Canonical'
 
 const firaSans = Fira_Sans({
   subsets: ['latin'],
@@ -31,12 +21,12 @@ const firaCode = Fira_Code({
   style: ['normal'],
 })
 
-// eslint-disable-next-line @next/next/no-async-client-component
 export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const pageMap = await getPageMap()
   return (
     <html lang="en" dir="ltr" suppressHydrationWarning>
       <NextraHead
@@ -50,47 +40,42 @@ export default async function RootLayout({
           lightness: 65,
         }}
       >
-        <style jsx global>{`
-        :root {
-          --main-font: ${firaSans.style.fontFamily}, sans-serif;
-          --code-font: ${firaCode.style.fontFamily}, sans-serif;
-        }
-        `}</style>
+        <style dangerouslySetInnerHTML={{ __html: `
+          :root {
+            --main-font: ${firaSans.style.fontFamily}, sans-serif;
+            --code-font: ${firaCode.style.fontFamily}, sans-serif;
+          }
+        ` }} />
         <Favicon />
         <DNSPrefetch />
         <link rel="alternate" type="text/markdown" href="/llms.txt" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'WebSite',
+              name: 'Lightpanda Documentation',
+              url: 'https://lightpanda.io/docs',
+              description: 'Official documentation for Lightpanda headless browser — installation, quickstart guides, API reference, and cloud deployment.',
+              about: { '@id': 'https://lightpanda.io/#software' },
+              publisher: {
+                '@type': 'Organization',
+                name: 'Lightpanda',
+                url: 'https://lightpanda.io',
+                logo: {
+                  '@type': 'ImageObject',
+                  url: 'https://cdn.lightpanda.io/website/assets/images/opengraph/og.png',
+                },
+              },
+            }).replace(/</g, '\\u003c'),
+          }}
+        />
       </NextraHead>
       <body data-pagefind-body>
-        <Providers>
-          <Layout
-            navbar={<Navbar />}
-            pageMap={await getPageMap()}
-            docsRepositoryBase={siteDetails.docsRepositoryBase}
-            footer={<Footer />}
-            feedback={{
-              content: 'Question? Send us feedback',
-            }}
-            toc={{
-              extraContent: (
-                <>
-                  <Version />
-                  <SocialIcons
-                    socials={siteDetails.socials}
-                    classNames="flex flex-row items-center justify-start gap-4 w-1/2 my-4"
-                  />
-                </>
-              ),
-            }}
-            darkMode={false}
-            nextThemes={{
-              defaultTheme: 'dark',
-            }}
-          >
-            <DocsJsonLd />
-            <Canonical />
-            {children}
-          </Layout>
-        </Providers>
+        <DocsClientLayout pageMap={pageMap}>
+          {children}
+        </DocsClientLayout>
       </body>
     </html>
   )
