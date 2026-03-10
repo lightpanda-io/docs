@@ -11,8 +11,8 @@
  * Add to package.json: "prebuild": "node scripts/generate-llms.mjs"
  */
 
-import { readdir, readFile, writeFile, stat } from 'node:fs/promises'
-import { join, relative, basename, dirname } from 'node:path'
+import { readFile, readdir, stat, writeFile } from 'node:fs/promises'
+import { basename, dirname, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -61,12 +61,12 @@ function parseFrontmatter(content) {
 function stripMdx(body) {
   return body
     .split('\n')
-    .filter((line) => !line.startsWith('import '))
-    .filter((line) => !line.match(/^<[A-Z]/))
-    .filter((line) => !line.match(/^\s*\/>/))
-    .filter((line) => !line.match(/^\s+\{ name:/)) // HowToJsonLd step props
-    .filter((line) => !line.match(/^\s+steps=\{/))
-    .filter((line) => !line.match(/^\s+\]\}/))
+    .filter(line => !line.startsWith('import '))
+    .filter(line => !line.match(/^<[A-Z]/))
+    .filter(line => !line.match(/^\s*\/>/))
+    .filter(line => !line.match(/^\s+\{ name:/))
+    .filter(line => !line.match(/^\s+steps=\{/))
+    .filter(line => !line.match(/^\s+\]\}/))
     .join('\n')
     .replace(/\n{3,}/g, '\n\n')
     .trim()
@@ -160,7 +160,7 @@ ${Object.entries(grouped)
   .map(
     ([section, sectionPages]) => `### ${section}
 
-${sectionPages.map((p) => `- [${p.title}](${SITE_URL}/docs/${p.path})${p.description ? ` — ${p.description}` : ''}`).join('\n')}`
+${sectionPages.map(p => `- [${p.title}](${SITE_URL}/docs/${p.path})${p.description ? ` — ${p.description}` : ''}`).join('\n')}`,
   )
   .join('\n\n')}
 `
@@ -173,7 +173,7 @@ ${sectionPages.map((p) => `- [${p.title}](${SITE_URL}/docs/${p.path})${p.descrip
 
 ${pages
   .map(
-    (p) => `---
+    p => `---
 
 ## ${p.title}
 
@@ -181,7 +181,7 @@ ${pages
 **Section:** ${p.section}
 ${p.description ? `**Description:** ${p.description}` : ''}
 
-${stripMdx(p.body)}`
+${stripMdx(p.body)}`,
   )
   .join('\n\n')}
 `
@@ -193,7 +193,7 @@ ${stripMdx(p.body)}`
   console.log(`✓ Generated llms-full.txt (${pages.length} pages, full content)`)
 }
 
-main().catch((err) => {
+main().catch(err => {
   console.error('Failed to generate llms files:', err)
   process.exit(1)
 })
