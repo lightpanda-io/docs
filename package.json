@@ -5,7 +5,9 @@
   "license": "Apache-2.0",
   "description": "Lightpanda Documentation",
   "scripts": {
+    "generate-llms": "node scripts/generate-llms.mjs",
     "dev": "next -p 1414",
+    "prebuild": "node scripts/generate-llms.mjs",
     "build": "NODE_ENV='production' next build",
     "postbuild": "pagefind --site ./out --output-path ./out/_pagefind",
     "typecheck": "npx -p typescript tsc --noEmit",

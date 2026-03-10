@@ -1,0 +1,40 @@
+# Lightpanda Documentation
+
+> Official documentation for Lightpanda headless browser — installation, quickstart guides, API reference, and cloud deployment.
+
+## About Lightpanda
+
+Lightpanda is a headless browser engine built from scratch in Zig for web automation, web scraping, and AI agents. It delivers 10× faster execution and 10× less memory than Chrome headless.
+
+- [Website](https://lightpanda.io)
+- [Blog](https://lightpanda.io/blog)
+- [GitHub](https://github.com/lightpanda-io/browser)
+- [Discord](https://discord.gg/K63XeymfB5)
+
+## Documentation Pages (14 pages)
+
+### Overview
+
+- [What is Lightpanda?](https://lightpanda.io/docs/)
+
+### Quickstart
+
+- [Build your first data extraction script](https://lightpanda.io/docs/quickstart/build-your-first-extraction-script) — Learn how to scrape Hackernews search page.
+- [Go to production with Lightpanda cloud](https://lightpanda.io/docs/quickstart/go-to-production-with-lightpanda-cloud) — Learn how to use a remote Lightpanda browser
+- [Installation and setup](https://lightpanda.io/docs/quickstart/installation-and-setup) — Learn how to initialize a Node.js project using Lightpanda browser.
+- [Your first test](https://lightpanda.io/docs/quickstart/your-first-test) — Learn what is Lightpanda browser and run your first scrapping script.
+
+### Open Source
+
+- [Build from sources](https://lightpanda.io/docs/open-source/guides/build-from-sources) — Lightpanda is written with Zig@0.14.0. You will have to install it with the right version in order to build the project.
+- [Configure a proxy](https://lightpanda.io/docs/open-source/guides/configure-a-proxy) — You can configure a proxy for use with the Lightpanda browser.
+- [Use Stagehand](https://lightpanda.io/docs/open-source/guides/use-stagehand) — Here is how to use Stagehand framwork with the Lightpanda browser.
+- [Installation](https://lightpanda.io/docs/open-source/installation) — You can download the last binary from the nightly builds for Linux x86_64 and MacOS aarch64 or use Docker image.
+- [Systems requirements](https://lightpanda.io/docs/open-source/systems-requirements) — Debian 12, Ubuntu 22.04, Ubuntu 24.04, on x86-64 and arm64 architecture. macOS 13 Ventura, or later.
+- [Usage](https://lightpanda.io/docs/open-source/usage) — You can dump an URL manually or start a CDP server.
+
+### Cloud
+
+- [Getting started](https://lightpanda.io/docs/cloud-offer/getting-started) — Start using remote browsers easily with Lightpanda cloud.
+- [CDP](https://lightpanda.io/docs/cloud-offer/tools/cdp) — Connect to Lightpanda Cloud offer using Chrome Devtool Protocol.
+- [MCP](https://lightpanda.io/docs/cloud-offer/tools/mcp) — Control Lightpanda's cloud offer using Model Context Protocol

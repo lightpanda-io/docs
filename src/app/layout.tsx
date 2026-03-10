@@ -5,6 +5,7 @@ import { Layout } from 'nextra-theme-docs'
 import { Head as NextraHead } from 'nextra/components'
 import { getPageMap } from 'nextra/page-map'
 
+import { DocsJsonLd } from '@/components/lightpanda/DocsJsonLd'
 import { Footer } from '@/components/lightpanda/Footer'
 import { Navbar } from '@/components/lightpanda/Navbar'
 import { DNSPrefetch } from '@lightpanda/common/components/DNSPrefetch'
@@ -57,6 +58,7 @@ export default async function RootLayout({
         `}</style>
         <Favicon />
         <DNSPrefetch />
+        <link rel="alternate" type="text/markdown" href="/llms.txt" />
       </NextraHead>
       <body data-pagefind-body>
         <Providers>
@@ -84,6 +86,7 @@ export default async function RootLayout({
               defaultTheme: 'dark',
             }}
           >
+            <DocsJsonLd />
             <Canonical />
             {children}
           </Layout>
