@@ -2,8 +2,30 @@
 title: Installation
 description: You can download the last binary from the nightly builds for Linux x86_64 and MacOS aarch64 or use Docker image.
 ---
+import { Callout } from 'nextra/components'
 
 # Installation
+
+## One-liner installer
+
+For Linux or MacOSx users, you can install Lightpanda with following command.
+For Windows, take a look at the [dedicated section](#windows--wsl2).
+
+```bash copy
+curl -fsSL https://pkg.lightpanda.io/install.sh | bash
+```
+
+<Callout type="info" emoji="ℹ️">
+`curl`, `jq` and `sha256sum` are required to install Lightpanda with the
+one-liner installer.
+</Callout>
+
+By default the installer installs the last nightly build.
+But you can pick a specific release:
+
+```bash copy
+curl -fsSL https://pkg.lightpanda.io/install.sh | bash -s "v0.2.5"
+```
 
 ## Install from Docker
 
@@ -17,7 +39,7 @@ The following command fetches the Docker image and starts a new container exposi
 docker run -d --name lightpanda -p 9222:9222 lightpanda/browser:nightly
 ```
 
-## Install from the nightly builds
+## Install manually from the nightly builds
 
 The latest binary can be downloaded from the [nightly
 builds](https://github.com/lightpanda-io/browser/releases/tag/nightly) for
@@ -51,7 +73,7 @@ curl -L -o lightpanda \
   chmod a+x ./lightpanda
 ```
 
-*For Windows + WSL2*
+## Windows + WSL2
 
 The Lightpanda browser is compatible to run on Windows inside WSL (Windows Subsystem for Linux). If WSL has not been installed before follow these steps (for more information see: [MS Windows install WSL](https://learn.microsoft.com/en-us/windows/wsl/install)).
 Install & open WSL + Ubuntu from an **administrator** shell:
@@ -67,8 +89,6 @@ curl -L -o lightpanda https://github.com/lightpanda-io/browser/releases/download
 chmod a+x ./lightpanda
 ```
 It is recommended to install clients like Puppeteer on the Windows host.
-
-
 
 ## Telemetry
 By default, Lightpanda collects and sends usage telemetry. This can be disabled by setting an environment variable `LIGHTPANDA_DISABLE_TELEMETRY=true`. You can read Lightpanda's privacy policy at: [https://lightpanda.io/privacy-policy](https://lightpanda.io/privacy-policy).
