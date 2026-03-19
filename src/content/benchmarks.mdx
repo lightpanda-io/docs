@@ -106,7 +106,7 @@ echo "$MEM\t$CPU"
 
 At 16 ms average, Lightpanda processes ~62 pages/second. Chrome at 185 ms averages ~5 pages/second.
 
-Lightpanda's range (12-47 ms) is wider in relative terms than Chrome's (164-205 ms). The 47 ms spikes are consistent with V8 JIT warm-up on early loads. Even at its worst (47 ms), Lightpanda is 3.5x faster than Chrome's best case (164 ms minimum). The table's 4.4x ratio compares Chrome's average (185 ms) to Lightpanda's maximum (47 ms), a different pair of values.
+Lightpanda's range (12-47 ms) is wider in relative terms than Chrome's (164-205 ms). The 47 ms spikes are consistent with V8 JIT warm-up on early loads. Even at its worst (47 ms), Lightpanda is 3.5x faster than Chrome's best case (164 ms minimum). The table's 4.4x ratio compares the maximum page load times (Chrome 205 ms vs Lightpanda 47 ms), the narrowest gap because it pairs each browser's worst iteration.
 
 Chrome's 402.1 MB is the baseline cost of the rendering engine and GPU process, even when nothing is rendered. Lightpanda's 21.2 MB means ~19 instances fit in the memory footprint of a single Chrome.
 
