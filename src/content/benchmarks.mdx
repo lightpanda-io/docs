@@ -1,11 +1,11 @@
 ---
 title: Benchmarks
-description: Official Lightpanda benchmarks comparing speed, memory, and CPU against Headless Chrome. Reproducible, open-source, version-pinned.
+description: Official Lightpanda benchmarks comparing speed, memory, and CPU against Chrome Headless. Reproducible, open-source, version-pinned.
 ---
 
 # Benchmarks
 
-Official benchmarks comparing Lightpanda against Headless Chrome on speed, memory, and CPU. Every number comes from open-source, version-pinned test runs that anyone can reproduce.
+Official benchmarks comparing Lightpanda against Chrome Headless on speed, memory, and CPU. Every number comes from open-source, version-pinned test runs that anyone can reproduce.
 
 Two benchmarks are published:
 
@@ -27,7 +27,7 @@ Versions tested: Chrome 143.0.7499.109 (Campfire) / 143.0.7499.169 (Crawler) · 
 
 Both browsers use the same JavaScript engine: V8. The performance gap comes from everything surrounding JS execution.
 
-Headless Chrome is Chromium with the display turned off. The rendering engine (Blink), compositor, and GPU process still run on every page load, even when nothing is rendered.
+Chrome Headless is Chromium with the display turned off. The rendering engine (Blink), compositor, and GPU process still run on every page load, even when nothing is rendered.
 
 Lightpanda removes all of those layers. Its pipeline is: fetch HTML, parse, build DOM, execute JS, respond over CDP. That is the entire stack.
 
