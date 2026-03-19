@@ -31,7 +31,7 @@ Chrome Headless is Chromium with the display turned off. The rendering engine (B
 
 Lightpanda removes all of those layers. Its pipeline is: fetch HTML, parse, build DOM, execute JS, respond over CDP. That is the entire stack.
 
-![Architecture comparison: Chrome Headless vs Lightpanda](/images/docs/benchmarks-architecture_comparison.png)
+![Architecture comparison: Chrome Headless vs Lightpanda](https://cdn.lightpanda.io/website/assets/images/docs/benchmarks-architecture_comparison.png)
 
 | | Chrome Headless | Lightpanda |
 |---|---|---|
@@ -49,7 +49,7 @@ Lightpanda removes all of those layers. Its pipeline is: fetch HTML, parse, buil
 
 Both benchmarks ran on an **AWS EC2 m5.xlarge** (x86_64): 4 vCPU, 16 GB RAM, fresh Ubuntu install.
 
-![AWS EC2 m5.xlarge test machine - Ubuntu 24.04.3 LTS, Intel Xeon Platinum 8259CL (4) @ 3.168GHz, 16 GB RAM](/images/docs/benchmarks-aws_neofetch.png)
+![AWS EC2 m5.xlarge test machine - Ubuntu 24.04.3 LTS, Intel Xeon Platinum 8259CL (4) @ 3.168GHz, 16 GB RAM](https://cdn.lightpanda.io/website/assets/images/docs/benchmarks-aws_neofetch.png)
 
 ### Software versions
 
@@ -98,9 +98,9 @@ echo "$MEM\t$CPU"
 | Peak memory (PSS) | 402.1 MB | 21.2 MB | 19.0x less |
 | Peak CPU | 158.6% | 4.6% | 34.5x less |
 
-![Campfire page load times: Chrome vs Lightpanda](/images/docs/benchmarks-campfire_page_load.png)
+![Campfire page load times: Chrome vs Lightpanda](https://cdn.lightpanda.io/website/assets/images/docs/benchmarks-campfire_page_load.png)
 
-![Campfire peak memory: Chrome vs Lightpanda](/images/docs/benchmarks-campfire_peak_memory.png)
+![Campfire peak memory: Chrome vs Lightpanda](https://cdn.lightpanda.io/website/assets/images/docs/benchmarks-campfire_peak_memory.png)
 
 ### Reading the numbers
 
@@ -142,10 +142,10 @@ npm run bench-puppeteer-cdp
 
 **Test site:** [demo-browser.lightpanda.io/amiibo/](https://demo-browser.lightpanda.io/amiibo/) - content requires JavaScript to render. A simple HTTP scraper would see only a blank page.
 
-![Amiibo site with JavaScript rendered](/images/docs/benchmarks-amiibo_with_js.png)
+![Amiibo site with JavaScript rendered](https://cdn.lightpanda.io/website/assets/images/docs/benchmarks-amiibo_with_js.png)
 *With JavaScript: full content rendered.*
 
-![Amiibo site without JavaScript - blank placeholder](/images/docs/benchmarks-amiibo_without_js.png)
+![Amiibo site without JavaScript - blank placeholder](https://cdn.lightpanda.io/website/assets/images/docs/benchmarks-amiibo_without_js.png)
 *Without JavaScript: placeholder text only.*
 
 ### Results
@@ -173,13 +173,13 @@ All durations are elapsed time. Memory is PSS peak. CPU is aggregated peak acros
 
 Both browsers use similar total CPU, but Lightpanda completes 933 pages in one-tenth the time.
 
-![Crawler time vs parallelism: Chrome vs Lightpanda](/images/docs/benchmarks-crawler_time_vs_parallel.png)
+![Crawler time vs parallelism: Chrome vs Lightpanda](https://cdn.lightpanda.io/website/assets/images/docs/benchmarks-crawler_time_vs_parallel.png)
 
-![Crawler peak memory at 25 parallel tasks](/images/docs/benchmarks-crawler_25p_memory.png)
+![Crawler peak memory at 25 parallel tasks](https://cdn.lightpanda.io/website/assets/images/docs/benchmarks-crawler_25p_memory.png)
 
-![Crawler peak CPU at 25 parallel tasks](/images/docs/benchmarks-crawler_25p_cpu.png)
+![Crawler peak CPU at 25 parallel tasks](https://cdn.lightpanda.io/website/assets/images/docs/benchmarks-crawler_25p_cpu.png)
 
-![Crawler memory scaling across parallelism levels](/images/docs/benchmarks-crawler_memory_scaling.png)
+![Crawler memory scaling across parallelism levels](https://cdn.lightpanda.io/website/assets/images/docs/benchmarks-crawler_memory_scaling.png)
 
 ### How scaling differs
 

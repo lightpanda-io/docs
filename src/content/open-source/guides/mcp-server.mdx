@@ -13,7 +13,7 @@ lightpanda mcp
 
 The server communicates via **MCP JSON-RPC 2.0 over stdio**, making it compatible with Claude Desktop, Cursor, Windsurf, and any MCP-aware agent framework.
 
-![Lightpanda Native MCP Architecture](/docshttps://cdn.lightpanda.io/website/assets/images/docs/mcp-server-architecture.svg)
+![Lightpanda Native MCP Architecture](https://cdn.lightpanda.io/website/assets/images/docs/mcp-server-architecture.svg)
 *Single-process architecture: MCP server, browser engine, and JS runtime share one binary.*
 
 | Capability | How |
@@ -103,7 +103,7 @@ npx -y supergateway --help
 - Logs go to **stderr**, separate from the protocol stream.
 - One instance = one session. Page state persists within that session.
 
-![MCP Stdio Message Flow](/docshttps://cdn.lightpanda.io/website/assets/images/docs/mcp-server-stdio-flow.svg)
+![MCP Stdio Message Flow](https://cdn.lightpanda.io/website/assets/images/docs/mcp-server-stdio-flow.svg)
 *Stdio message flow: three-step handshake, then tool discovery and tool calls.*
 
 ### MCP handshake
@@ -157,7 +157,7 @@ No response is sent. The session is now active and you can call `tools/list`, `r
 
 ## Tools and resources
 
-![MCP Tools and Resources Overview](/docshttps://cdn.lightpanda.io/website/assets/images/docs/mcp-server-tools-overview.svg)
+![MCP Tools and Resources Overview](https://cdn.lightpanda.io/website/assets/images/docs/mcp-server-tools-overview.svg)
 *Four tools and two resources available in v0.2.5.*
 
 ### Tools
@@ -347,7 +347,7 @@ finally:
 
 Lightpanda MCP natively supports only stdio. To expose it over HTTP, use [supergateway](https://www.npmjs.com/package/supergateway) as a bridge. Requires Node.js 18+.
 
-![Supergateway Bridge Architecture](/docshttps://cdn.lightpanda.io/website/assets/images/docs/mcp-server-supergateway-bridge.svg)
+![Supergateway Bridge Architecture](https://cdn.lightpanda.io/website/assets/images/docs/mcp-server-supergateway-bridge.svg)
 *supergateway bridges stdio to streamableHttp, enabling remote HTTP access.*
 
 ```sh copy
