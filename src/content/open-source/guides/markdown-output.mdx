@@ -7,7 +7,7 @@ description: Convert any web page to clean, token-efficient Markdown directly fr
 
 Lightpanda (v0.2.5+) outputs web page content as Markdown directly from its browser engine, after JavaScript execution. No external HTML-to-Markdown converter needed.
 
-![Lightpanda Markdown Feature Architecture](/images/docs/markdown-output-architecture.png)
+![Lightpanda Markdown Feature Architecture](https://cdn.lightpanda.io/website/assets/images/docs/markdown-output-architecture.png)
 *Lightpanda processes web pages through its browser engine and outputs Markdown, semantic trees, or accessibility data through CLI, CDP, or MCP interfaces.*
 
 ---
@@ -50,7 +50,7 @@ lightpanda fetch --dump <format> [options] <URL>
 
 ### Output formats
 
-![Output format comparison: HTML vs Markdown vs Semantic Tree for example.com](/images/docs/markdown-output-formats.png)
+![Output format comparison: HTML vs Markdown vs Semantic Tree for example.com](https://cdn.lightpanda.io/website/assets/images/docs/markdown-output-formats.png)
 *The same page (example.com) in three output formats. Markdown strips all non-semantic markup for a smaller representation.*
 
 | Format | Description | Best for |
@@ -190,7 +190,7 @@ The `semantic_tree_text` format outputs the same data in a compact readable form
 
 In server mode (`lightpanda serve`), Lightpanda exposes a WebSocket CDP endpoint with a custom **LP domain**. `LP.getMarkdown` converts the current page's live DOM to Markdown.
 
-![CLI vs CDP Workflow comparison](/images/docs/markdown-output-workflow.png)
+![CLI vs CDP Workflow comparison](https://cdn.lightpanda.io/website/assets/images/docs/markdown-output-workflow.png)
 *CLI runs as a single command; CDP gives programmatic control to interact with the page before extracting Markdown.*
 
 Unlike `--dump markdown` which processes a URL from scratch, `LP.getMarkdown` converts the DOM at call time. You can click, fill forms, or wait for dynamic content, then call it to capture the current state.
@@ -353,7 +353,7 @@ Runs over stdio, suitable for AI coding assistants and agent frameworks. Accepts
 
 Markdown reduces payload size significantly compared to raw HTML. Reduction scales with DOM complexity.
 
-![HTML vs Markdown output size comparison and token reduction percentages](/images/docs/markdown-output-size-comparison.png)
+![HTML vs Markdown output size comparison and token reduction percentages](https://cdn.lightpanda.io/website/assets/images/docs/markdown-output-size-comparison.png)
 *HTML vs. Markdown output size (left) and percentage reduction (right) across three representative site types.*
 
 | Site | HTML (bytes) | Markdown (bytes) | Reduction |
