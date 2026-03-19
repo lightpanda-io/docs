@@ -21,6 +21,7 @@ const meta: MetaRecord = {
   },
   'open-source': 'Open source edition',
   'cloud-offer': 'Cloud offer',
+  benchmarks: 'Benchmarks',
 }
 
 export default meta

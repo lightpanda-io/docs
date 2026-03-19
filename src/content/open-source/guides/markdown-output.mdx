@@ -1,0 +1,548 @@
+---
+title: Markdown output
+description: Convert any web page to clean, token-efficient Markdown directly from the browser, after JavaScript execution.
+---
+
+# Markdown output
+
+Lightpanda (v0.2.5+) outputs web page content as Markdown directly from its browser engine, after JavaScript execution. No external HTML-to-Markdown converter needed.
+
+![Lightpanda Markdown Feature Architecture](/images/docs/markdown-output-architecture.png)
+*Lightpanda processes web pages through its browser engine and outputs Markdown, semantic trees, or accessibility data through CLI, CDP, or MCP interfaces.*
+
+---
+
+## Overview
+
+Three ways to get Markdown from any web page:
+
+| Pathway | Best for | How |
+|---|---|---|
+| **CLI** `fetch --dump markdown` | Scripts, pipelines, quick extraction | Single command, stdout |
+| **CDP** `LP.getMarkdown` | Puppeteer/Playwright automation | Programmatic, after page interactions |
+| **MCP** server | AI agent / LLM tool integration | Model Context Protocol over stdio |
+
+Additional structured output modes:
+
+- `semantic_tree` - Full accessibility tree as structured JSON
+- `semantic_tree_text` - Human-readable indented accessibility tree
+- `Accessibility.getFullAXTree` - Standard CDP accessibility tree via WebSocket
+
+> The `--with_frame` flag mentioned in early blog posts is `--with_frames` (plural) in the current binary. The singular form is not recognized and will produce a fatal error.
+
+---
+
+## CLI: `fetch --dump`
+
+The `fetch` command fetches a URL, executes JavaScript, and dumps the result to stdout. Runs standalone with no browser session or CDP connection needed.
+
+### Syntax
+
+```sh
+lightpanda fetch --dump <format> [options] <URL>
+
+# Formats:
+#   html                Full rendered HTML (post-JS)
+#   markdown            CommonMark markdown
+#   semantic_tree       JSON accessibility tree
+#   semantic_tree_text  Human-readable accessibility tree
+```
+
+### Output formats
+
+![Output format comparison: HTML vs Markdown vs Semantic Tree for example.com](/images/docs/markdown-output-formats.png)
+*The same page (example.com) in three output formats. Markdown strips all non-semantic markup for a smaller representation.*
+
+| Format | Description | Best for |
+|---|---|---|
+| `html` | Full post-JS DOM as HTML | Archiving, diffing, debugging |
+| `markdown` | CommonMark markdown (links, headings, lists, tables) | AI/LLM context, summarization |
+| `semantic_tree` | Full accessibility tree as structured JSON | Accessibility audits, structured parsing |
+| `semantic_tree_text` | Indented human-readable accessibility tree | Quick accessibility review, debugging |
+
+### Basic example
+
+```sh copy
+./lightpanda fetch --dump markdown https://example.com
+```
+
+<details>
+<summary>Example output</summary>
+
+```markdown
+# Example Domain
+
+This domain is for use in documentation examples without needing permission. Avoid use in operations.
+
+[Learn more](https://iana.org/domains/example)
+```
+
+</details>
+
+### `--with_frames` flag
+
+Includes rendered iframe content in the output. Without it, iframe content is excluded.
+
+```sh copy
+# Without iframe content (default)
+./lightpanda fetch --dump markdown https://example.com
+
+# With iframe content included
+./lightpanda fetch --dump markdown --with_frames https://example.com
+```
+
+On pages without iframes, output is identical either way.
+
+### `--strip_mode` flag
+
+Removes groups of tags from the output. Values can be combined with commas:
+
+```sh copy
+# Remove JavaScript and CSS from output
+./lightpanda fetch --dump html --strip_mode js,css https://example.com
+
+# Remove all UI, scripts and styles
+./lightpanda fetch --dump html --strip_mode full https://example.com
+```
+
+| Value | Tags removed |
+|---|---|
+| `js` | `script`, `link[as=script]`, `link[rel=preload]` |
+| `css` | `style`, `link[rel=stylesheet]` |
+| `ui` | `img`, `picture`, `video`, `svg`, `style`, `link[rel=stylesheet]` |
+| `full` | Combines `js` + `ui` + `css` |
+
+### Semantic tree output
+
+The `semantic_tree` format returns the page's accessibility tree as structured JSON:
+
+```sh copy
+./lightpanda fetch --dump semantic_tree https://example.com
+```
+
+Each node includes:
+
+| Field | Type | Description |
+|---|---|---|
+| `nodeId` | string | Unique node identifier |
+| `backendDOMNodeId` | integer | Backend DOM node ID |
+| `nodeName` | string | HTML element name (e.g., `h1`, `p`, `a`, `text`) |
+| `xpath` | string | XPath to the node |
+| `nodeType` | integer | DOM node type (1 = element, 3 = text, 9 = document) |
+| `isInteractive` | boolean | Whether the element is interactive |
+| `role` | string | ARIA role (e.g., `heading`, `paragraph`, `link`, `none`) |
+| `name` | string | Computed accessible name |
+| `nodeValue` | string | Text content (for text nodes) |
+| `attributes` | object | HTML attributes (e.g., `href`, `lang`) |
+| `children` | array | Child nodes |
+
+<details>
+<summary>Example output (first two levels)</summary>
+
+```json
+{
+  "nodeId": "1",
+  "backendDOMNodeId": 1,
+  "nodeName": "root",
+  "xpath": "",
+  "nodeType": 9,
+  "children": [{
+    "nodeId": "2",
+    "backendDOMNodeId": 2,
+    "nodeName": "html",
+    "xpath": "/html[1]",
+    "nodeType": 1,
+    "isInteractive": false,
+    "role": "none",
+    "attributes": {"lang": "en"},
+    "children": ["..."]
+  }]
+}
+```
+
+</details>
+
+The `semantic_tree_text` format outputs the same data in a compact readable form:
+
+```sh copy
+./lightpanda fetch --dump semantic_tree_text https://example.com
+```
+
+<details>
+<summary>Example output</summary>
+
+```
+[1] RootWebArea: Example Domain
+  [5] heading: Example Domain
+  [6] paragraph:
+    [7] StaticText: This domain is for use in documentation examples without needing permission. Avoid use in operations.
+  [8] paragraph:
+    [9] link: Learn more
+```
+
+</details>
+
+> The CLI `semantic_tree` and the CDP `Accessibility.getFullAXTree` return different JSON schemas. The CLI uses flat field names (`role`, `name` as strings); CDP uses typed objects (e.g., `role: { type: "role", value: "heading" }`). See [CDP: Accessibility tree](#cdp-accessibility-tree) for the CDP schema.
+
+---
+
+## CDP: `LP.getMarkdown`
+
+In server mode (`lightpanda serve`), Lightpanda exposes a WebSocket CDP endpoint with a custom **LP domain**. `LP.getMarkdown` converts the current page's live DOM to Markdown.
+
+![CLI vs CDP Workflow comparison](/images/docs/markdown-output-workflow.png)
+*CLI runs as a single command; CDP gives programmatic control to interact with the page before extracting Markdown.*
+
+Unlike `--dump markdown` which processes a URL from scratch, `LP.getMarkdown` converts the DOM at call time. You can click, fill forms, or wait for dynamic content, then call it to capture the current state.
+
+### Starting the CDP server
+
+```sh copy
+# Start CDP server (default: ws://127.0.0.1:9222)
+./lightpanda serve
+
+# Custom host and port
+./lightpanda serve --host 0.0.0.0 --port 9333
+
+# Verify it's running
+curl http://127.0.0.1:9222/json/version
+```
+
+### Using `LP.getMarkdown` with Puppeteer
+
+```javascript copy
+// install: npm install puppeteer-core
+import puppeteer from 'puppeteer-core';
+
+const browser = await puppeteer.connect({
+  browserWSEndpoint: 'ws://127.0.0.1:9222',
+});
+
+const context = await browser.createBrowserContext();
+const page = await context.newPage();
+const client = await page.createCDPSession();
+
+await page.goto('https://example.com', { waitUntil: 'networkidle0' });
+
+const result = await client.send('LP.getMarkdown', {});
+console.log(result.markdown);
+
+await page.close();
+await context.close();
+await browser.disconnect();
+```
+
+### Using `LP.getMarkdown` with Playwright
+
+```javascript copy
+// install: npm install playwright-core
+import { chromium } from 'playwright-core';
+
+const browser = await chromium.connectOverCDP('ws://127.0.0.1:9222');
+const context = await browser.newContext();
+const page = await context.newPage();
+
+await page.goto('https://example.com');
+
+const client = await page.context().newCDPSession(page);
+const result = await client.send('LP.getMarkdown', {});
+console.log(result.markdown);
+
+await page.close();
+await context.close();
+await browser.close();
+```
+
+> The official demo repo uses `import { chromium } from 'playwright'` (full package) with `chromium.connectOverCDP({ endpointURL: browserAddress })`. Both forms work. Using `playwright-core` avoids downloading bundled browsers.
+
+> `LP.getMarkdown` works the same way locally or on [Lightpanda Cloud](https://console.lightpanda.io/signup).
+
+### Converting specific elements
+
+`LP.getMarkdown` supports converting a sub-portion of the page by targeting specific DOM nodes, useful for skipping headers, footers, and sidebars.
+
+> The targeted extraction parameter API is not yet publicly documented. Check the [Lightpanda docs](https://lightpanda.io/docs) for updates.
+
+### Return value
+
+| Field | Type | Description |
+|---|---|---|
+| `markdown` | string | CommonMark markdown of the current page DOM |
+
+---
+
+## CDP: Accessibility tree
+
+Lightpanda supports the standard CDP `Accessibility.getFullAXTree` command, returning the complete accessibility tree as a structured array of nodes, compatible with Chrome's CDP implementation.
+
+### Usage with Puppeteer
+
+```javascript copy
+const client = await page.createCDPSession();
+const result = await client.send('Accessibility.getFullAXTree', {});
+
+console.log(JSON.stringify(result.nodes, null, 2));
+console.log(`Total nodes: ${result.nodes.length}`);
+```
+
+### Usage with Playwright
+
+```javascript copy
+const client = await page.context().newCDPSession(page);
+const result = await client.send('Accessibility.getFullAXTree', {});
+console.log(JSON.stringify(result.nodes, null, 2));
+```
+
+### AX node structure
+
+<details>
+<summary>Example node shape</summary>
+
+```json
+{
+  "nodeId": 6,
+  "backendDOMNodeId": 6,
+  "role": { "type": "role", "value": "heading" },
+  "ignored": false,
+  "name": {
+    "type": "computedString",
+    "value": "Example Domain",
+    "sources": [{ "type": "contents" }]
+  },
+  "properties": [
+    { "name": "level", "value": { "type": "integer", "value": 1 } }
+  ],
+  "parentId": 5,
+  "childIds": [9]
+}
+```
+
+</details>
+
+| Field | Type | Description |
+|---|---|---|
+| `nodeId` | integer | Unique node identifier |
+| `backendDOMNodeId` | integer | Backend DOM node ID |
+| `role` | object | `{ type: "role", value: "<role>" }` - ARIA role |
+| `ignored` | boolean | Whether the node is ignored for accessibility |
+| `ignoredReasons` | array | Why the node is ignored (if applicable) |
+| `name` | object | `{ type: "computedString", value: "<name>", sources: [...] }` |
+| `properties` | array | ARIA properties (e.g., `level`, `url`, `focusable`) |
+| `parentId` | integer | Parent node ID |
+| `childIds` | array | Child node IDs |
+
+For `example.com`, the CDP accessibility tree contains **12 nodes**.
+
+---
+
+## MCP server
+
+Lightpanda includes a built-in MCP (Model Context Protocol) server for direct integration with AI tools and LLM frameworks.
+
+```sh copy
+./lightpanda mcp
+```
+
+Runs over stdio, suitable for AI coding assistants and agent frameworks. Accepts the same HTTP, proxy, logging, and TLS options as `fetch` and `serve` (see [Quick reference](#quick-reference)).
+
+> For full MCP server documentation — tools, resources, handshake protocol, agent configuration, and HTTP transport — see the [MCP server guide](/open-source/guides/mcp-server).
+
+---
+
+## Size and token reduction
+
+Markdown reduces payload size significantly compared to raw HTML. Reduction scales with DOM complexity.
+
+![HTML vs Markdown output size comparison and token reduction percentages](/images/docs/markdown-output-size-comparison.png)
+*HTML vs. Markdown output size (left) and percentage reduction (right) across three representative site types.*
+
+| Site | HTML (bytes) | Markdown (bytes) | Reduction |
+|---|---|---|---|
+| `example.com` | 529 | 169 | **68.1%** |
+| `lightpanda.io` | ~198,400 | 8,958 | **95.5%** |
+| `en.wikipedia.org/wiki/Markdown` | 404,048 | 59,803 | **85.2%** |
+
+> HTML sizes for live sites may vary slightly between runs due to dynamic content. Markdown sizes and reduction percentages remain stable.
+
+Commands used for measurement:
+
+```sh copy
+./lightpanda fetch --dump html <URL> | wc -c      # HTML size
+./lightpanda fetch --dump markdown <URL> | wc -c   # Markdown size
+```
+
+These byte-level reductions correlate with [Cloudflare's published measurements](https://blog.cloudflare.com/markdown-for-agents/) of ~80% token reduction when converting HTML to Markdown.
+
+---
+
+## Real-world example: AI product scraper
+
+A complete workflow: scraping product data from a JS-rendered e-commerce page using `LP.getMarkdown`.
+
+**Goal:** Extract product name, price, description, and features from a JS-rendered product page without parsing HTML.
+**Target:** `https://demo-browser.lightpanda.io/campfire-commerce/`
+**Key detail:** Product details are rendered client-side and do not exist in the initial HTML source.
+
+### Node.js + Puppeteer
+
+```javascript copy
+// ai-product-scraper.mjs
+import puppeteer from 'puppeteer-core';
+
+const BROWSER_WS = process.env.BROWSER_ADDRESS ?? 'ws://127.0.0.1:9222';
+const BASE_URL = process.env.BASE_URL ?? 'https://demo-browser.lightpanda.io';
+
+async function scrapeProduct(path) {
+  const browser = await puppeteer.connect({
+    browserWSEndpoint: BROWSER_WS,
+  });
+
+  const context = await browser.createBrowserContext();
+  const page = await context.newPage();
+  const client = await page.createCDPSession();
+
+  try {
+    await page.goto(`${BASE_URL}${path}`, { waitUntil: 'networkidle0' });
+    const { markdown } = await client.send('LP.getMarkdown', {});
+    return markdown;
+  } finally {
+    await page.close();
+    await context.close();
+    await browser.disconnect();
+  }
+}
+
+const md = await scrapeProduct('/campfire-commerce/');
+console.log(md);
+```
+
+### CLI one-liner
+
+```sh copy
+./lightpanda fetch --dump markdown \
+  https://demo-browser.lightpanda.io/campfire-commerce/ \
+  | your-llm-tool --prompt "Extract: name, price, features as JSON"
+```
+
+### Sample output
+
+<details>
+<summary>Example output (demo product page)</summary>
+
+```markdown
+# Outdoor Odyssey Nomad Backpack 60 liters
+
+#### $244.99
+[Add To Cart](https://demo-browser.lightpanda.io/campfire-commerce/)
+
+### Product Details
+
+The Outdoor Odyssey Nomad Backpack is a spacious and durable 60-liter backpack
+designed for multi-day outdoor adventures. It features padded shoulder straps and
+back panel, adjustable sternum strap and hip belt, multiple compartments and pockets,
+and compression straps to secure your gear.
+
+### Features
+
+- Large 60-liter capacity for multi-day outdoor adventures
+- Padded shoulder straps and back panel for comfort and support
+- Multiple compartments and pockets, including a sleeping bag compartment
+  and hydration bladder sleeve, for easy organization
+- Durable and water-resistant materials with compression straps and
+  attachment points for trekking poles or ice axes
+
+## Related Products
+
+- Outdoor Odyssey Hiking Poles - $79.99
+- Outdoor Odyssey Sleeping Bag - $129.99
+- Outdoor Odyssey Water Bottle - $19.99
+
+## Reviews
+
+[3 detailed customer reviews...]
+```
+
+</details>
+
+Full output also includes nav bar, product images (as Markdown image links), and footer.
+
+When using CDP, call `LP.getMarkdown` after the page has settled (`waitUntil: 'networkidle0'` in Puppeteer, or an explicit wait in Playwright). CLI `fetch` handles this automatically.
+
+---
+
+## Quick reference
+
+### `fetch` command options
+
+| Flag | Values / Default | Description |
+|---|---|---|
+| `--dump` | `html` \| `markdown` \| `semantic_tree` \| `semantic_tree_text` | Output format |
+| `--with_frames` | flag (off) | Include iframe content |
+| `--strip_mode` | `js` \| `css` \| `ui` \| `full` (comma-separated) | Remove tag groups |
+| `--with_base` | flag (off) | Add `<base>` tag to HTML output |
+| `--obey_robots` | flag (off) | Respect robots.txt |
+| `--http_timeout` | ms (default: 10000) | Max transfer duration. 0 = no timeout. |
+| `--http_connect_timeout` | ms (default: 0) | Connection timeout. 0 = no timeout. |
+| `--http_max_concurrent` | integer (default: 10) | Max concurrent HTTP requests |
+| `--http_max_host_open` | integer (default: 4) | Max open connections per host:port |
+| `--http_max_response_size` | bytes (default: no limit) | Max response size |
+| `--http_proxy` | URL | HTTP proxy with optional user:pass |
+| `--proxy_bearer_token` | token | Bearer token for proxy auth |
+| `--insecure_disable_tls_host_verification` | flag (off) | Disable TLS host verification |
+| `--log_level` | `debug` \| `info` \| `warn` \| `error` \| `fatal` | Logging verbosity (default: `warn`) |
+| `--log_format` | `pretty` \| `logfmt` | Log format (default: `logfmt`) |
+| `--log_filter_scopes` | scope names | Filter verbose logs per scope |
+| `--user_agent_suffix` | string | Suffix appended to `Lightpanda/X.Y` User-Agent |
+
+### `serve` command options
+
+| Flag | Default | Description |
+|---|---|---|
+| `--host` | `127.0.0.1` | CDP server host |
+| `--port` | `9222` | CDP server port |
+| `--timeout` | 10 seconds | Inactivity timeout. Max: 604800 (1 week). |
+| `--cdp_max_connections` | 16 | Max simultaneous CDP connections |
+| `--cdp_max_pending_connections` | 128 | Max pending connections in accept queue |
+
+Also accepts all HTTP, proxy, logging, TLS, and User-Agent options from the `fetch` table above.
+
+### `mcp` command
+
+Starts an MCP server over stdio. Accepts the same HTTP, proxy, logging, and TLS options as `fetch` and `serve` (but not `--dump`, `--with_frames`, `--with_base`, or `--strip_mode`, which are `fetch`-only).
+
+```sh copy
+./lightpanda mcp
+```
+
+### CDP commands
+
+| Command | Description |
+|---|---|
+| `LP.getMarkdown` | Custom Lightpanda command. Returns `{ markdown: string }`. Supports targeted element conversion. |
+| `Accessibility.getFullAXTree` | Standard CDP. Returns `{ nodes: [...] }` - full accessibility tree. |
+
+---
+
+## Known behaviors
+
+- **CommonMark syntax** - Headings use `#`, links use `[text](url)`, images use `![alt](src)`.
+- **Non-semantic elements excluded** - `div`, `span` wrappers and `script`/`style` content are omitted. Only structural and content-bearing elements are converted.
+- **Backslash escaping** - Applied where necessary (e.g., `\-` for literal hyphens in non-list contexts).
+- **LP domain** - `LP.getMarkdown` is the first command in Lightpanda's custom CDP domain. More commands are planned.
+- **Wait for navigation** - When using `LP.getMarkdown` via CDP, ensure navigation has completed. Use `waitUntil: 'networkidle0'` in Puppeteer, or explicit waits for JS-heavy pages.
+- **`--with_frames` not `--with_frame`** - Only the plural form is valid.
+- **Dynamic HTML sizes** - Byte sizes for live sites may vary slightly between runs. Markdown sizes and reduction percentages are stable.
+- **CLI vs CDP schema difference** - CLI `semantic_tree` uses flat string fields; CDP `Accessibility.getFullAXTree` uses typed objects. Same data, different schemas.
+- **Targeted extraction** - `LP.getMarkdown` can convert specific sub-portions of a page, not just the full DOM.
+
+---
+
+## References
+
+- [Native Markdown Output in Lightpanda](https://lightpanda.io/blog/posts/native-markdown-output)
+- [Playwright markdown demo](https://github.com/lightpanda-io/demo/blob/main/playwright/markdown.js)
+- [Puppeteer markdown demo](https://github.com/lightpanda-io/demo/blob/main/puppeteer/markdown.js)
+- [Playwright AX tree demo](https://github.com/lightpanda-io/demo/blob/main/playwright/axtree.js)
+- [Puppeteer AX tree demo](https://github.com/lightpanda-io/demo/blob/main/puppeteer/axtree.js)
+- [Lightpanda releases](https://github.com/lightpanda-io/browser/releases)
+- [Cloudflare: Markdown for Agents](https://blog.cloudflare.com/markdown-for-agents/)

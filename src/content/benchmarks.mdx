@@ -1,0 +1,315 @@
+---
+title: Benchmarks
+description: Official Lightpanda benchmarks comparing speed, memory, and CPU against Headless Chrome. Reproducible, open-source, version-pinned.
+---
+
+# Benchmarks
+
+Official benchmarks comparing Lightpanda against Headless Chrome on speed, memory, and CPU. Every number comes from open-source, version-pinned test runs that anyone can reproduce.
+
+Two benchmarks are published:
+
+- **Campfire** - 100 sequential page loads from localhost. Isolates pure browser overhead with no network noise.
+- **Crawler** - 933 real, JavaScript-rendered pages crawled over the network at concurrency levels from 1 to 100.
+
+| Scenario | Speed vs Chrome | Memory vs Chrome |
+|---|---|---|
+| Campfire: 100 local page loads | ~11x faster | ~19x less |
+| Crawler: 933 pages, 25 parallel tasks | ~9.7x faster | ~16.3x less |
+
+> These two benchmarks use different automation clients (Puppeteer vs. chromedp), so their ratios cannot be directly compared to each other. Each ratio is valid only within its own benchmark.
+
+Versions tested: Chrome 143.0.7499.109 (Campfire) / 143.0.7499.169 (Crawler) · Lightpanda [7b1f157](https://github.com/lightpanda-io/browser/commit/7b1f157cf8ccbdded7db6ab47e94577495ee87e4)
+
+---
+
+## Architecture
+
+Both browsers use the same JavaScript engine: V8. The performance gap comes from everything surrounding JS execution.
+
+Headless Chrome is Chromium with the display turned off. The rendering engine (Blink), compositor, and GPU process still run on every page load, even when nothing is rendered.
+
+Lightpanda removes all of those layers. Its pipeline is: fetch HTML, parse, build DOM, execute JS, respond over CDP. That is the entire stack.
+
+![Architecture comparison: Chrome Headless vs Lightpanda](/images/docs/benchmarks-architecture_comparison.png)
+
+| | Chrome Headless | Lightpanda |
+|---|---|---|
+| **Language** | C++ | Zig |
+| **JS engine** | V8 | V8 (same) |
+| **HTML / DOM** | Blink (includes rendering pipeline) | Zig DOM; html5ever parser |
+| **Rendering** | Active even in headless mode | Not present |
+| **Process model** | Multi-process (browser + renderer + GPU + utility) | Single process, multi-threaded |
+| **CDP support** | Native | Implemented - Puppeteer, Playwright (via CDP), chromedp |
+| **Web API coverage** | Complete | Partial, expanding ([status](https://github.com/lightpanda-io/browser#status)) |
+
+---
+
+## Test environment
+
+Both benchmarks ran on an **AWS EC2 m5.xlarge** (x86_64): 4 vCPU, 16 GB RAM, fresh Ubuntu install.
+
+![AWS EC2 m5.xlarge test machine - Ubuntu 24.04.3 LTS, Intel Xeon Platinum 8259CL (4) @ 3.168GHz, 16 GB RAM](/images/docs/benchmarks-aws_neofetch.png)
+
+### Software versions
+
+| Component | Campfire | Crawler |
+|---|---|---|
+| Lightpanda | 7b1f157 | 7b1f157 |
+| Chrome | 143.0.7499.109 | 143.0.7499.169 |
+| Automation client | Puppeteer (Node.js) | chromedp (Go) |
+
+The two benchmarks use different automation clients. Within each benchmark both browsers face the same client, so LP-vs-Chrome ratios are valid. Cross-benchmark ratios are not directly comparable because client overhead differs.
+
+### How measurements are taken
+
+- **Memory:** `smem` reporting PSS (Proportional Set Size), peak value. PSS divides shared memory pages proportionally across processes, avoiding double-counting from Chrome's multi-process architecture. The script filters on the browser binary name, so the automation client is excluded from both sides.
+- **CPU:** `ps aux`, aggregated across all browser processes, peak value.
+- **Time:** Elapsed time from `/usr/bin/time -v`, wrapping the automation client.
+
+All three metrics are sampled every 100 ms. The monitoring script from [BENCHMARKS.md](https://github.com/lightpanda-io/demo/blob/main/BENCHMARKS.md):
+
+```sh
+#!/bin/sh
+PROGRAM=$1
+MEM=`smem -c "pss" -P "^$PROGRAM" -t -k | tail -1`
+CPU=`ps aux | grep $PROGRAM | grep -v grep | awk '{sum+=$3} END {print "Total CPU: " sum "%"}'`
+echo "$MEM\t$CPU"
+```
+
+---
+
+## Benchmark 1: Campfire (local)
+
+**What it tests:** Pure browser overhead, no network. A synthetic e-commerce page served from localhost makes two XHR requests (product details + reviews). Puppeteer loads it 100 times sequentially via CDP.
+
+**Why a custom page:** Lightpanda is not yet fully web-platform-compliant. The team built a page that works correctly in both browsers so the comparison is meaningful.
+
+**Test page:** [demo-browser.lightpanda.io/campfire-commerce/](https://demo-browser.lightpanda.io/campfire-commerce/)
+
+### Results
+
+| Metric | Chrome 143.0.7499.109 | Lightpanda 7b1f157 | Ratio |
+|---|---|---|---|
+| Total duration (100 loads) | 18,551 ms | 1,698 ms | 10.9x faster |
+| Average per page | 185 ms | 16 ms | 11.6x faster |
+| Minimum per page | 164 ms | 12 ms | 13.7x faster |
+| Maximum per page | 205 ms | 47 ms | 4.4x faster |
+| Peak memory (PSS) | 402.1 MB | 21.2 MB | 19.0x less |
+| Peak CPU | 158.6% | 4.6% | 34.5x less |
+
+![Campfire page load times: Chrome vs Lightpanda](/images/docs/benchmarks-campfire_page_load.png)
+
+![Campfire peak memory: Chrome vs Lightpanda](/images/docs/benchmarks-campfire_peak_memory.png)
+
+### Reading the numbers
+
+At 16 ms average, Lightpanda processes ~62 pages/second. Chrome at 185 ms averages ~5 pages/second.
+
+Lightpanda's range (12-47 ms) is wider in relative terms than Chrome's (164-205 ms). The 47 ms spikes are consistent with V8 JIT warm-up on early loads. Even at its worst (47 ms), Lightpanda is 3.5x faster than Chrome's best case (164 ms minimum). The table's 4.4x ratio compares Chrome's average (185 ms) to Lightpanda's maximum (47 ms), a different pair of values.
+
+Chrome's 402.1 MB is the baseline cost of the rendering engine and GPU process, even when nothing is rendered. Lightpanda's 21.2 MB means ~19 instances fit in the memory footprint of a single Chrome.
+
+### Reproduce
+
+```sh copy
+git clone https://github.com/lightpanda-io/demo && cd demo
+npm install
+go run ws/main.go   # serves public/ on port 1234
+
+# Chrome
+google-chrome --headless=new --remote-debugging-port=9222
+BROWSER_ADDRESS=http://127.0.0.1:9222 npm run bench-puppeteer-cdp
+
+# Lightpanda
+./lightpanda serve
+npm run bench-puppeteer-cdp
+```
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `BROWSER_ADDRESS` | `ws://127.0.0.1:9222` | CDP endpoint |
+| `BASE_URL` | `http://127.0.0.1:1234` | Local web server |
+| `RUNS` | `100` | Page load count |
+
+---
+
+## Benchmark 2: Crawler (real-world network)
+
+**What it tests:** Production conditions - real pages, real network, varying concurrency. This directly tests whether network latency closes the performance gap.
+
+**How it works:** A Go program using chromedp visits a root page, discovers all subpage links, and loads each one: 933 pages total. Chrome runs multiple tabs in a single instance. Lightpanda runs multiple independent processes (see [Parallelism models](#parallelism-models)).
+
+**Test site:** [demo-browser.lightpanda.io/amiibo/](https://demo-browser.lightpanda.io/amiibo/) - content requires JavaScript to render. A simple HTTP scraper would see only a blank page.
+
+![Amiibo site with JavaScript rendered](/images/docs/benchmarks-amiibo_with_js.png)
+*With JavaScript: full content rendered.*
+
+![Amiibo site without JavaScript - blank placeholder](/images/docs/benchmarks-amiibo_without_js.png)
+*Without JavaScript: placeholder text only.*
+
+### Results
+
+| Parallelism | LP time | LP memory | LP CPU | Chrome time | Chrome memory | Chrome CPU |
+|---|---|---|---|---|---|---|
+| 1 | 51.68 s | 27.2 MB | 11.1% | 82.83 s | 1.3 GB | 124.9% |
+| 2 | 29.79 s | 31.7 MB | 26.6% | 53.11 s | 1.3 GB | 202.3% |
+| 5 | 11.70 s | 43.9 MB | 71.6% | 45.66 s | 1.6 GB | 237% |
+| 10 | 6.76 s | 63.7 MB | 135.3% | 45.62 s | 1.7 GB | 241.6% |
+| 25 | 4.81 s | 123.0 MB | 204.7% | 46.70 s | 2.0 GB | 254% |
+| 100 | 5.23 s | 410.2 MB | 202.8% | 69.37 s | 4.2 GB | 229% |
+
+All durations are elapsed time. Memory is PSS peak. CPU is aggregated peak across all browser processes.
+
+### At 25 parallel tasks
+
+25 concurrent tasks is a representative production workload on a 4-vCPU machine. Network latency did not close the gap.
+
+| Metric | Chrome | Lightpanda | Ratio |
+|---|---|---|---|
+| Time (933 pages) | 46.70 s | 4.81 s | 9.7x faster |
+| Peak memory (PSS) | 2.0 GB | 123 MB | 16.3x less |
+| Peak CPU | 254% | 204.7% | comparable |
+
+Both browsers use similar total CPU, but Lightpanda completes 933 pages in one-tenth the time.
+
+![Crawler time vs parallelism: Chrome vs Lightpanda](/images/docs/benchmarks-crawler_time_vs_parallel.png)
+
+![Crawler peak memory at 25 parallel tasks](/images/docs/benchmarks-crawler_25p_memory.png)
+
+![Crawler peak CPU at 25 parallel tasks](/images/docs/benchmarks-crawler_25p_cpu.png)
+
+![Crawler memory scaling across parallelism levels](/images/docs/benchmarks-crawler_memory_scaling.png)
+
+### How scaling differs
+
+**Lightpanda** gets faster as processes are added: from 51.68 s (1 process) to 4.81 s (25 processes), a 10.7x speedup from parallelism alone. Above 25 it plateaus (5.23 s at 100) because processes exceed the machine's 4 vCPUs and contend for CPU time.
+
+**Chrome** hits a ceiling at 5 tabs. It improves from 82.83 s (1 tab) to 45.66 s (5 tabs), then flatlines. At 100 tabs it degrades to 69.37 s, worse than at 5, 10, or 25 tabs. Chrome's background-tab optimizations (freezing inactive JS, reducing working set sizes) are designed for human browsing and hurt automation throughput.
+
+**Memory** scales differently too. Chrome starts at 1.3 GB for a single tab and grows to 4.2 GB at 100 tabs (~29 MB/tab marginal). Lightpanda starts at 27.2 MB and adds ~4 MB per process, reaching 410.2 MB at 100. At 100 parallel tasks: **410 MB vs 4.2 GB**.
+
+### Parallelism models
+
+The Crawler benchmark compares Chrome's multi-tab model (shared browser/GPU process) against Lightpanda's multi-process model (fully isolated memory and event loop). These are architecturally different. Chrome's per-tab marginal cost is lower because it amortizes its rendering stack across tabs.
+
+Lightpanda also supports a single-process, multi-threaded model (multiple CDP connections in one binary, each on its own OS thread with a dedicated V8 Isolate). This shipped on [February 27, 2026](https://lightpanda.io/blog/posts/how-we-built-multiclient) and works with Puppeteer and Playwright. Updated benchmarks for this configuration are in progress.
+
+### Reproduce
+
+```sh copy
+git clone https://github.com/lightpanda-io/demo && cd demo/chromedp
+go build -o crawler crawler/main.go
+
+# Chrome (25 tabs)
+rm -fr /tmp/bench_chrome
+/opt/google/chrome/chrome --headless=new --remote-debugging-port=9222 \
+  --user-data-dir=/tmp/bench_chrome
+# Get the WebSocket ID from the /json/version endpoint:
+# curl -s http://127.0.0.1:9222/json/version | grep -o '"[^"]*"' | grep ws
+./crawler --pool 25 \
+  --cdp ws://127.0.0.1:9222/devtools/browser/<WEBSOCKET_ID> \
+  https://demo-browser.lightpanda.io/amiibo/
+
+# Lightpanda (25 processes)
+./crawler --pool 25 --fork --lpd-path <path_to_lightpanda_binary> \
+  https://demo-browser.lightpanda.io/amiibo/
+```
+
+Replace `--pool 25` with any value from the results table to reproduce that row.
+
+---
+
+## Caveats
+
+### Web API coverage is partial
+
+Lightpanda supports DOM manipulation, XHR, Fetch, cookies, form input, click interactions, network interception, CDP/WebSocket, robots.txt compliance, and more, but not the full web platform. Pages depending on Canvas, WebGL, Service Workers, Web Workers, or other unimplemented APIs may fail.
+
+Both benchmarks use pages known to work with Lightpanda. Test your target pages before committing to Lightpanda in production. File issues at [github.com/lightpanda-io/browser/issues](https://github.com/lightpanda-io/browser/issues).
+
+### Parallelism is not apples-to-apples
+
+The Crawler benchmark compares Chrome's multi-tab model against Lightpanda's multi-process model. See [Parallelism models](#parallelism-models).
+
+### Linux x86_64 only
+
+Both benchmarks ran on Linux x86_64. Lightpanda also supports macOS aarch64 and Windows via WSL2, but no performance data has been published for those platforms.
+
+### Beta status
+
+Lightpanda is in beta. Stability and coverage are improving, but crashes or unexpected behavior on some sites may occur.
+
+---
+
+## FAQ
+
+<details>
+<summary>Why use PSS instead of RSS for memory?</summary>
+
+Chrome's multi-process architecture shares memory pages across processes. RSS counts shared pages multiple times, overstating total usage. PSS divides shared pages proportionally, giving a fairer total.
+
+</details>
+
+<details>
+<summary>Does the automation client's memory count?</summary>
+
+No. The `smem` script filters on the browser binary name. The Puppeteer/Node.js process and Go crawler are excluded from both sides equally. Both absolute figures are slightly understated by the same amount (~15 MB for the Go client); relative ratios are unaffected.
+
+</details>
+
+<details>
+<summary>Why does Lightpanda's max page load (47 ms) spike above its average (16 ms)?</summary>
+
+V8 JIT compilation has a warm-up period. On early loads V8 is still profiling and compiling hot code paths. Garbage collection pauses can also cause spikes. Even at 47 ms, Lightpanda's worst case is 3.5x faster than Chrome's best (164 ms).
+
+</details>
+
+<details>
+<summary>Why does Lightpanda stop getting faster above 25 processes?</summary>
+
+The test machine has 4 vCPUs. Beyond that count, adding processes yields diminishing returns as they contend for CPU time. At 100 processes (5.23 s) Lightpanda is slightly slower than at 25 (4.81 s), but still 13.3x faster than Chrome at 100 tabs (69.37 s).
+
+</details>
+
+<details>
+<summary>Why does Chrome get slower at 100 tabs?</summary>
+
+Chrome's tab management optimizes for human browsing: freezing inactive JS, reducing working sets, deprioritizing background tabs. In automation every tab is actively loading, and these optimizations hurt throughput. At 100 tabs Chrome takes 69.37 s, worse than at 5 (45.66 s), 10 (45.62 s), or 25 tabs (46.70 s).
+
+</details>
+
+<details>
+<summary>Does Lightpanda work with Playwright and Puppeteer?</summary>
+
+Yes. Lightpanda implements CDP and is compatible with Puppeteer, Playwright, and chromedp. The Campfire benchmark uses Puppeteer; the Crawler uses chromedp.
+
+</details>
+
+<details>
+<summary>Have these benchmarks been independently reproduced?</summary>
+
+Not as of March 2026. Source code is open at [github.com/lightpanda-io/demo](https://github.com/lightpanda-io/demo). Community results are welcome.
+
+</details>
+
+---
+
+## Live performance tracking
+
+Lightpanda publishes a continuous performance dashboard at [perf.lightpanda.io](https://perf.lightpanda.io).
+
+---
+
+## Further reading
+
+- [BENCHMARKS.md](https://github.com/lightpanda-io/demo/blob/main/BENCHMARKS.md) - Raw data, tool output, reproduction steps
+- [From Local to Real World Benchmarks](https://lightpanda.io/blog/posts/from-local-to-real-world-benchmarks) - Crawler analysis and scaling behavior (Jan 27, 2026)
+- [Why Build a New Browser?](https://lightpanda.io/blog/posts/why-build-a-new-browser) - Performance thesis and origin story (May 28, 2025)
+- [What Is a True Headless Browser?](https://lightpanda.io/blog/posts/what-is-a-true-headless-browser) - Architecture comparison (Nov 14, 2025)
+- [Why We Built Lightpanda in Zig](https://lightpanda.io/blog/posts/why-we-built-lightpanda-in-zig) - Language and memory management rationale (Dec 5, 2025)
+- [Migrating Our DOM to Zig](https://lightpanda.io/blog/posts/migrating-our-dom-to-zig) - DOM implementation history (Jan 8, 2026)
+- [How We Built MultiClient](https://lightpanda.io/blog/posts/how-we-built-multiclient) - Single-process concurrency architecture (Feb 27, 2026)
+- [Native Markdown Output](https://lightpanda.io/blog/posts/native-markdown-output) - AI agent token efficiency via LP.getMarkdown (Mar 5, 2026)
+- [perf.lightpanda.io](https://perf.lightpanda.io) - Live performance tracking
+- [github.com/lightpanda-io/browser](https://github.com/lightpanda-io/browser) - Source code, web API status, issues

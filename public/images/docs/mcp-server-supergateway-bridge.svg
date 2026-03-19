@@ -1,0 +1,84 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 340" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">
+  <defs>
+    <linearGradient id="sgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#F59E0B;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#D97706;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="lpGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6C3CE1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4F1FCB;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="clientGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2563EB;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1D4ED8;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="115%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.12"/>
+    </filter>
+    <marker id="arr1" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#475569"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="340" rx="12" fill="#F8FAFC"/>
+
+  <!-- Title -->
+  <text x="400" y="34" text-anchor="middle" font-size="16" font-weight="700" fill="#1E293B">HTTP Transport via supergateway</text>
+  <text x="400" y="54" text-anchor="middle" font-size="12" fill="#64748B">Bridges stdio to streamableHttp — enables remote MCP access</text>
+
+  <!-- Remote Client -->
+  <rect x="30" y="90" width="160" height="170" rx="12" fill="url(#clientGrad)" filter="url(#shadow)"/>
+  <text x="110" y="120" text-anchor="middle" font-size="13" font-weight="700" fill="white">Remote Client</text>
+  <rect x="44" y="136" width="132" height="24" rx="5" fill="rgba(255,255,255,0.15)"/>
+  <text x="110" y="153" text-anchor="middle" font-size="10" fill="white">AI Agent / curl</text>
+  <rect x="44" y="168" width="132" height="24" rx="5" fill="rgba(255,255,255,0.15)"/>
+  <text x="110" y="185" text-anchor="middle" font-size="10" fill="white">Microservice</text>
+  <rect x="44" y="200" width="132" height="24" rx="5" fill="rgba(255,255,255,0.15)"/>
+  <text x="110" y="217" text-anchor="middle" font-size="10" fill="white">Cloud Function</text>
+  <rect x="44" y="232" width="132" height="20" rx="5" fill="rgba(255,255,255,0.25)"/>
+  <text x="110" y="246" text-anchor="middle" font-size="9" font-weight="600" fill="white">POST /mcp</text>
+
+  <!-- Arrow: Client → Supergateway -->
+  <line x1="190" y1="155" x2="275" y2="155" stroke="#475569" stroke-width="2" marker-end="url(#arr1)"/>
+  <text x="232" y="147" text-anchor="middle" font-size="9" fill="#475569" font-weight="600">HTTP</text>
+
+  <line x1="275" y1="195" x2="190" y2="195" stroke="#475569" stroke-width="2" marker-end="url(#arr1)"/>
+  <text x="232" y="212" text-anchor="middle" font-size="9" fill="#475569" font-weight="600">SSE</text>
+
+  <!-- Supergateway -->
+  <rect x="275" y="90" width="190" height="170" rx="12" fill="url(#sgGrad)" filter="url(#shadow)"/>
+  <text x="370" y="118" text-anchor="middle" font-size="13" font-weight="700" fill="white">supergateway</text>
+  <text x="370" y="136" text-anchor="middle" font-size="10" fill="rgba(255,255,255,0.85)">Node.js bridge</text>
+  <rect x="289" y="150" width="162" height="24" rx="5" fill="rgba(255,255,255,0.2)"/>
+  <text x="370" y="167" text-anchor="middle" font-size="10" font-weight="600" fill="white">streamableHttp → stdio</text>
+  <rect x="289" y="182" width="162" height="24" rx="5" fill="rgba(255,255,255,0.15)"/>
+  <text x="370" y="199" text-anchor="middle" font-size="10" font-weight="400" fill="white">Port 8000 (default)</text>
+  <rect x="289" y="214" width="162" height="24" rx="5" fill="rgba(255,255,255,0.15)"/>
+  <text x="370" y="231" text-anchor="middle" font-size="10" font-weight="400" fill="white">Stateless mode</text>
+
+  <!-- Arrow: Supergateway → Lightpanda -->
+  <line x1="465" y1="155" x2="540" y2="155" stroke="#475569" stroke-width="2" marker-end="url(#arr1)"/>
+  <text x="502" y="147" text-anchor="middle" font-size="9" fill="#475569" font-weight="600">stdin</text>
+
+  <line x1="540" y1="195" x2="465" y2="195" stroke="#475569" stroke-width="2" marker-end="url(#arr1)"/>
+  <text x="502" y="212" text-anchor="middle" font-size="9" fill="#475569" font-weight="600">stdout</text>
+
+  <!-- Lightpanda -->
+  <rect x="540" y="90" width="220" height="170" rx="12" fill="url(#lpGrad2)" filter="url(#shadow)"/>
+  <text x="650" y="118" text-anchor="middle" font-size="13" font-weight="700" fill="white">lightpanda mcp</text>
+  <text x="650" y="136" text-anchor="middle" font-size="10" fill="rgba(255,255,255,0.85)">Fresh process per request</text>
+  <rect x="556" y="150" width="188" height="24" rx="5" fill="rgba(255,255,255,0.2)"/>
+  <text x="650" y="167" text-anchor="middle" font-size="10" font-weight="600" fill="white">MCP Server + Browser Engine</text>
+  <rect x="556" y="182" width="90" height="24" rx="5" fill="rgba(255,255,255,0.15)"/>
+  <text x="601" y="199" text-anchor="middle" font-size="10" fill="white">4 Tools</text>
+  <rect x="654" y="182" width="90" height="24" rx="5" fill="rgba(255,255,255,0.15)"/>
+  <text x="699" y="199" text-anchor="middle" font-size="10" fill="white">2 Resources</text>
+  <rect x="556" y="214" width="188" height="24" rx="5" fill="rgba(255,255,255,0.15)"/>
+  <text x="650" y="231" text-anchor="middle" font-size="10" fill="white">--obey_robots (optional)</text>
+
+  <!-- Note box -->
+  <rect x="80" y="280" width="640" height="44" rx="8" fill="#FEF3C7" stroke="#F59E0B" stroke-width="1" filter="url(#shadow)"/>
+  <text x="110" y="299" font-size="11" fill="#92400E"><tspan font-weight="700">⚠ Stateless:</tspan> Each HTTP request spawns a new lightpanda process. Use inline <tspan font-weight="700">url</tspan> param</text>
+  <text x="110" y="316" font-size="11" fill="#92400E">on each tool call, or use stdio directly for stateful multi-turn sessions.</text>
+</svg>

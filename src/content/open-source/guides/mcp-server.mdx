@@ -1,0 +1,649 @@
+---
+title: MCP server
+description: Lightpanda ships a native Model Context Protocol server built into the browser binary. One binary, one command, full browser capabilities for your AI agent.
+---
+
+# MCP server
+
+Lightpanda v0.2.5 ships a **native Model Context Protocol (MCP) server** built directly into the browser binary. The MCP server shares the same process as the Zig-based JavaScript engine with no CDP intermediary and no extra processes.
+
+```sh copy
+lightpanda mcp
+```
+
+The server communicates via **MCP JSON-RPC 2.0 over stdio**, making it compatible with Claude Desktop, Cursor, Windsurf, and any MCP-aware agent framework.
+
+![Lightpanda Native MCP Architecture](/docs/images/docs/mcp-server-architecture.svg)
+*Single-process architecture: MCP server, browser engine, and JS runtime share one binary.*
+
+| Capability | How |
+|---|---|
+| Navigate to any URL | `goto` tool |
+| Extract page content as markdown | `markdown` tool |
+| Extract all hyperlinks | `links` tool |
+| Run arbitrary JavaScript | `evaluate` tool |
+| Read raw HTML DOM | `mcp://page/html` resource |
+| Read markdown snapshot | `mcp://page/markdown` resource |
+| Respect robots.txt | `--obey_robots` flag |
+| Expose over HTTP | supergateway bridge (Node.js) |
+
+---
+
+## Installation
+
+### System requirements
+
+| Requirement | Details |
+|---|---|
+| **OS** | Linux (x86_64, aarch64), macOS (x86_64, aarch64) |
+| **Binary** | Single self-contained executable (~58 MB macOS, ~110 MB Linux) |
+| **Dependencies** | glibc (Linux) - no Node.js or Python required for core MCP |
+| **Network** | Outbound HTTP/HTTPS for page loading |
+| **MCP client** | Claude Desktop, Cursor, Windsurf, or any MCP-compatible host |
+| **Node.js** *(optional)* | Required only for HTTP transport via supergateway (v18+) |
+
+### Download and install
+
+#### Option A: Stable release (recommended)
+
+```sh copy
+# Linux x86_64
+curl -L -o lightpanda \
+  https://github.com/lightpanda-io/browser/releases/download/v0.2.5/lightpanda-x86_64-linux
+chmod +x lightpanda
+
+# Linux aarch64 (ARM)
+curl -L -o lightpanda \
+  https://github.com/lightpanda-io/browser/releases/download/v0.2.5/lightpanda-aarch64-linux
+chmod +x lightpanda
+
+# macOS Apple Silicon (M1/M2/M3/M4)
+curl -L -o lightpanda \
+  https://github.com/lightpanda-io/browser/releases/download/v0.2.5/lightpanda-aarch64-macos
+chmod +x lightpanda
+
+# macOS Intel
+curl -L -o lightpanda \
+  https://github.com/lightpanda-io/browser/releases/download/v0.2.5/lightpanda-x86_64-macos
+chmod +x lightpanda
+
+# Verify installation
+./lightpanda version
+```
+
+#### Option B: Nightly build
+
+```sh copy
+curl -L -o lightpanda \
+  https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-x86_64-linux
+chmod +x lightpanda && sudo mv lightpanda /usr/local/bin/
+```
+
+#### Optional: Node.js and supergateway (for HTTP transport)
+
+Only needed if you want to expose the MCP server over HTTP:
+
+```sh copy
+# Install Node.js via nvm (if not already installed)
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+nvm install --lts
+
+# supergateway is run via npx, no global install needed
+npx -y supergateway --help
+```
+
+> The lightpanda binary is self-contained. Node.js is only required for HTTP transport via supergateway.
+
+---
+
+## How it works: stdio transport
+
+- The client **spawns `lightpanda mcp` as a child process**.
+- Messages are **newline-delimited JSON-RPC 2.0** sent to **stdin**; responses come on **stdout**.
+- Logs go to **stderr**, separate from the protocol stream.
+- One instance = one session. Page state persists within that session.
+
+![MCP Stdio Message Flow](/docs/images/docs/mcp-server-stdio-flow.svg)
+*Stdio message flow: three-step handshake, then tool discovery and tool calls.*
+
+### MCP handshake
+
+Every session begins with a three-step handshake:
+
+**Step 1: Client sends `initialize`**
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "initialize",
+  "params": {
+    "protocolVersion": "2024-11-05",
+    "capabilities": {},
+    "clientInfo": { "name": "my-agent", "version": "1.0" }
+  }
+}
+```
+
+**Step 2: Server responds with capabilities**
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "protocolVersion": "2025-11-25",
+    "capabilities": { "resources": {}, "tools": {} },
+    "serverInfo": { "name": "lightpanda", "version": "0.1.0" }
+  }
+}
+```
+
+> The server always responds with `protocolVersion` `"2025-11-25"` regardless of client version. This is Lightpanda's own version string — it does not correspond to a published MCP spec version (the current spec versions are `2024-11-05` and `2025-03-26`). Backward compatibility with `2024-11-05` clients is maintained.
+>
+> **`serverInfo.version` (`"0.1.0"`) is the MCP interface version, not the Lightpanda release version.** Run `./lightpanda version` to get the build hash.
+
+**Step 3: Client sends `initialized` notification (required)**
+
+```json
+{"jsonrpc":"2.0","method":"notifications/initialized","params":{}}
+```
+
+No response is sent. The session is now active and you can call `tools/list`, `resources/list`, and `tools/call`.
+
+> Every JSON-RPC message **must** end with a newline (`\n`). Omitting it will hang the process.
+
+---
+
+## Tools and resources
+
+![MCP Tools and Resources Overview](/docs/images/docs/mcp-server-tools-overview.svg)
+*Four tools and two resources available in v0.2.5.*
+
+### Tools
+
+All tools are called via `tools/call`:
+
+| Tool | Parameter | Type | Required | Description |
+|---|---|---|---|---|
+| **`goto`** | `url` | string | Yes | URL to navigate to |
+| **`markdown`** | `url` | string | No | If provided, navigates first, then extracts markdown |
+| **`links`** | `url` | string | No | If provided, navigates first, then extracts links |
+| **`evaluate`** | `script` | string | Yes | JavaScript to execute in page context |
+| | `url` | string | No | If provided, navigates first |
+
+#### `goto`
+
+Navigate to a URL and load the page into memory.
+
+```json
+{"jsonrpc":"2.0","id":2,"method":"tools/call",
+ "params":{"name":"goto","arguments":{"url":"https://example.com"}}}
+```
+
+**Response:** `"Navigated successfully."` - returned even if the URL is unreachable. Always verify with a follow-up content call (see [Known behaviors](#known-behaviors)).
+
+#### `markdown`
+
+Extract the current page's content as clean, token-efficient markdown.
+
+```json
+{"jsonrpc":"2.0","id":3,"method":"tools/call",
+ "params":{"name":"markdown","arguments":{"url":"https://example.com"}}}
+```
+
+<details>
+<summary>Response example</summary>
+
+```json
+{"result":{"content":[{"type":"text","text":"\n# Example Domain\n\nThis domain is for use in illustrative examples in documents...\n\n[More information...](https://www.iana.org/domains/example)\n"}],"isError":false}}
+```
+
+</details>
+
+> Using `markdown` with an inline `url` is the most efficient single-call pattern - it navigates and extracts in one request. Essential for HTTP transport where sessions are stateless.
+
+#### `links`
+
+Extract all hyperlinks from the loaded page as a newline-separated list of absolute URLs.
+
+```json
+{"jsonrpc":"2.0","id":4,"method":"tools/call",
+ "params":{"name":"links","arguments":{"url":"https://example.com"}}}
+```
+
+**Response:** One URL per line, e.g. `"https://iana.org/domains/example"`.
+
+#### `evaluate`
+
+Execute arbitrary JavaScript in the page context and return the result as a string.
+
+```json
+{"jsonrpc":"2.0","id":5,"method":"tools/call",
+ "params":{"name":"evaluate","arguments":{
+   "script":"document.title",
+   "url":"https://example.com"}}}
+```
+
+**Response:** `"Example Domain"`
+
+> `evaluate` is the most versatile tool. Use it to extract structured data, interact with the DOM, or approximate capabilities not yet available as dedicated tools (see [Future features](#future-features)).
+
+### Resources
+
+Two read-only resources are available after a page has been loaded via `resources/read`:
+
+| URI | MIME type | Description |
+|---|---|---|
+| `mcp://page/html` | `text/html` | Raw serialized HTML DOM of the loaded page |
+| `mcp://page/markdown` | `text/markdown` | Markdown representation (identical output to the `markdown` tool) |
+
+```json
+{"jsonrpc":"2.0","id":6,"method":"resources/read",
+ "params":{"uri":"mcp://page/html"}}
+```
+
+```json
+{"jsonrpc":"2.0","id":7,"method":"resources/read",
+ "params":{"uri":"mcp://page/markdown"}}
+```
+
+> The `markdown` tool and the `mcp://page/markdown` resource return the same content. The difference is who initiates: **tools** are called by the agent during its workflow; **resources** are read by the host application (e.g. an IDE displaying page state in the background).
+
+---
+
+## Command-line options
+
+All options below apply to `lightpanda mcp`:
+
+| Option | Description | Default |
+|---|---|---|
+| `--obey_robots` | Fetch and obey `robots.txt` of target sites | `false` |
+| `--http_proxy <url>` | HTTP proxy for all requests (supports `user:pass` for basic auth) | none |
+| `--proxy_bearer_token <token>` | Bearer token for proxy authentication | none |
+| `--http_max_concurrent <n>` | Maximum concurrent HTTP requests | `10` |
+| `--http_max_host_open <n>` | Maximum open connections per host:port | `4` |
+| `--http_connect_timeout <ms>` | Connection timeout in milliseconds (0 = no timeout) | `0` |
+| `--http_timeout <ms>` | Transfer timeout in milliseconds (0 = no timeout) | `10000` |
+| `--http_max_response_size <bytes>` | Maximum response size for any request | no limit |
+| `--insecure_disable_tls_host_verification` | Disable TLS host verification (advanced) | `false` |
+| `--log_level <level>` | `debug`, `info`, `warn`, `error`, or `fatal` | `warn` |
+| `--log_format <fmt>` | `pretty` or `logfmt` | `logfmt` |
+| `--log_filter_scopes <scopes>` | Filter verbose logs: `http`, `unknown_prop`, `event`, etc. | none |
+| `--user_agent_suffix <str>` | Suffix appended to the `Lightpanda/X.Y` User-Agent header | none |
+
+```sh copy
+lightpanda mcp --obey_robots --log_level debug --log_format pretty
+```
+
+---
+
+## Connecting an AI agent
+
+### Claude Desktop / Cursor / Windsurf
+
+Add to your MCP host configuration:
+
+- **Claude Desktop:** Settings > Developer > Edit Config
+- **Cursor:** `.cursor/mcp.json` in your project
+- **Windsurf:** Cascade MCP settings
+
+```json
+{
+  "mcpServers": {
+    "lightpanda": {
+      "command": "/path/to/lightpanda",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+For robots.txt compliance, use `"args": ["mcp", "--obey_robots"]`.
+
+> Replace `/path/to/lightpanda` with the actual binary path, e.g. `/usr/local/bin/lightpanda`.
+
+### Python agent (direct stdio)
+
+> **Do NOT call `rpc()` for notifications** (methods with no `id`, like `notifications/initialized`). Notifications have no response, so `rpc()` will block forever waiting for one. Write notifications directly to `lp.stdin` instead.
+
+```python copy
+import subprocess, json
+
+lp = subprocess.Popen(
+    ["lightpanda", "mcp"],
+    stdin=subprocess.PIPE,
+    stdout=subprocess.PIPE,
+    stderr=subprocess.PIPE
+)
+
+# rpc() sends a request and waits for a response.
+# Do NOT use rpc() for notifications (no response expected) — it will hang.
+def rpc(msg):
+    lp.stdin.write((json.dumps(msg) + "\n").encode())
+    lp.stdin.flush()
+    return json.loads(lp.stdout.readline())
+
+try:
+    # 1. Handshake
+    rpc({"jsonrpc":"2.0","id":1,"method":"initialize",
+         "params":{"protocolVersion":"2024-11-05","capabilities":{},
+                   "clientInfo":{"name":"my-agent","version":"1.0"}}})
+
+    # Notification: no response expected, so write directly instead of rpc()
+    lp.stdin.write(b'{"jsonrpc":"2.0","method":"notifications/initialized","params":{}}\n')
+    lp.stdin.flush()
+
+    # 2. Extract markdown from a page
+    result = rpc({"jsonrpc":"2.0","id":2,"method":"tools/call",
+                  "params":{"name":"markdown","arguments":{"url":"https://example.com"}}})
+
+    print(result["result"]["content"][0]["text"])
+finally:
+    lp.terminate()
+```
+
+### HTTP transport via supergateway
+
+Lightpanda MCP natively supports only stdio. To expose it over HTTP, use [supergateway](https://www.npmjs.com/package/supergateway) as a bridge. Requires Node.js 18+.
+
+![Supergateway Bridge Architecture](/docs/images/docs/mcp-server-supergateway-bridge.svg)
+*supergateway bridges stdio to streamableHttp, enabling remote HTTP access.*
+
+```sh copy
+npx -y supergateway \
+  --stdio "lightpanda mcp" \
+  --outputTransport streamableHttp \
+  --port 8000
+
+# Endpoint: http://localhost:8000/mcp
+```
+
+With robots.txt: `--stdio "lightpanda mcp --obey_robots"`
+
+#### Calling the HTTP endpoint
+
+```sh copy
+# Initialize
+curl -X POST http://localhost:8000/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize",
+        "params":{"protocolVersion":"2024-11-05","capabilities":{},
+                  "clientInfo":{"name":"curl-test","version":"1.0"}}}'
+
+# Extract markdown (pass url inline - HTTP is stateless by default)
+curl -X POST http://localhost:8000/mcp \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call",
+        "params":{"name":"markdown","arguments":{"url":"https://example.com"}}}'
+```
+
+> By default, supergateway is **stateless**: each HTTP request spawns a fresh process. Always pass the `url` inline with each tool call. For stateful sessions, use stdio directly or add `--stateful --sessionTimeout <ms>` to the supergateway command.
+
+---
+
+## Real-world example: news headline extractor
+
+A multi-step workflow: navigate to Hacker News, extract headlines with JavaScript, then pull all links in a single stateful stdio session.
+
+```python copy
+import subprocess, json
+
+def mcp_session():
+    lp = subprocess.Popen(
+        ["lightpanda", "mcp"],
+        stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
+
+    def rpc(msg):
+        lp.stdin.write((json.dumps(msg) + "\n").encode())
+        lp.stdin.flush()
+        return json.loads(lp.stdout.readline())
+
+    try:
+        # Handshake
+        rpc({"jsonrpc":"2.0","id":1,"method":"initialize","params":{
+            "protocolVersion":"2024-11-05","capabilities":{},
+            "clientInfo":{"name":"headline-agent","version":"1.0"}}})
+        lp.stdin.write(b'{"jsonrpc":"2.0","method":"notifications/initialized","params":{}}\n')
+        lp.stdin.flush()
+
+        # Step 1: Navigate to Hacker News
+        rpc({"jsonrpc":"2.0","id":2,"method":"tools/call",
+             "params":{"name":"goto","arguments":{"url":"https://news.ycombinator.com"}}})
+
+        # Step 2: Extract top 5 headlines via JavaScript
+        r = rpc({"jsonrpc":"2.0","id":3,"method":"tools/call","params":{
+            "name":"evaluate","arguments":{"script":
+                "var titles = [];"
+                "document.querySelectorAll('.titleline > a').forEach(function(a, i) {"
+                "  if (i < 5) titles.push((i+1) + '. ' + a.textContent);"
+                "});"
+                "titles.join('\\n');"
+            }}})
+        print("Top HN Headlines:")
+        print(r["result"]["content"][0]["text"])
+
+        # Step 3: Extract all links (no url param - page state persists)
+        r2 = rpc({"jsonrpc":"2.0","id":4,"method":"tools/call",
+                  "params":{"name":"links","arguments":{}}})
+        links = r2["result"]["content"][0]["text"].split("\n")
+        print(f"\nExtracted {len(links)} links total")
+    finally:
+        lp.terminate()
+
+mcp_session()
+```
+
+<details>
+<summary>Example output</summary>
+
+```
+Top HN Headlines:
+1. Show HN: Channel Surfer – Watch YouTube like it's cable TV
+2. Can I run AI locally?
+3. Hammerspoon
+4. Mouser: An open source alternative to Logi-Plus mouse software
+5. Qatar helium shutdown puts chip supply chain on a two-week clock
+
+Extracted 229 links total
+```
+
+</details>
+
+Headlines are live and will differ on each run. The script structure and approximate link count (~200+) are the reproducible parts.
+
+### Why this works
+
+- **Step 1** loads the page into memory via `goto`.
+- **Step 2** runs a DOM query via `evaluate`. The page's JS context is available.
+- **Step 3** calls `links` without a `url`, operating on the page already in memory. This is the stateful session benefit of stdio transport.
+
+---
+
+## Known behaviors
+
+### `goto` always returns success
+
+`goto` returns `"Navigated successfully."` even for invalid or unreachable URLs. The failure surfaces on the next content call:
+
+```
+# Navigation failed
+
+Reason: CouldntResolveHost
+```
+
+Always check the content result after navigation, not the `goto` response itself.
+
+### Protocol version negotiation
+
+The server always responds with `protocolVersion: "2025-11-25"`, regardless of client version. Full backward compatibility with `2024-11-05` is maintained.
+
+### Session state: stdio vs. HTTP
+
+| Transport | Stateful? | Behavior |
+|---|---|---|
+| **stdio** (direct) | Yes | Page persists across calls within the session |
+| **HTTP** (supergateway, default) | No | Each request spawns a fresh process |
+| **HTTP** (supergateway `--stateful`) | Yes | Process persists within a session (requires `--sessionTimeout`) |
+
+For stateless HTTP, always pass `url` inline with each tool call.
+
+### Newline requirement
+
+Every JSON-RPC message **must** end with `\n`. Omitting it hangs the process. This is the most common integration mistake.
+
+---
+
+## Future features
+
+Lightpanda's engine exposes additional capabilities through its custom **LP CDP domain** that are not yet available via MCP:
+
+| Future tool | Description | Current workaround |
+|---|---|---|
+| **`semantic_tree`** | Pruned, LLM-optimized DOM with ARIA roles and interactivity detection | `evaluate` with custom DOM traversal, or CDP via `lightpanda serve` |
+| **`interactiveElements`** | Extract buttons, inputs, selects with roles and positions | `evaluate` with `querySelectorAll('a, button, input, select, textarea')` |
+| **`structuredData`** | Extract JSON-LD, OpenGraph, and semantic metadata | `evaluate` with JS to query `<script type="application/ld+json">` and `<meta>` tags |
+
+### Using the CDP interface today
+
+> **These CDP commands (`LP.getSemanticTree`, `LP.getInteractiveElements`, `LP.getStructuredData`) are planned but not yet confirmed as implemented.** Check the [Lightpanda browser status](https://github.com/lightpanda-io/browser#status) before using them. If they are not yet available, use the `evaluate` workaround below instead.
+
+```sh copy
+lightpanda serve --host 127.0.0.1 --port 9222
+```
+
+```javascript copy
+import puppeteer from 'puppeteer-core';
+const browser = await puppeteer.connect({ browserWSEndpoint: 'ws://127.0.0.1:9222' });
+const context = await browser.createBrowserContext();
+const page = await context.newPage();
+await page.goto('https://example.com');
+const client = await page.createCDPSession();
+
+const tree = await client.send('LP.getSemanticTree', { format: 'text' });
+const interactive = await client.send('LP.getInteractiveElements', {});
+const structured = await client.send('LP.getStructuredData', {});
+
+await page.close();
+await context.close();
+await browser.disconnect();
+```
+
+### Using `evaluate` as a workaround
+
+```python copy
+# Extract JSON-LD structured data
+r = rpc({"jsonrpc":"2.0","id":10,"method":"tools/call","params":{
+    "name":"evaluate","arguments":{"script":
+        "JSON.stringify(Array.from(document.querySelectorAll('script[type=\"application/ld+json\"]'))"
+        ".map(function(s){ return JSON.parse(s.textContent); }))"
+    }}})
+
+# Extract interactive elements
+r = rpc({"jsonrpc":"2.0","id":11,"method":"tools/call","params":{
+    "name":"evaluate","arguments":{"script":
+        "Array.from(document.querySelectorAll('a, button, input, select, textarea'))"
+        ".map(function(el){ return el.tagName + ': ' + (el.textContent || el.value || el.name || '').trim().substring(0,50); })"
+        ".join('\\n')"
+    }}})
+```
+
+Other planned enhancements:
+
+- **SSE transport** - Available today via supergateway. Native SSE support in the binary may be added in a future release.
+- **Additional MCP resources** - Resources for semantic tree, interactive elements, or structured data.
+- **Multi-page sessions** - Support for multiple tabs/pages within a single MCP session.
+
+---
+
+## Troubleshooting
+
+| Symptom | Resolution |
+|---|---|
+| `goto` succeeds but `markdown` shows `CouldntResolveHost` | URL was invalid or unreachable. Verify the URL and network. |
+| Empty stdout from `lightpanda mcp` | Send a newline (`\n`) after each JSON message. |
+| `Cannot GET /` on supergateway port | Use `http://localhost:8000/mcp`, not `/`. |
+| `EADDRINUSE` on supergateway | Port in use. `kill $(lsof -ti :8000)` or use `--port 8001`. |
+| `binary: permission denied` | Run `chmod +x lightpanda`. |
+| No data after `initialize` (SSE) | Send `notifications/initialized` (handshake Step 3) first. |
+| State not persisting over HTTP | Expected - supergateway defaults to stateless. Pass `url` inline, use `--stateful`, or use stdio. |
+| `Tool not found` for planned tools | `semantic_tree`, `interactiveElements`, `structuredData` are not yet in MCP. See [Future features](#future-features). |
+| Process hangs on startup | Ensure only one client reads from the instance's stdin. |
+| `--obey_robots` blocks a page | The site's `robots.txt` disallows access. Remove the flag or change URL. |
+| Unexpected content or slow loads | Run with `--log_level info --log_format pretty`. Logs go to stderr, safe for the protocol stream. |
+
+### Debugging
+
+Lightpanda defaults to `--log_level warn`. Setting `info` surfaces HTTP requests, navigation events, resource loading, and robots.txt fetches. All logs go to **stderr** and never interfere with stdout.
+
+```sh copy
+lightpanda mcp --log_level info --log_format pretty
+
+# Or pipe logs to a file
+lightpanda mcp --log_level info 2>lightpanda.log
+```
+
+Use `--log_level debug` for the most verbose output. Keep `warn` in production.
+
+---
+
+## Quick-start verification script
+
+Run after installation to confirm everything works:
+
+```python copy
+#!/usr/bin/env python3
+"""Lightpanda MCP quick-start verification. Requires: lightpanda in PATH or ./lightpanda"""
+import subprocess, json, sys
+
+LP_CMD = ["lightpanda", "mcp"]  # or ["./lightpanda", "mcp"]
+
+def run_test():
+    lp = subprocess.Popen(LP_CMD, stdin=subprocess.PIPE,
+                          stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    def rpc(msg):
+        lp.stdin.write((json.dumps(msg)+"\n").encode()); lp.stdin.flush()
+        line = lp.stdout.readline()
+        if not line: raise RuntimeError("No response from lightpanda")
+        return json.loads(line)
+
+    try:
+        # Initialize
+        r = rpc({"jsonrpc":"2.0","id":1,"method":"initialize","params":{
+            "protocolVersion":"2024-11-05","capabilities":{},
+            "clientInfo":{"name":"test","version":"1.0"}}})
+        assert r["result"]["serverInfo"]["name"] == "lightpanda", "init failed"
+        lp.stdin.write(b'{"jsonrpc":"2.0","method":"notifications/initialized","params":{}}\n')
+        lp.stdin.flush()
+
+        # List tools
+        r = rpc({"jsonrpc":"2.0","id":2,"method":"tools/list","params":{}})
+        tools = {t["name"] for t in r["result"]["tools"]}
+        assert tools == {"goto","markdown","links","evaluate"}, f"unexpected tools: {tools}"
+
+        # End-to-end: navigate and extract
+        r = rpc({"jsonrpc":"2.0","id":3,"method":"tools/call","params":{
+            "name":"markdown","arguments":{"url":"https://example.com"}}})
+        md = r["result"]["content"][0]["text"]
+        assert "Example Domain" in md, "markdown extraction failed"
+
+        print("All checks passed. Lightpanda MCP is working correctly.")
+    finally:
+        lp.terminate()
+
+run_test()
+```
+
+---
+
+## References
+
+- [LP Domain & Native MCP - Lightpanda Blog](https://lightpanda.io/blog/posts/lp-domain-commands-and-native-mcp)
+- [Lightpanda GitHub](https://github.com/lightpanda-io/browser)
+- [Lightpanda releases](https://github.com/lightpanda-io/browser/releases)
+- [MCP Specification](https://modelcontextprotocol.io/)
+- [supergateway (npm)](https://www.npmjs.com/package/supergateway)
+- [Lightpanda Cloud MCP (SSE)](https://lightpanda.io/docs/cloud-offer/tools/mcp)

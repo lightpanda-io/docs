@@ -1,0 +1,94 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">
+  <defs>
+    <linearGradient id="lpGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6C3CE1;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4F1FCB;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="agentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#2563EB;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1D4ED8;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="webGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#059669;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#047857;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="115%">
+      <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity="0.15"/>
+    </filter>
+    <marker id="arrowPurple" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#6C3CE1"/>
+    </marker>
+    <marker id="arrowBlue" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#2563EB"/>
+    </marker>
+    <marker id="arrowGreen" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#059669"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect x="0" y="0" width="800" height="400" rx="12" fill="#F8FAFC"/>
+
+  <!-- Title -->
+  <text x="400" y="38" text-anchor="middle" font-size="16" font-weight="700" fill="#1E293B">Lightpanda Native MCP Architecture</text>
+  <text x="400" y="58" text-anchor="middle" font-size="12" font-weight="400" fill="#64748B">Single-process — no CDP bridge, no external dependencies</text>
+
+  <!-- AI Agent Box -->
+  <rect x="40" y="100" width="180" height="220" rx="12" fill="url(#agentGrad)" filter="url(#shadow)"/>
+  <text x="130" y="132" text-anchor="middle" font-size="14" font-weight="700" fill="white">AI Agent</text>
+  <text x="130" y="152" text-anchor="middle" font-size="10" font-weight="400" fill="rgba(255,255,255,0.8)">(MCP Client)</text>
+
+  <rect x="56" y="170" width="148" height="28" rx="6" fill="rgba(255,255,255,0.15)"/>
+  <text x="130" y="189" text-anchor="middle" font-size="10" font-weight="400" fill="white">Claude / Cursor / Custom</text>
+  <rect x="56" y="208" width="148" height="28" rx="6" fill="rgba(255,255,255,0.15)"/>
+  <text x="130" y="227" text-anchor="middle" font-size="10" font-weight="400" fill="white">JSON-RPC 2.0 over stdio</text>
+  <rect x="56" y="246" width="148" height="28" rx="6" fill="rgba(255,255,255,0.15)"/>
+  <text x="130" y="265" text-anchor="middle" font-size="10" font-weight="400" fill="white">Newline-delimited messages</text>
+  <rect x="56" y="284" width="148" height="28" rx="6" fill="rgba(255,255,255,0.15)"/>
+  <text x="130" y="303" text-anchor="middle" font-size="10" font-weight="400" fill="white">Spawns child process</text>
+
+  <!-- Arrows: Agent → Lightpanda -->
+  <line x1="220" y1="185" x2="300" y2="185" stroke="#6C3CE1" stroke-width="2.5" marker-end="url(#arrowPurple)"/>
+  <text x="260" y="178" text-anchor="middle" font-size="9" font-weight="600" fill="#6C3CE1">stdin</text>
+
+  <line x1="300" y1="225" x2="220" y2="225" stroke="#2563EB" stroke-width="2.5" marker-end="url(#arrowBlue)"/>
+  <text x="260" y="242" text-anchor="middle" font-size="9" font-weight="600" fill="#2563EB">stdout</text>
+
+  <!-- Lightpanda Binary Box -->
+  <rect x="300" y="80" width="240" height="260" rx="12" fill="url(#lpGrad)" filter="url(#shadow)"/>
+  <text x="420" y="112" text-anchor="middle" font-size="14" font-weight="700" fill="white">lightpanda mcp</text>
+  <text x="420" y="130" text-anchor="middle" font-size="10" font-weight="400" fill="rgba(255,255,255,0.8)">Single Binary (~58 MB)</text>
+
+  <!-- Inner components -->
+  <rect x="316" y="148" width="208" height="36" rx="6" fill="rgba(255,255,255,0.2)"/>
+  <text x="420" y="171" text-anchor="middle" font-size="11" font-weight="600" fill="white">MCP Server (JSON-RPC)</text>
+  <rect x="316" y="194" width="100" height="30" rx="6" fill="rgba(255,255,255,0.15)"/>
+  <text x="366" y="213" text-anchor="middle" font-size="10" font-weight="400" fill="white">4 Tools</text>
+  <rect x="424" y="194" width="100" height="30" rx="6" fill="rgba(255,255,255,0.15)"/>
+  <text x="474" y="213" text-anchor="middle" font-size="10" font-weight="400" fill="white">2 Resources</text>
+  <rect x="316" y="234" width="208" height="36" rx="6" fill="rgba(255,255,255,0.2)"/>
+  <text x="420" y="257" text-anchor="middle" font-size="11" font-weight="600" fill="white">Zig Browser Engine</text>
+  <rect x="316" y="280" width="208" height="36" rx="6" fill="rgba(255,255,255,0.2)"/>
+  <text x="420" y="303" text-anchor="middle" font-size="11" font-weight="600" fill="white">JavaScript Runtime</text>
+
+  <!-- Arrow: Lightpanda → Web -->
+  <line x1="540" y1="210" x2="600" y2="210" stroke="#059669" stroke-width="2.5" marker-end="url(#arrowGreen)"/>
+  <text x="570" y="200" text-anchor="middle" font-size="9" font-weight="600" fill="#059669">HTTPS</text>
+
+  <!-- Web Box -->
+  <rect x="600" y="100" width="160" height="220" rx="12" fill="url(#webGrad)" filter="url(#shadow)"/>
+  <text x="680" y="132" text-anchor="middle" font-size="14" font-weight="700" fill="white">Web</text>
+
+  <rect x="616" y="150" width="128" height="28" rx="6" fill="rgba(255,255,255,0.15)"/>
+  <text x="680" y="169" text-anchor="middle" font-size="10" font-weight="400" fill="white">HTML / CSS / JS</text>
+  <rect x="616" y="188" width="128" height="28" rx="6" fill="rgba(255,255,255,0.15)"/>
+  <text x="680" y="207" text-anchor="middle" font-size="10" font-weight="400" fill="white">Page Rendering</text>
+  <rect x="616" y="226" width="128" height="28" rx="6" fill="rgba(255,255,255,0.15)"/>
+  <text x="680" y="245" text-anchor="middle" font-size="10" font-weight="400" fill="white">DOM Construction</text>
+  <rect x="616" y="264" width="128" height="28" rx="6" fill="rgba(255,255,255,0.15)"/>
+  <text x="680" y="283" text-anchor="middle" font-size="10" font-weight="400" fill="white">robots.txt (optional)</text>
+
+  <!-- Footer note -->
+  <text x="400" y="372" text-anchor="middle" font-size="11" font-weight="400" fill="#64748B">No CDP intermediary • Zero-overhead access • Same process as JS engine</text>
+  <text x="400" y="390" text-anchor="middle" font-size="10" font-weight="400" fill="#94A3B8">Lightpanda v0.2.5</text>
+</svg>
