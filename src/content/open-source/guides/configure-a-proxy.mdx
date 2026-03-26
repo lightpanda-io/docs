@@ -10,16 +10,16 @@ authentication. You can configure the proxy when starting the browser.
 
 ## Configure HTTP proxy
 
-Use the CLI option `--http_proxy` when starting Lightpanda to configure the
+Use the CLI option `--http-proxy` when starting Lightpanda to configure the
 proxy. Ensure your proxy address starts with `http://` or `https://`.
 
 Use a local proxy with the `fetch` command:
 ```sh copy
-./lightpanda fetch --http_proxy http://127.0.0.1:3000 https://lightpanda.io
+./lightpanda fetch --http-proxy http://127.0.0.1:3000 https://lightpanda.io
 ```
 Or configure the proxy with `serve` for the CDP server. All outgoing requests will use the proxy.
 ```sh copy
-./lightpanda serve --http_proxy http://127.0.0.1:3000
+./lightpanda serve --http-proxy http://127.0.0.1:3000
 ```
 
 ### HTTP proxy with basic auth
@@ -30,20 +30,20 @@ for the proxy using the `username:password@` format in the proxy address. It
 works for both `fetch` and `serve` commands.
 
 ```sh copy
-./lightpanda fetch --http_proxy 'http://me:my-password@127.0.0.1:3000' https://lightpanda.io
+./lightpanda fetch --http-proxy 'http://me:my-password@127.0.0.1:3000' https://lightpanda.io
 ```
 
 ### HTTP proxy with bearer auth
 
 Lightpanda supports [bearer
 auth](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Authentication#bearer)
-to authenticate with the `--proxy_bearer_token`. It works for both `fetch` and
+to authenticate with the `--proxy-bearer-token`. It works for both `fetch` and
 `serve` commands.
 
 This option will add a `Proxy-Authorization` header all the outgoing requests.
 
 ```sh copy
-./lightpanda fetch --http_proxy 'http://127.0.0.1:3000' --proxy_bearer_token 'MY-TOKEN' https://lightpanda.io
+./lightpanda fetch --http-proxy 'http://127.0.0.1:3000' --proxy-bearer-token 'MY-TOKEN' https://lightpanda.io
 ```
 
 ## Configure a proxy from your Puppeteer/Playwright script
@@ -57,7 +57,7 @@ With Puppeteer, you have to configure the proxy address when starting
 Lightpanda.
 
 ```sh copy
-./lightpanda fetch --http_proxy 'http://127.0.0.1:3000'
+./lightpanda fetch --http-proxy 'http://127.0.0.1:3000'
 ```
 
 Then you can call `page.authenticate` function to inject your authentication
