@@ -32,18 +32,19 @@ Lightpanda is the open-source browser made for headless usage:
 
 Fast web automation for AI agents, LLM training, scraping and testing:
 
-- Ultra-low memory footprint (9x less than Chrome)
-- Exceptionally fast execution (11x faster than Chrome)
+- Ultra-low memory footprint (16x less than Chrome)
+- Exceptionally fast execution (9x faster than Chrome)
 - Instant startup
 
-[<img width="350px" src="https://cdn.lightpanda.io/assets/images/github/execution-time.svg">](https://github.com/lightpanda-io/demo)
+[<img width="350px" src="https://cdn.lightpanda.io/assets/images/github/execution-time-v2.svg">
+](https://github.com/lightpanda-io/demo)
 &emsp;
-[<img width="350px" src="https://cdn.lightpanda.io/assets/images/github/memory-frame.svg">](https://github.com/lightpanda-io/demo)
-
+[<img width="350px" src="https://cdn.lightpanda.io/assets/images/github/memory-frame-v2.svg">
+](https://github.com/lightpanda-io/demo)
 </div>
 
-_Puppeteer requesting 100 pages from a local website on a AWS EC2 m5.large instance.
-See [benchmark details](https://github.com/lightpanda-io/demo)._
+_chromedp requesting 933 real web pages over the network on a AWS EC2 m5.large instance.
+See [benchmark details](https://github.com/lightpanda-io/demo/blob/main/BENCHMARKS.md#crawler-benchmark)._
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
