@@ -24,6 +24,8 @@ By the end of this guide, you’ll have:
 
 You'll need [Node.js](https://nodejs.org/en/download) installed on your computer.
 
+**Windows users:** Lightpanda has no native Windows binary. You'll need WSL to run it. See the [Windows (WSL) setup guide](/open-source/installation#windows-wsl) before continuing.
+
 ## Initialize the Node.js project
 
 Create a `hn-scraper` directory and initialize a new Node.js project.
@@ -31,11 +33,23 @@ Create a `hn-scraper` directory and initialize a new Node.js project.
 ```sh copy
 mkdir hn-scraper && \
   cd hn-scraper && \
-  npm init
+  npm init -y && \
+  npm pkg set type=module
 ```
 
-You can accept all the default values in the npm init prompts. When done, your
-directory should look like this:
+`npm init -y` accepts all defaults. `npm pkg set type=module` is required because
+Lightpanda uses ES module syntax (`import`/`export`) — the default `"type": "commonjs"`
+would cause a `SyntaxError`.
+
+Your `package.json` should contain:
+
+```json
+{
+  "type": "module"
+}
+```
+
+When done, your directory should look like this:
 
 <FileTree>
   <FileTree.Folder name="hn-scraper" defaultOpen>

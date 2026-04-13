@@ -73,22 +73,25 @@ curl -L -o lightpanda \
   chmod a+x ./lightpanda
 ```
 
-## Windows + WSL2
+## Windows (WSL)
 
-The Lightpanda browser is compatible to run on Windows inside WSL (Windows Subsystem for Linux). If WSL has not been installed before follow these steps (for more information see: [MS Windows install WSL](https://learn.microsoft.com/en-us/windows/wsl/install)).
-Install & open WSL + Ubuntu from an **administrator** shell:
-  1. `wsl --install`
-  2. -- restart --
-  3. `wsl --install -d Ubuntu`
-  4. `wsl`
+Lightpanda has no native Windows binary. To run it on Windows, you need a Linux environment — either WSL (Windows Subsystem for Linux).
 
-Once WSL and a Linux distribution have been installed the browser can be installed in the same way it is installed for Linux.
-Inside WSL install the Lightpanda browser:
+If WSL is not yet installed, run the following from an **administrator** shell
+(see [MS Windows install WSL](https://learn.microsoft.com/en-us/windows/wsl/install) for more information):
+
+1. `wsl --install`
+2. -- restart --
+3. `wsl`
+
+This installs WSL with Ubuntu by default. Once inside WSL, install Lightpanda as you would on Linux:
+
 ```bash copy
 curl -L -o lightpanda https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-x86_64-linux && \
 chmod a+x ./lightpanda
 ```
-It is recommended to install clients like Puppeteer on the Windows host.
+
+Your CDP client (Puppeteer, Playwright, etc.) should also run **inside WSL**, in the same Linux environment as Lightpanda.
 
 ## Telemetry
 By default, Lightpanda collects and sends usage telemetry. This can be disabled by setting an environment variable `LIGHTPANDA_DISABLE_TELEMETRY=true`. You can read Lightpanda's privacy policy at: [https://lightpanda.io/privacy-policy](https://lightpanda.io/privacy-policy).
