@@ -1,0 +1,180 @@
+---
+title: "Using Lightpanda's Native MCP Server with Claude"
+description:  "Step-by-step guide to connecting Lightpanda's native MCP server to Claude Desktop and Cowork. 9x faster than Chrome, 16x less memory, up to 80% fewer tokens than Chrome-based tools — purpose-built for AI agents. Includes live outputs, a five-tool agent demo, and a Windows (WSL) setup section."
+author: Céline Debled
+tags:
+  - mcp
+  - automation
+---
+
+## TL;DR
+
+Lightpanda ships a native MCP server built directly into the browser binary. Run it locally and point Claude Desktop or Cowork at it — you get web browsing built for machines, not humans: 9x faster execution than Chrome, 16x less memory.
+
+Unlike Claude's built-in web browsing, Lightpanda mcp can run locally in your own environment and produces drastically leaner page representations. Fewer tokens per page means lower API costs at scale. See the [full benchmark](https://github.com/lightpanda-io/demo/blob/main/BENCHMARKS.md#crawler-benchmark).
+
+
+---
+
+## The result, before the setup
+
+
+<video controls width="100%" style={{borderRadius: '8px', marginTop: '1rem'}}>
+  <source src="/blog/lightpanda-mcp-claude-demo-lp-website-md-and-libraries.mp4" type="video/mp4" />
+</video>
+
+Ask Claude:
+
+> *"Go to lightpanda.io and extract the page."*
+
+Claude calls `goto` then `markdown`. 
+
+Now ask:
+
+> *"What JavaScript libraries does this page load?"*
+
+Claude calls `evaluate` that evaluates Javascript in the current page context.
+
+
+---
+
+## How it works
+
+`lightpanda mcp` starts an MCP server inside the browser process. Claude Desktop and Cowork both speak this protocol natively.
+
+> **Beta status:** Lightpanda is in Beta and currently a work in progress. Stability and coverage are improving and many websites now work. You may still encounter errors or crashes. For the current list of supported web platform features, see the [list on Github](https://github.com/lightpanda-io/browser?tab=readme-ov-file#status).
+
+
+---
+
+## Installation
+
+See the [full installation guide](https://lightpanda.io/docs/open-source/installation). The one-liner:
+
+```bash
+curl -fsSL https://pkg.lightpanda.io/install.sh | bash
+```
+
+Verify it works before touching any config:
+
+```bash
+lightpanda mcp
+# → blocks silently, waiting for stdin. Ctrl+C to exit. That's correct.
+```
+
+---
+
+## Configure your Claude client
+
+The native MCP server is configured the same way for all clients: add a `lightpanda` entry to your `mcpServers` config, pointing at the binary with `["mcp"]` as the argument.
+
+### Claude Desktop
+
+**File → Settings → Developer → Edit Config** opens `claude_desktop_config.json`.
+
+```json
+{
+  "mcpServers": {
+    "lightpanda": {
+      "command": "/usr/local/bin/lightpanda",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+Replace the path with your actual binary location (`which lightpanda`).
+
+If you already have other entries in the config, `mcpServers` is just a new sibling key:
+
+```json
+{
+  "preferences": { "...": "..." },
+  "mcpServers": {
+    "lightpanda": {
+      "command": "wsl.exe",
+      "args": ["--exec", "/home/<your-wsl-username>/.local/bin/lightpanda", "mcp"]
+    }
+  }
+}
+```
+
+Fully quit Claude Desktop from the system tray and relaunch. 
+
+The mcp is listed among local MCP servers.
+![Lightpanda listed in Claude Developer Settings](/blog/claude-settings-lightpanda-mcp.png)
+
+And the tools icon in the input bar should show Lightpanda listed.
+
+![Lightpanda listed in Claude Desktop's tools panel](/blog/claude-connectors-active-list-lightpanda-mcp.png)
+
+
+#### On Windows (WSL)
+
+Claude Desktop is a native Windows process, but your Lightpanda binary lives in Linux (WSL). You can't point `command` directly at a Linux path — use `wsl.exe` as the launcher instead.
+
+The config file is at `C:\Users\<YourUsername>\AppData\Roaming\Claude\claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "lightpanda": {
+      "command": "wsl.exe",
+      "args": ["--exec", "/home/<your-wsl-username>/.local/bin/lightpanda", "mcp"]
+    }
+  }
+}
+```
+
+Find your WSL username with `echo $HOME` in your WSL terminal. Use the full absolute path — `~/` doesn't expand when called from `wsl.exe`.
+
+Test it from PowerShell before restarting Claude Desktop:
+
+```powershell
+wsl.exe --exec /home/<your-username>/.local/bin/lightpanda mcp
+# → should block silently. If it exits immediately, the path is wrong.
+```
+
+
+### Cowork
+
+Cowork reads the same `claude_desktop_config.json` as Claude Desktop — no additional config needed. If you set it up for Claude Desktop, it's already available in Cowork.
+
+---
+
+## Tools
+
+The native MCP server exposes 18 tools (`navigate` and `eval` are aliases for `goto` and `evaluate`). Descriptions below are taken directly from [`src/mcp/tools.zig`](https://github.com/lightpanda-io/browser/blob/main/src/mcp/tools.zig):
+ 
+| For reading | For acting |
+|---|---|
+| `goto` — navigate to a URL and load the page in memory for reuse | `click` — click on an interactive element; returns the current URL and title after the click |
+| `markdown` — get the page content in markdown format | `fill` — fill text into an input element; returns the filled value, URL, and title |
+| `links` — extract all links in the opened page | `press` — press a keyboard key, dispatching keydown and keyup events (Enter, Tab, Escape, ArrowDown…) |
+| `structuredData` — extract structured data (JSON-LD, OpenGraph, etc) from the opened page | `hover` — hover over an element, triggering mouseover and mouseenter events |
+| `semantic_tree` — get the page content as a simplified semantic DOM tree for AI reasoning | `selectOption` — select an option in a `<select>` dropdown by its value; dispatches input and change events |
+| `interactiveElements` — extract interactive elements from the opened page | `setChecked` — check or uncheck a checkbox or radio button; dispatches input, change, and click events |
+| `evaluate` — evaluate JavaScript in the current page context | `waitForSelector` — wait for an element matching a CSS selector; returns its backend node ID |
+| `findElement` — find interactive elements by ARIA role and/or accessible name | `scroll` — scroll the page or a specific element; returns the scroll position, URL, and title |
+| `detectForms` — detect all forms and return their structure including fields, types, and required status | |
+| `nodeDetails` — get detailed information about a node by its backend node ID (tag, role, name, disabled state, value, placeholder, href, checked state, select options) | |
+
+> The current docs table lists 12 tools. The source (`src/mcp/tools.zig`) has 18. The six missing — `nodeDetails`, `hover`, `press`, `selectOption`, `setChecked`, `findElement` — are fully implemented. They were added after the initial v0.2.5 release.
+
+
+---
+
+## What's next
+
+The native MCP is the fastest path to a working browser agent. If you want Lightpanda pre-packaged for your Claude workflow — with prompts and browser skills bundled — Lightpanda also ships an [agent skill](https://github.com/lightpanda-io/agent-skill). That's the subject of the next article.
+
+---
+
+## References
+
+- [Installation guide](https://lightpanda.io/docs/open-source/installation)
+- [Native MCP server docs](https://lightpanda.io/docs/open-source/guides/mcp-server)
+- [LP Domain & Native MCP — blog post](https://lightpanda.io/blog/posts/lp-domain-commands-and-native-mcp)
+- [Lightpanda releases](https://github.com/lightpanda-io/browser/releases)
+- [MCP Specification](https://modelcontextprotocol.io/)
+- [Lightpanda agent skill](https://github.com/lightpanda-io/agent-skill)
