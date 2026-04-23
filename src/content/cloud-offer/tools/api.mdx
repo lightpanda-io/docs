@@ -1,0 +1,90 @@
+---
+title: API
+description: Use HTTP API calls to get Lightpanda's results directly.
+---
+
+# HTTP API
+
+Lightpanda Cloud provides an HTTP API to easily retrieve results from Lightpanda without the burden of writing and running a CDP script.
+
+## Authentication
+
+Every HTTP API request must include a bearer authorization header with your token.
+
+```
+Authorization: Bearer YOUR_TOKEN
+```
+
+Example with curl:
+```sh copy
+curl -XPOST \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  https://euwest.cloud.lightpanda.io/api/fetch \
+   --data '{"url":"https://lightpanda.io"}'
+```
+
+## Fetch a URL
+
+The main API lets you fetch a URL and retrieve the rendered page in HTML or markdown format.
+The `POST /api/fetch` endpoint returns a JSON message containing the page's content.
+
+### Request
+
+The request requires the `Content-Type: application/json` header.
+
+The endpoint accepts the following parameters:
+
+* `url`: string, required: the URL to fetch.
+* `output_format`: `html` or `markdown`, optional, default `html`.
+* `wait_ms`: uint, optional, default `5000`: time to wait before retrieving the page, in milliseconds.
+* `wait_event`: `DOMContentLoaded`, `load`, `networkAlmostIdle` or `networkIdle`, optional, default `networkIdle`: event to wait for before retrieving the page.
+* `raw`: bool, optional, default `false`: if true, the raw HTML or markdown is returned directly, without the JSON wrapper.
+* `proxy_name`: optional, default `fast_dc`.
+* `country`: optional: only used with the `datacenter` proxy.
+
+```json copy
+{
+  "url": "https://lightpanda.io",
+  "output_format": "markdown",
+  "wait_ms": 50000,
+  "wait_event": "networkIdle",
+  "raw": false
+}
+```
+
+### Response
+
+If the request sets `raw` to `false`, a JSON response is returned.
+
+* `data`: string: the page's content, in the format specified by the `output_format` parameter.
+* `status`: uint: the response status code.
+* `headers`: array, optional: the HTTP headers returned by the server.
+
+```json copy
+{
+  "data": "\n# Example Domain\n\nThis domain is for use in documentation examples without needing permission. Avoid use in operations.\n\n[Learn more](https://iana.org/domains/example)\n",
+  "status": 200,
+  "headers": {
+    "age": "10026",
+    "allow": "GET, HEAD",
+    "cf-cache-status": "HIT",
+    "cf-ray": "9f0dd9374a2320ab-IAD",
+    "content-encoding": "br",
+    "content-type": "text/html",
+    "date": "Thu, 23 Apr 2026 15:19:47 GMT",
+    "last-modified": "Sat, 18 Apr 2026 00:51:00 GMT",
+    "server": "cloudflare"
+  }
+}
+```
+
+### Complete example with curl
+
+```sh copy
+$ curl -XPOST \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  https://euwest.cloud.lightpanda.io/api/fetch \
+  --data '{"url":"https://example.com", "output_format":"markdown"}'
+```
