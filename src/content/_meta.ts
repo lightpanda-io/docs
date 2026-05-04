@@ -15,9 +15,7 @@ const meta: MetaRecord = {
   },
   quickstart: {
     title: 'Quickstart',
-    theme: {
-      breadcrumb: false,
-    },
+    theme: {},
   },
   'open-source': 'Open source edition',
   'cloud-offer': 'Cloud offer',
