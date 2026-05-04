@@ -39,6 +39,32 @@ The following command fetches the Docker image and starts a new container exposi
 docker run -d --name lightpanda -p 127.0.0.1:9222:9222 lightpanda/browser:nightly
 ```
 
+## Install from package manager
+
+### Homebrew
+
+Install the last nightly using Homebrew.
+
+```sh copy
+brew install lightpanda-io/browser/lightpanda
+```
+
+### Arch Linux User Repository
+
+```sh copy
+yay -S lightpanda-bin
+```
+
+You can alternatively use the last nightly version with:
+```sh copy
+yay -S lightpanda-nightly-bin
+```
+
+### Debian/Ubuntu
+
+Starting `0.3.0`, a `.deb` is available with each [tagged
+release](https://github.com/lightpanda-io/browser/releases).
+
 ## Install manually from the nightly builds
 
 The latest binary can be downloaded from the [nightly
