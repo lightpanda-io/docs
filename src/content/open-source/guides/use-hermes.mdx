@@ -1,0 +1,102 @@
+---
+title: Use Hermes Agent
+description: Run Hermes Agent with Lightpanda as the browser backend.
+---
+
+# Use Hermes Agent
+
+[Hermes Agent](https://hermes-agent.nousresearch.com) is an open source autonomous agent built by [Nous Research](https://nousresearch.com). It runs autonomously for long stretches, builds persistent memory, spawns subagents in parallel, and reaches you on Telegram, Discord, Slack, and other platforms while working on a remote VM. From version `v0.13.0`, Hermes has native support for Lightpanda as a browser backend.
+
+When configured to use Lightpanda, Hermes will route browser actions through Lightpanda, with automatic Chrome fallback for actions Lightpanda doesn't yet support (such as screenshots).
+
+## Prerequisites
+
+- Hermes Agent `v0.13.0` or later
+- Lightpanda installed and on your `PATH`
+
+If you don't yet have Lightpanda installed, follow the [installation guide](/docs/open-source/installation).
+
+## Install Hermes
+
+If you don't have Hermes Agent yet, install it with the official one-liner:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/NousResearch/hermes-agent/main/scripts/install.sh | bash
+```
+
+If you already have Hermes installed, update to `v0.13.0` or later:
+
+```bash
+hermes update
+```
+
+Confirm the version:
+
+```bash
+hermes --version
+```
+
+## Configure Lightpanda as the browser backend
+
+Open Hermes' config file:
+
+```bash
+open ~/.hermes/config.yaml
+```
+
+Find the `browser:` block and add the `engine: lightpanda` line:
+
+```yaml
+browser:
+  engine: lightpanda
+```
+
+Save and close the file.
+
+## Verify the configuration
+
+Start Hermes:
+
+```bash
+hermes
+```
+
+Run the `/browser` slash command:
+
+```
+/browser
+```
+
+You should see:
+
+```
+🌐 Browser: local Lightpanda (agent-browser --engine lightpanda)
+   ⚡ Lightpanda: faster navigation, no screenshot support
+   Automatic Chrome fallback for screenshots and failed commands
+```
+
+Hermes will now route browser actions through Lightpanda.
+
+## Run a quick test
+
+Inside Hermes, try a prompt that involves browsing:
+
+```
+Visit https://news.ycombinator.com and list the top 5 story titles.
+```
+
+Hermes will spawn its browser tools and route them through Lightpanda. You'll see streaming tool calls (`browser_navigate`, `browser_snapshot`) executing against Lightpanda.
+
+## Automatic Chrome fallback
+
+Lightpanda doesn't yet support every browser action Hermes might call. When Hermes invokes an unsupported action (e.g. screenshots), or when a command errors out on Lightpanda, Hermes transparently retries on Chrome.
+
+This means enabling `engine: lightpanda` is non-disruptive: Lightpanda handles the actions it supports, Chrome handles the rest, and your agent's behavior remains unchanged.
+
+The current set of actions supported by Lightpanda inside Hermes covers the core agent workflow: navigate, snapshot, click, type, scroll, back, press, and eval. Actions that fall back to Chrome include screenshots, PDF generation, file uploads, and clipboard operations.
+
+## Further reading
+
+- [Hermes Agent documentation](https://hermes-agent.nousresearch.com/docs/)
+- [Pull request that added Lightpanda support to Hermes](https://github.com/NousResearch/hermes-agent/pull/7144)
+- [Lightpanda installation guide](/docs/open-source/installation)
