@@ -1,7 +1,9 @@
 import type { MetaRecord } from 'nextra'
 
 const meta: MetaRecord = {
-  'configure-a-proxy': 'Configure a proxy',
+  'markdown-axtree': 'Get a markdown version',
+  'use-stagehand': 'Use Stagehand',
+  'mcp-server': 'MCP server',
   'use-hermes': 'Use Hermes Agent',
 }
 
