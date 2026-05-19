@@ -1,0 +1,196 @@
+---
+title: Retrieve an HTML webpage
+description: Learn how to navigate to a webpage and extract data using Puppeteer or Playwright with Lightpanda.
+---
+import { Tabs } from 'nextra/components'
+import { Callout } from 'nextra/components'
+
+# Retrieve an HTML webpage
+
+In this guide, you'll connect a CDP client to Lightpanda and extract all reference links from a [Wikipedia page](https://en.wikipedia.org/wiki/Web_browser).
+
+<Callout type="info" emoji="ℹ️">
+  This guide uses **CDP locally**. Lightpanda is started as a local process via the `@lightpanda/browser` npm package. To connect from the cloud or use a different client, see the [Usage / CDP](/usage/cdp/puppeteer) section.
+</Callout>
+
+Unlike [curl](https://curl.se/), which only fetches raw HTML, Lightpanda executes JavaScript and runs query selectors directly in the browser — making it suitable for dynamic pages.
+
+## Prerequisites
+
+Install the [`puppeteer-core`](https://www.npmjs.com/package/puppeteer-core) *or* [`playwright-core`](https://www.npmjs.com/package/playwright-core) npm package.
+
+<Callout type="info" emoji="">
+  Unlike `puppeteer` and `playwright`, `puppeteer-core` and `playwright-core` don't download a Chromium browser.
+</Callout>
+
+<Tabs items={['puppeteer', 'playwright']} className="-mb-4">
+  <Tabs.Tab id="puppeteer" className="m-0">
+```sh copy
+npm install --save puppeteer-core @lightpanda/browser
+```
+  </Tabs.Tab>
+  <Tabs.Tab id="playwright" className="m-0">
+```sh copy
+npm install --save playwright-core @lightpanda/browser
+```
+  </Tabs.Tab>
+</Tabs>
+
+## Navigate and extract
+
+Use `page.goto` to navigate to the Wikipedia page, then run a query selector to extract all external reference links:
+
+<Tabs items={['puppeteer', 'playwright']} className="-mb-4">
+  <Tabs.Tab id="puppeteer" className="m-0">
+```javascript copy
+  // Go to Wikipedia page.
+  await page.goto("https://en.wikipedia.org/wiki/Web_browser");
+
+  // Extract all links from the references list of the page.
+  const reflist = await page.evaluate(() => {
+    return Array.from(document.querySelectorAll('.references a.external')).map(row => {
+      return row.getAttribute('href');
+    });
+  });
+
+  // Display the result.
+  console.log("all reference links", reflist);
+```
+  </Tabs.Tab>
+  <Tabs.Tab id="playwright" className="m-0">
+```javascript copy
+  // Go to Wikipedia page.
+  await page.goto("https://en.wikipedia.org/wiki/Web_browser");
+
+  // Extract all links from the references list of the page.
+  const reflist = await page.locator('.references a.external').evaluateAll(links =>
+    links.map(link => link.getAttribute('href'))
+  );
+
+  // Display the result.
+  console.log("all reference links", reflist);
+```
+  </Tabs.Tab>
+</Tabs>
+
+## Full script
+
+<Tabs items={['puppeteer', 'playwright']} className="-mb-4">
+  <Tabs.Tab id="puppeteer" className="m-0">
+```javascript copy
+'use strict'
+
+import { lightpanda } from '@lightpanda/browser';
+import puppeteer from 'puppeteer-core';
+
+const lpdopts = {
+  host: '127.0.0.1',
+  port: 9222,
+};
+
+const puppeteeropts = {
+  browserWSEndpoint: 'ws://' + lpdopts.host + ':' + lpdopts.port,
+};
+
+(async () => {
+  // Start Lightpanda browser in a separate process.
+  const proc = await lightpanda.serve(lpdopts);
+
+  // Connect Puppeteer to the browser.
+  const browser = await puppeteer.connect(puppeteeropts);
+  const context = await browser.createBrowserContext();
+  const page = await context.newPage();
+
+  // Go to Wikipedia page.
+  await page.goto("https://en.wikipedia.org/wiki/Web_browser");
+
+  // Extract all links from the references list of the page.
+  const reflist = await page.evaluate(() => {
+    return Array.from(document.querySelectorAll('.references a.external')).map(row => {
+      return row.getAttribute('href');
+    });
+  });
+
+  // Display the result.
+  console.log("all reference links", reflist);
+
+  // Disconnect Puppeteer.
+  await page.close();
+  await context.close();
+  await browser.disconnect();
+
+  // Stop Lightpanda browser process.
+  proc.stdout.destroy();
+  proc.stderr.destroy();
+  proc.kill();
+})();
+```
+  </Tabs.Tab>
+  <Tabs.Tab id="playwright" className="m-0">
+```javascript copy
+'use strict'
+
+import { lightpanda } from '@lightpanda/browser';
+import { chromium } from 'playwright-core';
+
+const lpdopts = {
+  host: '127.0.0.1',
+  port: 9222,
+};
+
+const playwrightopts = {
+  endpointURL: 'ws://' + lpdopts.host + ':' + lpdopts.port,
+};
+
+(async () => {
+  // Start Lightpanda browser in a separate process.
+  const proc = await lightpanda.serve(lpdopts);
+
+  // Connect Playwright's chromium driver to the browser.
+  const browser = await chromium.connectOverCDP(playwrightopts);
+  const context = await browser.newContext({});
+  const page = await context.newPage();
+
+  // Go to Wikipedia page.
+  await page.goto("https://en.wikipedia.org/wiki/Web_browser");
+
+  // Extract all links from the references list of the page.
+  const reflist = await page.locator('.references a.external').evaluateAll(links =>
+    links.map(link => link.getAttribute('href'))
+  );
+
+  // Display the result.
+  console.log("all reference links", reflist);
+
+  // Disconnect Playwright.
+  await page.close();
+  await context.close();
+  await browser.close();
+
+  // Stop Lightpanda browser process.
+  proc.stdout.destroy();
+  proc.stderr.destroy();
+  proc.kill();
+})();
+```
+  </Tabs.Tab>
+</Tabs>
+
+## Run it
+
+```sh copy
+node index.js
+```
+
+```sh
+$ node index.js
+🐼 Running Lightpanda's CDP server... { pid: 34389 }
+all reference links [
+  'https://gs.statcounter.com/browser-market-share',
+  'https://radar.cloudflare.com/reports/browser-market-share-2024-q1',
+  'https://web.archive.org/web/20240523140912/https://www.internetworldstats.com/stats.htm',
+  'https://www.internetworldstats.com/stats.htm',
+  'https://www.reference.com/humanities-culture/purpose-browser-e61874e41999ede',
+  ...
+]
+```
