@@ -17,8 +17,8 @@ const meta: MetaRecord = {
     title: 'Quickstart',
     theme: {},
   },
-  'open-source': 'Open source edition',
-  'cloud-offer': 'Cloud offer',
+  'run-locally': 'Run locally',
+  'run-on-lightpanda-cloud': 'Run on Lightpanda Cloud',
 }
 
 export default meta
