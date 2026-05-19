@@ -1,0 +1,42 @@
+---
+title: Nightly builds
+description: Install Lightpanda manually from the latest nightly builds.
+---
+
+# Nightly builds
+
+The latest binary can be downloaded from the [nightly
+builds](https://github.com/lightpanda-io/browser/releases/tag/nightly) for
+Linux and MacOS.
+
+### Linux x86_64
+```bash copy
+curl -L -o lightpanda \
+  https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-x86_64-linux && \
+  chmod a+x ./lightpanda
+```
+
+### Linux aarch64
+```bash copy
+curl -L -o lightpanda \
+  https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-aarch64-linux && \
+  chmod a+x ./lightpanda
+```
+
+### MacOS aarch64
+```sh copy
+curl -L -o lightpanda \
+  https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-aarch64-macos && \
+  chmod a+x ./lightpanda
+```
+
+### MacOS x86_64
+```sh copy
+curl -L -o lightpanda \
+  https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-x86_64-macos && \
+  chmod a+x ./lightpanda
+```
+
+## Telemetry
+
+By default, Lightpanda collects and sends usage telemetry. This can be disabled by setting an environment variable `LIGHTPANDA_DISABLE_TELEMETRY=true`. You can read Lightpanda's privacy policy at: [https://lightpanda.io/privacy-policy](https://lightpanda.io/privacy-policy).
