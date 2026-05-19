@@ -1,0 +1,107 @@
+---
+title: Serve
+description: Start Lightpanda as a local CDP server.
+---
+
+# Serve
+
+Start Lightpanda as a [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/) (CDP) server to control it with clients like [Puppeteer](https://pptr.dev/), [Playwright](https://playwright.dev/) or [Chromedp](https://github.com/chromedp/chromedp).
+
+```sh copy
+./lightpanda serve --obey-robots --host 127.0.0.1 --port 9222
+```
+```sh
+INFO  app : server running . . . . . . . . . . . . . . . . .  [+0ms]
+      address = 127.0.0.1:9222
+```
+
+## Options
+
+```bash
+--host          Host of the CDP server
+                Defaults to "127.0.0.1"
+
+--port          Port of the CDP server
+                Defaults to 9222
+
+--advertise-host
+                The host to advertise, e.g. in the /json/version response.
+                Useful, for example, when --host is 0.0.0.0.
+                Defaults to --host value
+
+--timeout       Inactivity timeout in seconds before disconnecting clients
+                Defaults to 10 (seconds). Limited to 604800 (1 week).
+
+--cdp-max-connections
+                Maximum number of simultaneous CDP connections.
+                Defaults to 16.
+
+--cdp-max-pending-connections
+                Maximum pending connections in the accept queue.
+                Defaults to 128.
+
+--insecure-disable-tls-host-verification
+                Disables host verification on all HTTP requests. This is an
+                advanced option which should only be set if you understand
+                and accept the risk of disabling host verification.
+
+--obey-robots
+                Fetches and obeys the robots.txt (if available) of the web pages
+                we make requests towards.
+                Defaults to false.
+
+--http-proxy    The HTTP proxy to use for all HTTP requests.
+                A username:password can be included for basic authentication.
+                Defaults to none.
+
+--proxy-bearer-token
+                The <token> to send for bearer authentication with the proxy
+                Proxy-Authorization: Bearer <token>
+
+--http-max-concurrent
+                The maximum number of concurrent HTTP requests.
+                Defaults to 10.
+
+--http-max-host-open
+                The maximum number of open connection to a given host:port.
+                Defaults to 4.
+
+--http-connect-timeout
+                The time, in milliseconds, for establishing an HTTP connection
+                before timing out. 0 means it never times out.
+                Defaults to 0.
+
+--http-timeout
+                The maximum time, in milliseconds, the transfer is allowed
+                to complete. 0 means it never times out.
+                Defaults to 10000.
+
+--http-max-response-size
+                Limits the acceptable response size for any request
+                (e.g. XHR, fetch, script loading, ...).
+                Defaults to no limit.
+
+--log-level     The log level: debug, info, warn, error or fatal.
+                Defaults towarn.
+
+--log-format    The log format: pretty or logfmt.
+                Defaults to logfmt.
+
+--log-filter-scopes
+                Filter out too verbose logs per scope:
+                http, unknown_prop, event, ...
+
+--user-agent-suffix
+                Suffix to append to the Lightpanda/X.Y User-Agent
+
+--web-bot-auth-key-file
+                Path to the Ed25519 private key PEM file.
+
+--web-bot-auth-keyid
+                The JWK thumbprint of your public key.
+
+--web-bot-auth-domain
+                Your domain e.g. yourdomain.com
+```
+
+See also [how to configure proxy](/run-locally/configure-a-proxy).

@@ -1,0 +1,100 @@
+---
+title: Puppeteer
+description: Use Lightpanda with Puppeteer via CDP, locally or on the cloud.
+---
+import { Tabs } from 'nextra/components'
+
+# Puppeteer
+
+Use Lightpanda with [Puppeteer](https://pptr.dev/) via the [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/) (CDP).
+
+<Tabs items={['Local', 'Cloud']}>
+  <Tabs.Tab>
+Start Lightpanda as a local CDP server (see [serve command](/run-locally/commands/serve) for all options):
+
+```sh copy
+./lightpanda serve --host 127.0.0.1 --port 9222
+```
+
+Connect Puppeteer using `browserWSEndpoint`:
+
+```js copy
+'use strict'
+
+import puppeteer from 'puppeteer-core'
+
+const browser = await puppeteer.connect({
+  browserWSEndpoint: "ws://127.0.0.1:9222",
+})
+
+const context = await browser.createBrowserContext()
+const page = await context.newPage()
+
+await page.goto('https://wikipedia.com/')
+
+const links = await page.evaluate(() => {
+  return Array.from(document.querySelectorAll('a')).map(row => {
+    return row.getAttribute('href')
+  })
+})
+
+console.log(links)
+
+await page.close()
+await context.close()
+await browser.disconnect()
+```
+  </Tabs.Tab>
+  <Tabs.Tab>
+Export your API token and connect to the cloud endpoint:
+
+```sh copy
+export LPD_TOKEN="your token here"
+```
+
+```js copy
+import puppeteer from 'puppeteer-core';
+
+const browser = await puppeteer.connect({
+  browserWSEndpoint: "wss://euwest.cloud.lightpanda.io/ws?token=" + process.env.LPD_TOKEN,
+});
+const context = await browser.createBrowserContext();
+const page = await context.newPage();
+
+// ...
+
+await page.close();
+await context.close();
+await browser.disconnect();
+```
+
+More examples in [demo/puppeteer](https://github.com/lightpanda-io/demo/tree/main/puppeteer).
+
+## Cloud options
+
+Depending on your location, connect using:
+- `wss://euwest.cloud.lightpanda.io/ws` (west Europe)
+- `wss://uswest.cloud.lightpanda.io/ws` (west US)
+
+### Browser
+
+By default the cloud serves [Lightpanda browsers](https://github.com/lightpanda-io/browser).
+Use `browser=chrome` to select Google Chrome, or `browser=lightpanda` to force Lightpanda.
+
+```text copy
+wss://euwest.cloud.lightpanda.io/ws?browser=chrome&token=TOKEN
+```
+
+### Proxies
+
+**fast_dc** — default, a single shared datacenter IP.
+
+**datacenter** — a pool of shared datacenter IPs with automatic rotation. Accepts an optional `country` query parameter (two-letter country code).
+
+```text copy
+wss://euwest.cloud.lightpanda.io/ws?proxy=datacenter&country=de&token=TOKEN
+```
+
+[Contact us](mailto:hello@lightpanda.io) for additional proxy options.
+  </Tabs.Tab>
+</Tabs>

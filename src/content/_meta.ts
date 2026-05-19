@@ -19,6 +19,7 @@ const meta: MetaRecord = {
   },
   'run-locally': 'Run locally',
   'run-on-lightpanda-cloud': 'Run on Lightpanda Cloud',
+  usage: 'Usage',
   guides: 'Guides',
 }
 
