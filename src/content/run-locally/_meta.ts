@@ -1,8 +1,18 @@
 import type { MetaRecord } from 'nextra'
 
 const meta: MetaRecord = {
-  installation: 'Installation',
-  commands: 'Commands',
+  installation: {
+    title: 'Installation',
+    theme: {
+      collapsed: false,
+    },
+  },
+  commands: {
+    title: 'Commands',
+    theme: {
+      collapsed: false,
+    },
+  },
   'configure-a-proxy': 'Configure a proxy',
 }
 

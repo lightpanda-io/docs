@@ -1,0 +1,894 @@
+---
+title: Quickstart
+description: Set up your first project with Lightpanda browser and run it locally in under 10 minutes.
+---
+import { FileTree } from 'nextra/components'
+import { Tabs } from 'nextra/components'
+import { Callout } from 'nextra/components'
+
+# Quickstart
+
+In this Quickstart, you'll set up your first project with [Lightpanda browser](https://lightpanda.io) and run it locally in under 10 minutes.
+By the end of this guide, you'll have:
+* A working [Node.js](https://nodejs.org) project configured with Lightpanda
+* A browser instance that starts and stops programmatically
+* The foundation for running automated scripts using either [Puppeteer](https://pptr.dev) or [Playwright](https://playwright.dev/) to control the browser
+
+## 1. Installation and setup
+
+### Prerequisites
+
+You'll need [Node.js](https://nodejs.org/en/download) installed on your computer.
+
+### Initialize the Node.js project
+
+Create a `hn-scraper` directory and initialize a new Node.js project.
+
+```sh copy
+mkdir hn-scraper && \
+  cd hn-scraper && \
+  npm init
+```
+
+You can accept all the default values in the npm init prompts. When done, your
+directory should look like this:
+
+<FileTree>
+  <FileTree.Folder name="hn-scraper" defaultOpen>
+    <FileTree.File name="package.json" />
+  </FileTree.Folder>
+</FileTree>
+
+
+### Install Lightpanda dependency
+
+Install Lightpanda by using the [official npm package](https://www.npmjs.com/package/@lightpanda/browser).
+
+<Tabs items={['npm', 'yarn', 'pnpm']} className="-mb-4">
+  <Tabs.Tab id="npm" className="m-0">
+    ```sh copy
+    npm install --save @lightpanda/browser
+    ```
+  </Tabs.Tab>
+  <Tabs.Tab id="yarn" className="m-0">
+    ```sh copy
+    yarn add @lightpanda/browser
+    ```
+  </Tabs.Tab>
+  <Tabs.Tab id="pnpm" className="m-0">
+  ```sh copy
+  pnpm add @lightpanda/browser
+  ```
+  </Tabs.Tab>
+</Tabs>
+
+Create an `index.js` file with the following content:
+
+```javascript copy
+'use strict'
+
+import { lightpanda } from '@lightpanda/browser';
+
+const lpdopts = {
+  host: '127.0.0.1',
+  port: 9222,
+};
+
+(async () => {
+  // Start Lightpanda browser in a separate process.
+  const proc = await lightpanda.serve(lpdopts);
+
+  // Do your magic ✨
+
+  // Stop Lightpanda browser process.
+  proc.stdout.destroy();
+  proc.stderr.destroy();
+  proc.kill();
+})();
+```
+
+Run your script to start and stop a Lightpanda browser.
+
+```sh copy
+node index.js
+```
+Starting and stopping the browser is almost instant.
+```sh
+$ node index.js
+🐼 Running Lightpanda's CDP server... { pid: 4084512 }
+```
+
+## 2. Your first test
+
+Lightpanda is a headless browser built from scratch. Unlike Headless Chrome, it
+has no UI or graphical rendering for humans, which allows it to start instantly
+and execute pages up to 10x faster.
+
+Unlike [curl](https://curl.se/), which only fetches raw HTML, Lightpanda can
+execute JavaScript and run query selectors directly in the browser.
+
+It's ideal for crawling, testing, and running AI agents that need to interact
+with dynamic web pages, and it's fully compatible with libraries like
+[Puppeteer](https://pptr.dev/) and [Playwright](https://playwright.dev/).
+
+In this example, you'll connect CDP client, [Puppeteer](https://pptr.dev/) or [Playwright](https://playwright.dev/) to Lightpanda
+and extract all reference links from a [Wikipedia
+page](https://www.wikipedia.org/).
+
+### Connect CDP Client to Lightpanda
+
+Install the [`puppeteer-core`](https://www.npmjs.com/package/puppeteer-core) *or* [`playwright-core`](https://www.npmjs.com/package/playwright-core) npm package.
+
+<Callout type="info" emoji="">
+  Unlike `puppeteer` and `playwright` npm packages,
+  `puppeteer-core` and `playwright-core` don't download a Chromium browser.
+</Callout>
+
+<Tabs items={['puppeteer', 'playwright']} className="-mb-4">
+  <Tabs.Tab id="puppeteer" className="m-0">
+```sh copy
+npm install -save puppeteer-core
+```
+  </Tabs.Tab>
+  <Tabs.Tab id="playwright" className="m-0">
+```sh copy
+npm install -save playwright-core
+```
+  </Tabs.Tab>
+</Tabs>
+
+Edit your `index.js` to connect to Lightpanda:
+
+<Tabs items={['puppeteer', 'playwright']} className="-mb-4">
+  <Tabs.Tab id="puppeteer" className="m-0">
+```javascript copy
+'use strict'
+
+import { lightpanda } from '@lightpanda/browser';
+import puppeteer from 'puppeteer-core';
+
+const lpdopts = {
+  host: '127.0.0.1',
+  port: 9222,
+};
+
+const puppeteeropts = {
+  browserWSEndpoint: 'ws://' + lpdopts.host + ':' + lpdopts.port,
+};
+
+(async () => {
+  // Start Lightpanda browser in a separate process.
+  const proc = await lightpanda.serve(lpdopts);
+
+  // Connect Puppeteer to the browser.
+  const browser = await puppeteer.connect(puppeteeropts);
+  const context = await browser.createBrowserContext();
+  const page = await context.newPage();
+
+  // Do your magic ✨
+  console.log("CDP connection is working");
+
+  // Disconnect Puppeteer.
+  await page.close();
+  await context.close();
+  await browser.disconnect();
+
+  // Stop Lightpanda browser process.
+  proc.stdout.destroy();
+  proc.stderr.destroy();
+  proc.kill();
+})();
+```
+  </Tabs.Tab>
+  <Tabs.Tab id="playwright" className="m-0">
+```javascript copy
+'use strict'
+
+import { lightpanda } from '@lightpanda/browser';
+import { chromium } from 'playwright-core';
+
+const lpdopts = {
+  host: '127.0.0.1',
+  port: 9222,
+};
+
+const playwrightopts = {
+  endpointURL: 'ws://' + lpdopts.host + ':' + lpdopts.port,
+};
+
+(async () => {
+  // Start Lightpanda browser in a separate process.
+  const proc = await lightpanda.serve(lpdopts);
+
+  // Connect Playwright's chromium driver to the browser.
+  const browser = await chromium.connectOverCDP(playwrightopts);
+  const context = await browser.newContext({});
+  const page = await context.newPage();
+
+  // Do your magic ✨
+  console.log("CDP connection is working");
+
+  // Disconnect Puppeteer.
+  await page.close();
+  await context.close();
+  await browser.close();
+
+  // Stop Lightpanda browser process.
+  proc.stdout.destroy();
+  proc.stderr.destroy();
+  proc.kill();
+})();
+```
+  </Tabs.Tab>
+</Tabs>
+
+Run the script to test the connection between Puppeteer or Playwright and Lightpanda:
+
+```sh copy
+node index.js
+```
+```sh
+$ node index.js
+🐼 Running Lightpanda's CDP server... { pid: 31371 }
+CDP connection is working
+```
+
+### Extract all reference links from Wikipedia
+
+Update `index.js` using `page.goto` to navigate to a Wikipedia page and extract
+all the reference links:
+
+<Tabs items={['puppeteer', 'playwright']} className="-mb-4">
+  <Tabs.Tab id="puppeteer" className="m-0">
+```javascript copy
+  // Go to Wikipedia page.
+  await page.goto("https://en.wikipedia.org/wiki/Web_browser");
+```
+  </Tabs.Tab>
+  <Tabs.Tab id="playwright" className="m-0">
+```javascript copy
+  // Go to Wikipedia page.
+  await page.goto("https://en.wikipedia.org/wiki/Web_browser");
+```
+  </Tabs.Tab>
+</Tabs>
+
+Execute a query selector on the browser to extract the links:
+
+<Tabs items={['puppeteer', 'playwright']} className="-mb-4">
+  <Tabs.Tab id="puppeteer" className="m-0">
+```javascript copy
+  // Extract all links from the references list of the page.
+  const reflist = await page.evaluate(() => {
+    return Array.from(document.querySelectorAll('.references a.external')).map(row => {
+      return row.getAttribute('href');
+    });
+  });
+```
+  </Tabs.Tab>
+  <Tabs.Tab id="playwright" className="m-0">
+```javascript copy
+  // Extract all links from the references list of the page.
+  const reflist = await page.locator('.references a.external').evaluateAll(links =>
+    links.map(link => link.getAttribute('href'))
+  );
+```
+  </Tabs.Tab>
+</Tabs>
+
+Here's the full `index.js` file:
+
+<Tabs items={['puppeteer', 'playwright']} className="-mb-4">
+  <Tabs.Tab id="puppeteer" className="m-0">
+```javascript copy
+'use strict'
+
+import { lightpanda } from '@lightpanda/browser';
+import puppeteer from 'puppeteer-core';
+
+const lpdopts = {
+  host: '127.0.0.1',
+  port: 9222,
+};
+
+const puppeteeropts = {
+  browserWSEndpoint: 'ws://' + lpdopts.host + ':' + lpdopts.port,
+};
+
+(async () => {
+  // Start Lightpanda browser in a separate process.
+  const proc = await lightpanda.serve(lpdopts);
+
+  // Connect Puppeteer to the browser.
+  const browser = await puppeteer.connect(puppeteeropts);
+  const context = await browser.createBrowserContext();
+  const page = await context.newPage();
+
+  // Go to Wikipedia page.
+  await page.goto("https://en.wikipedia.org/wiki/Web_browser");
+
+  // Extract all links from the references list of the page.
+  const reflist = await page.evaluate(() => {
+    return Array.from(document.querySelectorAll('.references a.external')).map(row => {
+      return row.getAttribute('href');
+    });
+  });
+
+  // Display the result.
+  console.log("all reference links", reflist);
+
+  // Disconnect Puppeteer.
+  await page.close();
+  await context.close();
+  await browser.disconnect();
+
+  // Stop Lightpanda browser process.
+  proc.stdout.destroy();
+  proc.stderr.destroy();
+  proc.kill();
+})();
+```
+  </Tabs.Tab>
+  <Tabs.Tab id="playwright" className="m-0">
+```javascript copy
+'use strict'
+
+import { lightpanda } from '@lightpanda/browser';
+import { chromium } from 'playwright-core';
+
+const lpdopts = {
+  host: '127.0.0.1',
+  port: 9222,
+};
+
+const playwrightopts = {
+  endpointURL: 'ws://' + lpdopts.host + ':' + lpdopts.port,
+};
+
+(async () => {
+  // Start Lightpanda browser in a separate process.
+  const proc = await lightpanda.serve(lpdopts);
+
+  // Connect using Playwright's chromium driver to the browser.
+  const browser = await chromium.connectOverCDP(playwrightopts);
+  const context = await browser.newContext({});
+  const page = await context.newPage();
+
+  // Go to Wikipedia page.
+  await page.goto("https://en.wikipedia.org/wiki/Web_browser");
+
+  // Extract all links from the references list of the page.
+  const reflist = await page.locator('.references a.external').evaluateAll(links =>
+    links.map(link => link.getAttribute('href'))
+  );
+
+  // Display the result.
+  console.log("all reference links", reflist);
+
+  // Disconnect Playwright.
+  await page.close();
+  await context.close();
+  await browser.close();
+
+  // Stop Lightpanda browser process.
+  proc.stdout.destroy();
+  proc.stderr.destroy();
+  proc.kill();
+})();
+```
+  </Tabs.Tab>
+</Tabs>
+
+### Execute the link extraction
+
+Execute index.js to see the links directly in your console:
+```sh copy
+node index.js
+```
+
+```sh
+$ node index.js
+🐼 Running Lightpanda's CDP server... { pid: 34389 }
+all reference links [
+  'https://gs.statcounter.com/browser-market-share',
+  'https://radar.cloudflare.com/reports/browser-market-share-2024-q1',
+  'https://web.archive.org/web/20240523140912/https://www.internetworldstats.com/stats.htm',
+  'https://www.internetworldstats.com/stats.htm',
+  'https://www.reference.com/humanities-culture/purpose-browser-e61874e41999ede',
+```
+
+## 3. Extract data
+
+We will now use the browser to run a search on the [HackerNews
+website](https://news.ycombinator.com/). We need Lightpanda here because the
+website uses XHR requests to display search results. We will also run query
+selectors directly in the browser to extract
+and structure the data.
+
+![HackerNews](https://cdn.lightpanda.io/website/assets/images/docs/hn.png)
+
+### Navigate and search
+
+Similar to the Wikipedia example, edit `index.js` to navigate to HackerNews:
+
+<Tabs items={['puppeteer', 'playwright']} className="-mb-4">
+  <Tabs.Tab id="puppeteer" className="m-0">
+```javascript copy
+  await page.goto("https://news.ycombinator.com/");
+```
+  </Tabs.Tab>
+  <Tabs.Tab id="playwright" className="m-0">
+```javascript copy
+  await page.goto("https://news.ycombinator.com/");
+```
+  </Tabs.Tab>
+</Tabs>
+
+Type the term lightpanda in the search input at the bottom of the page and
+press the Enter key to submit the search:
+
+<Tabs items={['puppeteer', 'playwright']} className="-mb-4">
+  <Tabs.Tab id="puppeteer" className="m-0">
+```javascript copy
+  await page.type('input[name="q"]','lightpanda');
+  await page.keyboard.press('Enter');
+```
+  </Tabs.Tab>
+  <Tabs.Tab id="playwright" className="m-0">
+```javascript copy
+  await page.locator('input[name="q"]').fill('lightpanda');
+  await page.keyboard.press('Enter');
+```
+  </Tabs.Tab>
+</Tabs>
+
+Wait for the search results to be displayed, with a timeout limit of 5 seconds:
+
+<Tabs items={['puppeteer', 'playwright']} className="-mb-4">
+  <Tabs.Tab id="puppeteer" className="m-0">
+```javascript copy
+  await page.waitForFunction(() => {
+      return document.querySelector('.Story_container') != null;
+  }, {timeout: 5000});
+```
+  </Tabs.Tab>
+  <Tabs.Tab id="playwright" className="m-0">
+```javascript copy
+  await page.waitForSelector('.Story_container', { timeout: 5000 });
+```
+  </Tabs.Tab>
+</Tabs>
+
+### Extract the data
+
+We will loop over the search results to extract the title, the URL, and a list
+of metadata including the author, the number of points, and comments:
+
+<Tabs items={['puppeteer', 'playwright']} className="-mb-4">
+  <Tabs.Tab id="puppeteer" className="m-0">
+```javascript copy
+  // Loop over search results to extract data.
+  const res = await page.evaluate(() => {
+    return Array.from(document.querySelectorAll('.Story_container')).map(row => {
+      return {
+        // Extract the title.
+        title: row.querySelector('.Story_title span').textContent,
+        // Extract the URL.
+        url: row.querySelector('.Story_title a').getAttribute('href'),
+        // Extract the list of meta data.
+        meta: Array.from(row.querySelectorAll('.Story_meta > span:not(.Story_separator, .Story_comment)')).map(row => {
+          return row.textContent;
+        }),
+      }
+    });
+  });
+```
+  </Tabs.Tab>
+  <Tabs.Tab id="playwright" className="m-0">
+```javascript copy
+  // Loop over search results to extract data.
+  const res = await page.evaluate(() => {
+    return Array.from(document.querySelectorAll('.Story_container')).map(row => {
+      return {
+        // Extract the title.
+        title: row.querySelector('.Story_title span').textContent,
+        // Extract the URL.
+        url: row.querySelector('.Story_title a').getAttribute('href'),
+        // Extract the list of meta data.
+        meta: Array.from(row.querySelectorAll('.Story_meta > span:not(.Story_separator, .Story_comment)')).map(row => {
+          return row.textContent;
+        }),
+      }
+    });
+  });
+```
+  </Tabs.Tab>
+</Tabs>
+
+### The final script
+
+Here is the full version of index.js updated to run the search and extract
+results:
+
+<Tabs items={['puppeteer', 'playwright']} className="-mb-4">
+  <Tabs.Tab id="puppeteer" className="m-0">
+```javascript copy
+'use strict'
+
+import { lightpanda } from '@lightpanda/browser';
+import puppeteer from 'puppeteer-core';
+
+const lpdopts = {
+  host: '127.0.0.1',
+  port: 9222,
+};
+
+const puppeteeropts = {
+  browserWSEndpoint: 'ws://' + lpdopts.host + ':' + lpdopts.port,
+};
+
+(async () => {
+  // Start Lightpanda browser in a separate process.
+  const proc = await lightpanda.serve(lpdopts);
+
+  // Connect Puppeteer to the browser.
+  const browser = await puppeteer.connect(puppeteeropts);
+  const context = await browser.createBrowserContext();
+  const page = await context.newPage();
+
+  // Go to hackernews home page.
+  await page.goto("https://news.ycombinator.com/");
+
+  // Find the search box at the bottom of the page and type the term lightpanda
+  // to search.
+  await page.type('input[name="q"]','lightpanda');
+  // Press enter key to run the search.
+  await page.keyboard.press('Enter');
+
+  // Wait until the search results are loaded on the page, with a 5 seconds
+  // timeout limit.
+  await page.waitForFunction(() => {
+      return document.querySelector('.Story_container') != null;
+  }, {timeout: 5000});
+
+  // Loop over search results to extract data.
+  const res = await page.evaluate(() => {
+    return Array.from(document.querySelectorAll('.Story_container')).map(row => {
+      return {
+        // Extract the title.
+        title: row.querySelector('.Story_title span').textContent,
+        // Extract the URL.
+        url: row.querySelector('.Story_title a').getAttribute('href'),
+        // Extract the list of meta data.
+        meta: Array.from(row.querySelectorAll('.Story_meta > span:not(.Story_separator, .Story_comment)')).map(row => {
+          return row.textContent;
+        }),
+      }
+    });
+  });
+
+  // Display the result.
+  console.log(res);
+
+  // Disconnect Puppeteer.
+  await page.close();
+  await context.close();
+  await browser.disconnect();
+
+  // Stop Lightpanda browser process.
+  proc.stdout.destroy();
+  proc.stderr.destroy();
+  proc.kill();
+})();
+```
+  </Tabs.Tab>
+  <Tabs.Tab id="playwright" className="m-0">
+```javascript copy
+'use strict'
+
+import { lightpanda } from '@lightpanda/browser';
+import { chromium } from 'playwright-core';
+
+const lpdopts = {
+  host: '127.0.0.1',
+  port: 9222,
+};
+
+const playwrightopts = {
+  endpointURL: 'ws://' + lpdopts.host + ':' + lpdopts.port,
+};
+
+(async () => {
+  // Start Lightpanda browser in a separate process.
+  const proc = await lightpanda.serve(lpdopts);
+
+  // Connect using Playwright's chromium driver to the browser.
+  const browser = await chromium.connectOverCDP(playwrightopts);
+  const context = await browser.newContext({});
+  const page = await context.newPage();
+
+  // Go to hackernews home page.
+  await page.goto("https://news.ycombinator.com/");
+
+  // Find the search box at the bottom of the page and type the term lightpanda
+  // to search.
+  await page.locator('input[name="q"]').fill('lightpanda');
+  // Press enter key to run the search.
+  await page.keyboard.press('Enter');
+
+  // Wait until the search results are loaded on the page, with a 5 seconds
+  // timeout limit.
+  await page.waitForSelector('.Story_container', { timeout: 5000 });
+
+  // Loop over search results to extract data.
+  const res = await page.evaluate(() => {
+    return Array.from(document.querySelectorAll('.Story_container')).map(row => {
+      return {
+        // Extract the title.
+        title: row.querySelector('.Story_title span').textContent,
+        // Extract the URL.
+        url: row.querySelector('.Story_title a').getAttribute('href'),
+        // Extract the list of meta data.
+        meta: Array.from(row.querySelectorAll('.Story_meta > span:not(.Story_separator, .Story_comment)')).map(row => {
+          return row.textContent;
+        }),
+      }
+    });
+  });
+
+  // Display the result.
+  console.log(res);
+
+  // Disconnect Playwright.
+  await page.close();
+  await context.close();
+  await browser.close();
+
+  // Stop Lightpanda browser process.
+  proc.stdout.destroy();
+  proc.stderr.destroy();
+  proc.kill();
+})();
+```
+  </Tabs.Tab>
+</Tabs>
+
+### Run the script
+
+You can run it to see the result immediately:
+
+```sh copy
+node index.js
+```
+```sh
+$ node index.js
+🐼 Running Lightpanda's CDP server… { pid: 598201 }
+[
+  {
+    title: 'Show HN: Lightpanda, an open-source headless browser in Zig',
+    url: 'https://news.ycombinator.com/item?id=42817439',
+    meta: [ '319 points', 'fbouvier', '9 months ago', '137 comments' ]
+  },
+  {
+    title: 'Lightpanda: Headless browser designed for AI and automation',
+    url: 'https://news.ycombinator.com/item?id=42812859',
+    meta: [ '154 points', 'tosh', '9 months ago', '1 comments' ]
+  },
+  {
+    title: 'Show HN: Lightpanda, an open-source headless browser in Zig',
+    url: 'https://news.ycombinator.com/item?id=42430629',
+    meta: [ '7 points', 'fbouvier', '10 months ago', '0 comments' ]
+  },
+  {
+    title: 'Lightpanda: Fast headless browser from scratch in Zig for AI and automation',
+    url: 'https://news.ycombinator.com/item?id=44900394',
+    meta: [ '5 points', 'lioeters', '2 months ago', '0 comments' ]
+  },
+  {
+    title: 'Lightpanda – The Headless Browser',
+    url: 'https://news.ycombinator.com/item?id=42745150',
+    meta: [ '4 points', 'vladkens', '9 months ago', '2 comments' ]
+  },
+  {
+    title: 'Lightpanda raises pre-seed to develop first browser built for machines and AI',
+    url: 'https://news.ycombinator.com/item?id=44263271',
+    meta: [ '1 points', 'cpeterso', '4 months ago', '0 comments' ]
+  }
+]
+```
+
+## 4. Go to production
+
+Use [Lightpanda's cloud offer](https://lightpanda.io/#cloud-offer) to switch from
+a local browser to a remotely managed version.
+
+Create a new account and an API token [here](https://console.lightpanda.io/signup).
+
+To connect, the script will use an environment variable named `LPD_TOKEN`.
+First export the variable with your token.
+
+```sh copy
+export LPD_TOKEN="paste your token here"
+```
+
+Edit `index.js` to change the Puppeteer connection options:
+
+<Tabs items={['puppeteer', 'playwright']} className="-mb-4">
+  <Tabs.Tab id="puppeteer" className="m-0">
+```javascript copy
+const puppeteeropts = {
+  browserWSEndpoint: 'wss://euwest.cloud.lightpanda.io/ws?token=' + process.env.LPD_TOKEN,
+};
+```
+  </Tabs.Tab>
+  <Tabs.Tab id="playwright" className="m-0">
+```javascript copy
+const playwrightopts = {
+  endpointURL: 'wss://euwest.cloud.lightpanda.io/ws?token=' + process.env.LPD_TOKEN,
+};
+```
+  </Tabs.Tab>
+</Tabs>
+
+<Callout type="info" emoji="ℹ️">
+Depending on your location, you can connect using the url
+`wss://euwest.cloud.lightpanda.io/ws` or `wss//uswest.cloud.lightpanda.io/ws`.
+</Callout>
+
+### Clean up local-only lines
+
+You no longer need to start a local browser process because you are using the
+cloud version. You can remove these parts of the script to simplify it:
+
+```javascript
+import { lightpanda } from '@lightpanda/browser';
+```
+```javascript
+const lpdopts = {
+  host: '127.0.0.1',
+  port: 9222,
+};
+```
+```javascript
+  // Start Lightpanda browser in a separate process.
+  const proc = await lightpanda.serve(lpdopts);
+```
+```javascript
+  // Stop Lightpanda browser process.
+  proc.stdout.destroy();
+  proc.stderr.destroy();
+  proc.kill();
+```
+
+### Final version
+
+Here is the final script using the cloud browser version:
+
+<Tabs items={['puppeteer', 'playwright']} className="-mb-4">
+  <Tabs.Tab id="puppeteer" className="m-0">
+```javascript copy
+'use strict'
+
+import puppeteer from 'puppeteer-core';
+
+const puppeteeropts = {
+  browserWSEndpoint: 'wss://euwest.cloud.lightpanda.io/ws?token=' + process.env.LPD_TOKEN,
+};
+
+(async () => {
+  // Connect Puppeteer to the browser.
+  const browser = await puppeteer.connect(puppeteeropts);
+  const context = await browser.createBrowserContext();
+  const page = await context.newPage();
+
+  // Go to hackernews home page.
+  await page.goto("https://news.ycombinator.com/");
+
+  // Find the search box at the bottom of the page and type the term lightpanda
+  // to search.
+  await page.type('input[name="q"]','lightpanda');
+  // Press enter key to run the search.
+  await page.keyboard.press('Enter');
+
+  // Wait until the search results are loaded on the page, with a 5 seconds
+  // timeout limit.
+  await page.waitForFunction(() => {
+      return document.querySelector('.Story_container') != null;
+  }, {timeout: 5000});
+
+  // Loop over search results to extract data.
+  const res = await page.evaluate(() => {
+    return Array.from(document.querySelectorAll('.Story_container')).map(row => {
+      return {
+        // Extract the title.
+        title: row.querySelector('.Story_title span').textContent,
+        // Extract the URL.
+        url: row.querySelector('.Story_title a').getAttribute('href'),
+        // Extract the list of meta data.
+        meta: Array.from(row.querySelectorAll('.Story_meta > span:not(.Story_separator, .Story_comment)')).map(row => {
+          return row.textContent;
+        }),
+      }
+    });
+  });
+
+  // Display the result.
+  console.log(res);
+
+  // Disconnect Puppeteer.
+  await page.close();
+  await context.close();
+  await browser.disconnect();
+})();
+```
+  </Tabs.Tab>
+  <Tabs.Tab id="playwright" className="m-0">
+```javascript copy
+'use strict'
+
+import { chromium } from 'playwright-core';
+
+const playwrightopts = {
+  endpointURL: 'wss://euwest.cloud.lightpanda.io/ws?token=' + process.env.LPD_TOKEN,
+};
+
+(async () => {
+  // Connect using Playwright's chromium driver to the browser.
+  const browser = await chromium.connectOverCDP(playwrightopts);
+  const context = await browser.newContext({});
+  const page = await context.newPage();
+
+  // Go to hackernews home page.
+  await page.goto("https://news.ycombinator.com/");
+
+  // Find the search box at the bottom of the page and type the term lightpanda
+  // to search.
+  await page.locator('input[name="q"]').fill('lightpanda');
+  // Press enter key to run the search.
+  await page.keyboard.press('Enter');
+
+  // Wait until the search results are loaded on the page, with a 5 seconds
+  // timeout limit.
+  await page.waitForSelector('.Story_container', { timeout: 5000 });
+
+  // Loop over search results to extract data.
+  const res = await page.evaluate(() => {
+    return Array.from(document.querySelectorAll('.Story_container')).map(row => {
+      return {
+        // Extract the title.
+        title: row.querySelector('.Story_title span').textContent,
+        // Extract the URL.
+        url: row.querySelector('.Story_title a').getAttribute('href'),
+        // Extract the list of meta data.
+        meta: Array.from(row.querySelectorAll('.Story_meta > span:not(.Story_separator, .Story_comment)')).map(row => {
+          return row.textContent;
+        }),
+      }
+    });
+  });
+
+  // Display the result.
+  console.log(res);
+
+  // Disconnect Playwright.
+  await page.close();
+  await context.close();
+  await browser.close();
+})();
+```
+  </Tabs.Tab>
+</Tabs>
+
+### Interested in on premise deployment?
+
+The core Lightpanda browser will always remain open source, including
+JavaScript execution, CDP compatibility, proxy support, and request
+interception.
+
+If you require on premise deployment, proprietary licensing, or enterprise
+features such as multi-context tabs and sandboxing, reach out to us at
+[hello@lightpanda.io](mailto:hello@lightpanda.io).
+
+### Need help?
+
+Stuck or have questions about your use case? Open an issue on GitHub or [join our Discord](https://discord.com/invite/K63XeymfB5).

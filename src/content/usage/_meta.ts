@@ -1,7 +1,12 @@
 import type { MetaRecord } from 'nextra'
 
 const meta: MetaRecord = {
-  cdp: 'CDP',
+  cdp: {
+    title: 'CDP',
+    theme: {
+      collapsed: false,
+    },
+  },
   mcp: 'MCP',
   api: 'HTTP API',
 }
