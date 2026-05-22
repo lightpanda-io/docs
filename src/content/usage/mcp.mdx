@@ -8,15 +8,37 @@ import { Tabs } from 'nextra/components'
 
 Use Lightpanda via the [Model Context Protocol](https://modelcontextprotocol.io) (MCP) to control the browser from AI applications.
 
-<Tabs items={['Local', 'Cloud']}>
-  <Tabs.Tab>
-Start the MCP server over stdio:
+## Connect
+
+### Run locally
+
+Run the MCP server over stdio:
 
 ```sh copy
 ./lightpanda mcp
 ```
 
-### Tools
+### Lightpanda Cloud
+
+Lightpanda Cloud exposes the MCP server over [SSE](https://modelcontextprotocol.io/specification/2024-11-05/basic/transports#http-with-sse). Connect to the endpoint nearest to you:
+
+- `https://euwest.cloud.lightpanda.io/mcp/sse` (Europe West)
+- `https://uswest.cloud.lightpanda.io/mcp/sse` (US West)
+
+### Authentication
+
+Pass your API token as a query parameter or in the `Authorization` header:
+
+```text copy
+https://euwest.cloud.lightpanda.io/mcp/sse?token=TOKEN
+```
+
+```text copy
+https://euwest.cloud.lightpanda.io/mcp/sse
+Authorization: Bearer TOKEN
+```
+
+## Tools
 
 | Name | Description |
 |-|-|
@@ -33,7 +55,7 @@ Start the MCP server over stdio:
 | scroll | Scroll the page or a specific element. Returns the scroll position and current page URL and title. |
 | waitForSelector | Wait for an element matching a CSS selector to appear in the page. Returns the backend node ID of the matched element. |
 
-#### `goto`
+### `goto`
 
 Navigate to a URL and load the page into memory.
 
@@ -44,7 +66,7 @@ Navigate to a URL and load the page into memory.
 
 **Response:** `"Navigated successfully."` — returned even if the URL is unreachable. Always verify with a follow-up content call (see [Known behaviors](#known-behaviors)).
 
-#### `markdown`
+### `markdown`
 
 Extract the current page's content as clean, token-efficient markdown.
 
@@ -64,7 +86,7 @@ Extract the current page's content as clean, token-efficient markdown.
 
 > Using `markdown` with an inline `url` is the most efficient single-call pattern — it navigates and extracts in one request. Essential for HTTP transport where sessions are stateless.
 
-#### `links`
+### `links`
 
 Extract all hyperlinks from the loaded page as a newline-separated list of absolute URLs.
 
@@ -75,7 +97,7 @@ Extract all hyperlinks from the loaded page as a newline-separated list of absol
 
 **Response:** One URL per line, e.g. `"https://iana.org/domains/example"`.
 
-#### `evaluate`
+### `evaluate`
 
 Execute arbitrary JavaScript in the page context and return the result as a string.
 
@@ -88,7 +110,7 @@ Execute arbitrary JavaScript in the page context and return the result as a stri
 
 **Response:** `"Example Domain"`
 
-### Resources
+## Resources
 
 Two read-only resources are available after a page has been loaded via `resources/read`:
 
@@ -109,7 +131,7 @@ Two read-only resources are available after a page has been loaded via `resource
 
 > The `markdown` tool and the `mcp://page/markdown` resource return the same content. The difference is who initiates: **tools** are called by the agent during its workflow; **resources** are read by the host application (e.g. an IDE displaying page state in the background).
 
-### Options
+## Options
 
 ```bash
 --insecure-disable-tls-host-verification
@@ -176,9 +198,9 @@ Two read-only resources are available after a page has been loaded via `resource
                 Your domain e.g. yourdomain.com
 ```
 
-### Connecting an AI agent
+## Connecting an AI agent
 
-#### Claude Desktop / Cursor / Windsurf
+### Claude Desktop / Cursor / Windsurf
 
 Add to your MCP host configuration:
 
@@ -201,7 +223,7 @@ For robots.txt compliance, use `"args": ["mcp", "--obey-robots"]`.
 
 > Replace `/path/to/lightpanda` with the actual binary path, e.g. `/usr/local/bin/lightpanda`.
 
-#### HTTP transport via supergateway
+### HTTP transport via supergateway
 
 Lightpanda MCP natively supports only stdio. To expose it over HTTP, use [supergateway](https://www.npmjs.com/package/supergateway) as a bridge.
 
@@ -217,7 +239,7 @@ npx -y supergateway \
 
 With robots.txt: `--stdio "lightpanda mcp --obey-robots"`
 
-##### Calling the HTTP endpoint
+#### Calling the HTTP endpoint
 
 ```sh copy
 # Initialize
@@ -236,9 +258,9 @@ curl -X POST http://localhost:8000/mcp \
         "params":{"name":"markdown","arguments":{"url":"https://example.com"}}}'
 ```
 
-### Known behaviors
+## Known behaviors
 
-#### `goto` always returns success
+### `goto` always returns success
 
 `goto` returns `"Navigated successfully."` even for invalid or unreachable URLs. The failure surfaces on the next content call:
 
@@ -250,7 +272,7 @@ Reason: CouldntResolveHost
 
 Always check the content result after navigation, not the `goto` response itself.
 
-#### Debugging
+### Debugging
 
 Lightpanda defaults to `--log-level warn`. Setting `info` surfaces HTTP requests, navigation events, resource loading, and robots.txt fetches. All logs go to **stderr** and never interfere with stdout.
 
@@ -263,43 +285,11 @@ lightpanda mcp --log-level info 2>lightpanda.log
 
 Use `--log-level debug` for the most verbose output. Keep `warn` in production.
 
-### References
+## References
 
 - [LP Domain & Native MCP — Lightpanda Blog](https://lightpanda.io/blog/posts/lp-domain-commands-and-native-mcp)
 - [Lightpanda GitHub](https://github.com/lightpanda-io/browser)
 - [Lightpanda releases](https://github.com/lightpanda-io/browser/releases)
 - [MCP Specification](https://modelcontextprotocol.io/)
 - [supergateway (npm)](https://www.npmjs.com/package/supergateway)
-  </Tabs.Tab>
-  <Tabs.Tab>
-The Lightpanda cloud MCP service supports [SSE](https://modelcontextprotocol.io/specification/2024-11-05/basic/transports#http-with-sse) transport.
 
-Depending on your location, connect using:
-- `https://euwest.cloud.lightpanda.io/mcp/sse` (west Europe)
-- `https://uswest.cloud.lightpanda.io/mcp/sse` (west US)
-
-### Authentication
-
-Pass your token as a query string parameter or via `Authorization: Bearer` HTTP header.
-
-```text copy
-https://euwest.cloud.lightpanda.io/mcp/sse?token=TOKEN
-```
-
-```text copy
-https://euwest.cloud.lightpanda.io/mcp/sse
-Authorization: Bearer TOKEN
-```
-
-### Tools
-
-| Name | Description |
-|-|-|
-| search | Search a term on a web search engine and get the search results. |
-| goto | Navigate to a specified URL and load the page in memory so it can be reused later for info extraction. |
-| markdown | Get the page in memory content in markdown format. Run a goto before getting markdown. |
-| links | Extract all links from the page in memory. Run a goto before getting links. |
-
-For more advanced use cases, use [CDP with Playwright MCP](https://github.com/microsoft/playwright-mcp).
-  </Tabs.Tab>
-</Tabs>
