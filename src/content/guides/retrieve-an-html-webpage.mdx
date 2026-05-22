@@ -36,6 +36,87 @@ npm install --save playwright-core @lightpanda/browser
   </Tabs.Tab>
 </Tabs>
 
+## Create index.js
+
+Create an `index.js` file. Import the packages, configure the connection, and set up the browser lifecycle:
+
+<Tabs items={['puppeteer', 'playwright']} className="-mb-4">
+  <Tabs.Tab id="puppeteer" className="m-0">
+```javascript copy
+'use strict'
+
+import { lightpanda } from '@lightpanda/browser';
+import puppeteer from 'puppeteer-core';
+
+const lpdopts = {
+  host: '127.0.0.1',
+  port: 9222,
+};
+
+const puppeteeropts = {
+  browserWSEndpoint: 'ws://' + lpdopts.host + ':' + lpdopts.port,
+};
+
+(async () => {
+  // Start Lightpanda browser in a separate process.
+  const proc = await lightpanda.serve(lpdopts);
+
+  // Connect Puppeteer to the browser.
+  const browser = await puppeteer.connect(puppeteeropts);
+  const context = await browser.createBrowserContext();
+  const page = await context.newPage();
+
+  // Disconnect Puppeteer.
+  await page.close();
+  await context.close();
+  await browser.disconnect();
+
+  // Stop Lightpanda browser process.
+  proc.stdout.destroy();
+  proc.stderr.destroy();
+  proc.kill();
+})();
+```
+  </Tabs.Tab>
+  <Tabs.Tab id="playwright" className="m-0">
+```javascript copy
+'use strict'
+
+import { lightpanda } from '@lightpanda/browser';
+import { chromium } from 'playwright-core';
+
+const lpdopts = {
+  host: '127.0.0.1',
+  port: 9222,
+};
+
+const playwrightopts = {
+  endpointURL: 'ws://' + lpdopts.host + ':' + lpdopts.port,
+};
+
+(async () => {
+  // Start Lightpanda browser in a separate process.
+  const proc = await lightpanda.serve(lpdopts);
+
+  // Connect Playwright's chromium driver to the browser.
+  const browser = await chromium.connectOverCDP(playwrightopts);
+  const context = await browser.newContext({});
+  const page = await context.newPage();
+
+  // Disconnect Playwright.
+  await page.close();
+  await context.close();
+  await browser.close();
+
+  // Stop Lightpanda browser process.
+  proc.stdout.destroy();
+  proc.stderr.destroy();
+  proc.kill();
+})();
+```
+  </Tabs.Tab>
+</Tabs>
+
 ## Navigate and extract
 
 Use `page.goto` to navigate to the Wikipedia page, then run a query selector to extract all external reference links:
