@@ -10,22 +10,23 @@ Use Lightpanda via the [Model Context Protocol](https://modelcontextprotocol.io)
 
 ## Connect
 
-### Run locally
-
-Run the MCP server over stdio:
+<Tabs items={['Local', 'Cloud']}>
+  <Tabs.Tab>
+Start the MCP server:
 
 ```sh copy
 ./lightpanda mcp
 ```
-
-### Lightpanda Cloud
+  </Tabs.Tab>
+  <Tabs.Tab>
+<Callout type="info" emoji="ℹ️">
+This is still a work in progress version. The cloud version does not support all tools.
+</Callout>
 
 Lightpanda Cloud exposes the MCP server over [SSE](https://modelcontextprotocol.io/specification/2024-11-05/basic/transports#http-with-sse). Connect to the endpoint nearest to you:
 
 - `https://euwest.cloud.lightpanda.io/mcp/sse` (Europe West)
 - `https://uswest.cloud.lightpanda.io/mcp/sse` (US West)
-
-### Authentication
 
 Pass your API token as a query parameter or in the `Authorization` header:
 
@@ -37,6 +38,8 @@ https://euwest.cloud.lightpanda.io/mcp/sse?token=TOKEN
 https://euwest.cloud.lightpanda.io/mcp/sse
 Authorization: Bearer TOKEN
 ```
+  </Tabs.Tab>
+</Tabs>
 
 ## Tools
 

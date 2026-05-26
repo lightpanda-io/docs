@@ -63,6 +63,8 @@ More examples in [demo/playwright](https://github.com/lightpanda-io/demo/tree/ma
 
 ## Cloud options
 
+### Endpoints
+
 Depending on your location, connect using:
 - `wss://euwest.cloud.lightpanda.io/ws` (west Europe)
 - `wss://uswest.cloud.lightpanda.io/ws` (west US)
@@ -78,9 +80,11 @@ wss://euwest.cloud.lightpanda.io/ws?browser=chrome&token=TOKEN
 
 ### Proxies
 
-**fast_dc** — default, a single shared datacenter IP.
+The `proxy` parameter controls the outbound IP the cloud browser uses when fetching pages — useful for geo-targeting or avoiding rate limits.
 
-**datacenter** — a pool of shared datacenter IPs with automatic rotation. Accepts an optional `country` query parameter (two-letter country code).
+**fast_dc** — default. A single shared datacenter IP, optimized for speed.
+
+**datacenter** — a pool of shared datacenter IPs with automatic rotation. Accepts an optional `country` parameter (two-letter country code) to target a specific country.
 
 ```text copy
 wss://euwest.cloud.lightpanda.io/ws?proxy=datacenter&country=de&token=TOKEN

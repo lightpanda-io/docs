@@ -16,7 +16,7 @@ Start Lightpanda as a local CDP server (see [serve command](/run-locally/command
 ./lightpanda serve --host 127.0.0.1 --port 9222
 ```
 
-Connect Puppeteer using `browserWSEndpoint`:
+Connect Puppeteer using `browserWSEndpoint` — the WebSocket URL Puppeteer uses to attach to an already-running browser instead of launching one itself:
 
 ```js copy
 'use strict'
@@ -24,7 +24,7 @@ Connect Puppeteer using `browserWSEndpoint`:
 import puppeteer from 'puppeteer-core'
 
 const browser = await puppeteer.connect({
-  browserWSEndpoint: "ws://127.0.0.1:9222",
+  browserWSEndpoint: 'ws://127.0.0.1:9222',
 })
 
 const context = await browser.createBrowserContext()
@@ -32,13 +32,8 @@ const page = await context.newPage()
 
 await page.goto('https://wikipedia.com/')
 
-const links = await page.evaluate(() => {
-  return Array.from(document.querySelectorAll('a')).map(row => {
-    return row.getAttribute('href')
-  })
-})
-
-console.log(links)
+const title = await page.title()
+console.log(title)
 
 await page.close()
 await context.close()
@@ -46,40 +41,46 @@ await browser.disconnect()
 ```
   </Tabs.Tab>
   <Tabs.Tab>
-Export your API token and connect to the cloud endpoint:
+Set your API token and connect to the cloud endpoint. The connection uses `wss://` (WebSocket over TLS) instead of the local `ws://`:
 
 ```sh copy
 export LPD_TOKEN="your token here"
 ```
 
 ```js copy
-import puppeteer from 'puppeteer-core';
+'use strict'
+
+import puppeteer from 'puppeteer-core'
 
 const browser = await puppeteer.connect({
-  browserWSEndpoint: "wss://euwest.cloud.lightpanda.io/ws?token=" + process.env.LPD_TOKEN,
-});
-const context = await browser.createBrowserContext();
-const page = await context.newPage();
+  browserWSEndpoint: 'wss://euwest.cloud.lightpanda.io/ws?token=' + process.env.LPD_TOKEN,
+})
+const context = await browser.createBrowserContext()
+const page = await context.newPage()
 
 // ...
 
-await page.close();
-await context.close();
-await browser.disconnect();
+await page.close()
+await context.close()
+await browser.disconnect()
 ```
 
 More examples in [demo/puppeteer](https://github.com/lightpanda-io/demo/tree/main/puppeteer).
+  </Tabs.Tab>
+</Tabs>
 
 ## Cloud options
 
-Depending on your location, connect using:
-- `wss://euwest.cloud.lightpanda.io/ws` (west Europe)
-- `wss://uswest.cloud.lightpanda.io/ws` (west US)
+### Endpoints
+
+Connect to the region nearest to you:
+
+- `wss://euwest.cloud.lightpanda.io/ws` (Europe West)
+- `wss://uswest.cloud.lightpanda.io/ws` (US West)
 
 ### Browser
 
-By default the cloud serves [Lightpanda browsers](https://github.com/lightpanda-io/browser).
-Use `browser=chrome` to select Google Chrome, or `browser=lightpanda` to force Lightpanda.
+By default the cloud runs [Lightpanda](https://github.com/lightpanda-io/browser). Use `browser=chrome` to request a Google Chrome instance instead, or `browser=lightpanda` to explicitly force Lightpanda.
 
 ```text copy
 wss://euwest.cloud.lightpanda.io/ws?browser=chrome&token=TOKEN
@@ -87,14 +88,14 @@ wss://euwest.cloud.lightpanda.io/ws?browser=chrome&token=TOKEN
 
 ### Proxies
 
-**fast_dc** — default, a single shared datacenter IP.
+The `proxy` parameter controls the outbound IP the cloud browser uses when fetching pages — useful for geo-targeting or avoiding rate limits.
 
-**datacenter** — a pool of shared datacenter IPs with automatic rotation. Accepts an optional `country` query parameter (two-letter country code).
+**fast_dc** — default. A single shared datacenter IP, optimized for speed.
+
+**datacenter** — a pool of shared datacenter IPs with automatic rotation. Accepts an optional `country` parameter (two-letter country code) to target a specific country.
 
 ```text copy
 wss://euwest.cloud.lightpanda.io/ws?proxy=datacenter&country=de&token=TOKEN
 ```
 
 [Contact us](mailto:hello@lightpanda.io) for additional proxy options.
-  </Tabs.Tab>
-</Tabs>
