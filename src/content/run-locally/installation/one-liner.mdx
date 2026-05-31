@@ -40,4 +40,7 @@ Inside WSL install the Lightpanda browser:
 curl -L -o lightpanda https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-x86_64-linux && \
 chmod a+x ./lightpanda
 ```
-It is recommended to install clients like Puppeteer on the Windows host.
+
+## Telemetry
+
+By default, Lightpanda collects and sends usage telemetry. This can be disabled by setting an environment variable `LIGHTPANDA_DISABLE_TELEMETRY=true`. You can read Lightpanda's privacy policy at: [https://lightpanda.io/privacy-policy](https://lightpanda.io/privacy-policy).

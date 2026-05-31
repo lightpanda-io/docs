@@ -2,8 +2,7 @@
 title: Interact with a webpage
 description: Learn how to interact with a dynamic webpage by typing, submitting a form, and extracting data with Lightpanda.
 ---
-import { Tabs } from 'nextra/components'
-import { Callout } from 'nextra/components'
+import { Callout, Tabs } from 'nextra/components'
 
 # Interact with a webpage
 
@@ -11,13 +10,19 @@ In this guide, you'll use Lightpanda to run a search on [HackerNews](https://new
 
 This example requires Lightpanda because HackerNews uses XHR requests to display search results — raw HTML fetching wouldn't capture them.
 
-<Callout type="info" emoji="ℹ️">
-  This guide uses **CDP locally**. Lightpanda is started as a local process via the `@lightpanda/browser` npm package. To connect from the cloud or use a different client, see the [Usage / CDP](/usage/cdp/puppeteer) section.
-</Callout>
-
 ## Prerequisites
 
-Install the [`puppeteer-core`](https://www.npmjs.com/package/puppeteer-core) *or* [`playwright-core`](https://www.npmjs.com/package/playwright-core) npm package.
+You'll need [Node.js](https://nodejs.org/en/download) installed on your computer. 
+
+Create a `hn-scraper` directory and initialize a new Node.js project. You can accept all the default values in the npm init prompts. 
+
+```sh copy
+mkdir hn-scraper && \
+  cd hn-scraper && \
+  npm init
+```
+
+Install the `lightpanda` and the [`puppeteer-core`](https://www.npmjs.com/package/puppeteer-core) *or* [`playwright-core`](https://www.npmjs.com/package/playwright-core) npm package.
 
 <Callout type="info" emoji="">
   Unlike `puppeteer` and `playwright`, `puppeteer-core` and `playwright-core` don't download a Chromium browser.
@@ -35,6 +40,8 @@ npm install --save playwright-core @lightpanda/browser
 ```
   </Tabs.Tab>
 </Tabs>
+
+This guide uses a local Lightpanda instance — see [installation](/run-locally/installation/one-liner) for setup details. The code can be adapted to connect to [Lightpanda Cloud](/run-on-lightpanda-cloud/getting-started).
 
 ## Create index.js
 

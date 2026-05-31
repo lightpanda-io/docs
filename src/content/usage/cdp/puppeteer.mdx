@@ -8,6 +8,8 @@ import { Tabs } from 'nextra/components'
 
 Use Lightpanda with [Puppeteer](https://pptr.dev/) via the [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/) (CDP).
 
+More examples in [demo/puppeteer](https://github.com/lightpanda-io/demo/tree/main/puppeteer).
+
 <Tabs items={['Local', 'Cloud']}>
   <Tabs.Tab>
 Start Lightpanda as a local CDP server (see [serve command](/run-locally/commands/serve) for all options):
@@ -65,9 +67,6 @@ await context.close()
 await browser.disconnect()
 ```
 
-More examples in [demo/puppeteer](https://github.com/lightpanda-io/demo/tree/main/puppeteer).
-  </Tabs.Tab>
-</Tabs>
 
 ## Cloud options
 
@@ -99,3 +98,5 @@ wss://euwest.cloud.lightpanda.io/ws?proxy=datacenter&country=de&token=TOKEN
 ```
 
 [Contact us](mailto:hello@lightpanda.io) for additional proxy options.
+  </Tabs.Tab>
+</Tabs>
