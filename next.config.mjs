@@ -1,31 +1,17 @@
 import nextra from 'nextra'
+import { basePath, redirects } from './redirects.mjs'
 
 const withNextra = nextra({})
 
 export default withNextra({
-  basePath: '/docs',
+  basePath,
   output: 'export',
   images: { unoptimized: true },
+  // Note: redirects() is honored only by the Node server (next dev / next
+  // start). With `output: 'export'` Next drops them, so the same `redirects`
+  // map is turned into static stub pages by scripts/generate-redirects.mjs.
   redirects: () =>
-    Object.entries({
-      '/quickstart/installation-and-setup': '/quickstart',
-      '/quickstart/your-first-test': '/quickstart',
-      '/quickstart/build-your-first-extraction-script': '/quickstart',
-      '/quickstart/go-to-production-with-lightpanda-cloud': '/quickstart',
-      '/open-source/installation': '/run-locally/installation/one-liner ',
-      '/open-source/usage': '/run-locally/commands/serve',
-      '/open-source/systems-requirements': '/run-locally/installation/system-requirements',
-      '/open-source/guides/build-from-sources': '/run-locally/installation/build-from-sources',
-      '/open-source/guides/configure-a-proxy': '/run-locally/configure-a-proxy',
-      '/open-source/guides/markdown-axtree': '/guides/markdown-axtree',
-      '/open-source/guides/use-hermes': '/guides/use-hermes',
-      '/open-source/guides/use-stagehand': '/guides/use-stagehand',
-      '/open-source/guides/mcp-server': '/usage/mcp',
-      '/cloud-offer/getting-started': '/run-on-lightpanda-cloud/getting-started',
-      '/cloud-offer/tools/cdp': '/usage/cdp/puppeteer',
-      '/cloud-offer/tools/mcp': '/usage/mcp',
-      '/cloud-offer/tools/api': '/usage/api',
-    }).map(([from, to]) => ({
+    Object.entries(redirects).map(([from, to]) => ({
       source: from,
       destination: to,
       permanent: true,
