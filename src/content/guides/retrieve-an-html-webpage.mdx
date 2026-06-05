@@ -1,50 +1,51 @@
 ---
-title: Your first test
-description: Learn what is Lightpanda browser and run your first scrapping script.
+title: Retrieve an HTML webpage
+description: Learn how to navigate to a webpage and extract data using Puppeteer or Playwright with Lightpanda.
 ---
-import { Tabs } from 'nextra/components'
-import { Callout } from 'nextra/components'
+import { Callout, Tabs } from 'nextra/components'
 
-# 2. Your first test
+# Retrieve an HTML webpage
 
-Lightpanda is a headless browser built from scratch. Unlike Headless Chrome, it
-has no UI or graphical rendering for humans, which allows it to start instantly
-and execute pages up to 10x faster.
+In this guide, you'll connect a CDP client to Lightpanda and extract all reference links from a [Wikipedia page](https://en.wikipedia.org/wiki/Web_browser).
 
-Unlike [curl](https://curl.se/), which only fetches raw HTML, Lightpanda can
-execute JavaScript and run query selectors directly in the browser.
+Unlike [curl](https://curl.se/), which only fetches raw HTML, Lightpanda executes JavaScript and runs query selectors directly in the browser — making it suitable for dynamic pages.
 
-It's ideal for crawling, testing, and running AI agents that need to interact
-with dynamic web pages, and it’s fully compatible with libraries like
-[Puppeteer](https://pptr.dev/) and [Playwright](https://playwright.dev/).
+## Prerequisites
 
-In this example, you’ll connect CDP client, [Puppeteer](https://pptr.dev/) or [Playwright](https://playwright.dev/) to Lightpanda
-and extract all reference links from a [Wikipedia
-page](https://www.wikipedia.org/).
+You'll need [Node.js](https://nodejs.org/en/download) installed on your computer. 
 
-## Connect CDP Client to Lightpanda
+Create a `hn-scraper` directory and initialize a new Node.js project. You can accept all the default values in the npm init prompts. 
 
-Install the [`puppeteer-core`](https://www.npmjs.com/package/puppeteer-core) *or* [`playwright-core`](https://www.npmjs.com/package/playwright-core) npm package.
+```sh copy
+mkdir hn-scraper && \
+  cd hn-scraper && \
+  npm init
+```
+
+Install the `lightpanda` and the [`puppeteer-core`](https://www.npmjs.com/package/puppeteer-core) *or* [`playwright-core`](https://www.npmjs.com/package/playwright-core) npm packages.
 
 <Callout type="info" emoji="">
-  Unlike `puppeteer` and `playwright` npm packages,
-  `puppeteer-core` and `playwright-core` don't download a Chromium browser.
+  Unlike `puppeteer` and `playwright`, `puppeteer-core` and `playwright-core` don't download a Chromium browser.
 </Callout>
 
 <Tabs items={['puppeteer', 'playwright']} className="-mb-4">
   <Tabs.Tab id="puppeteer" className="m-0">
 ```sh copy
-npm install -save puppeteer-core
+npm install --save puppeteer-core @lightpanda/browser
 ```
   </Tabs.Tab>
   <Tabs.Tab id="playwright" className="m-0">
 ```sh copy
-npm install -save playwright-core
+npm install --save playwright-core @lightpanda/browser
 ```
   </Tabs.Tab>
 </Tabs>
 
-Edit your `index.js` to connect to Lightpanda:
+This guide uses a local Lightpanda instance — see [installation](/run-locally/installation/one-liner) for setup details. The code can be adapted to connect to [Lightpanda Cloud](/run-on-lightpanda-cloud/getting-started).
+
+## Create index.js
+
+Create an `index.js` file. Import the packages, configure the connection, and set up the browser lifecycle:
 
 <Tabs items={['puppeteer', 'playwright']} className="-mb-4">
   <Tabs.Tab id="puppeteer" className="m-0">
@@ -71,9 +72,6 @@ const puppeteeropts = {
   const browser = await puppeteer.connect(puppeteeropts);
   const context = await browser.createBrowserContext();
   const page = await context.newPage();
-
-  // Do your magic ✨
-  console.log("CDP connection is working");
 
   // Disconnect Puppeteer.
   await page.close();
@@ -112,10 +110,7 @@ const playwrightopts = {
   const context = await browser.newContext({});
   const page = await context.newPage();
 
-  // Do your magic ✨
-  console.log("CDP connection is working");
-
-  // Disconnect Puppeteer.
+  // Disconnect Playwright.
   await page.close();
   await context.close();
   await browser.close();
@@ -129,61 +124,44 @@ const playwrightopts = {
   </Tabs.Tab>
 </Tabs>
 
-Run the script to test the connection between Puppeteer or Playwright and Lightpanda:
+## Navigate and extract
 
-```sh copy
-node index.js
-```
-```sh
-$ node index.js
-🐼 Running Lightpanda's CDP server... { pid: 31371 }
-CDP connection is working
-```
-
-## Extract all reference links from Wikipedia
-
-Update `index.js` using `page.goto` to navigate to a Wikipedia page and extract
-all the reference links:
+Use `page.goto` to navigate to the Wikipedia page, then run a query selector to extract all external reference links:
 
 <Tabs items={['puppeteer', 'playwright']} className="-mb-4">
   <Tabs.Tab id="puppeteer" className="m-0">
 ```javascript copy
   // Go to Wikipedia page.
   await page.goto("https://en.wikipedia.org/wiki/Web_browser");
-```
-  </Tabs.Tab>
-  <Tabs.Tab id="playwright" className="m-0">
-```javascript copy
-  // Go to Wikipedia page.
-  await page.goto("https://en.wikipedia.org/wiki/Web_browser");
-```
-  </Tabs.Tab>
-</Tabs>
 
-Execute a query selector on the browser to extract the links:
-
-<Tabs items={['puppeteer', 'playwright']} className="-mb-4">
-  <Tabs.Tab id="puppeteer" className="m-0">
-```javascript copy
   // Extract all links from the references list of the page.
   const reflist = await page.evaluate(() => {
     return Array.from(document.querySelectorAll('.references a.external')).map(row => {
       return row.getAttribute('href');
     });
   });
+
+  // Display the result.
+  console.log("all reference links", reflist);
 ```
   </Tabs.Tab>
   <Tabs.Tab id="playwright" className="m-0">
 ```javascript copy
+  // Go to Wikipedia page.
+  await page.goto("https://en.wikipedia.org/wiki/Web_browser");
+
   // Extract all links from the references list of the page.
   const reflist = await page.locator('.references a.external').evaluateAll(links =>
     links.map(link => link.getAttribute('href'))
   );
+
+  // Display the result.
+  console.log("all reference links", reflist);
 ```
   </Tabs.Tab>
 </Tabs>
 
-Here’s the full `index.js` file:
+## Full script
 
 <Tabs items={['puppeteer', 'playwright']} className="-mb-4">
   <Tabs.Tab id="puppeteer" className="m-0">
@@ -256,7 +234,7 @@ const playwrightopts = {
   // Start Lightpanda browser in a separate process.
   const proc = await lightpanda.serve(lpdopts);
 
-  // Connect using Playwright's chromium driver to the browser.
+  // Connect Playwright's chromium driver to the browser.
   const browser = await chromium.connectOverCDP(playwrightopts);
   const context = await browser.newContext({});
   const page = await context.newPage();
@@ -286,9 +264,8 @@ const playwrightopts = {
   </Tabs.Tab>
 </Tabs>
 
-## Execute the link extraction
+## Run it
 
-Execute index.js to see the links directly in your console:
 ```sh copy
 node index.js
 ```
@@ -302,6 +279,6 @@ all reference links [
   'https://web.archive.org/web/20240523140912/https://www.internetworldstats.com/stats.htm',
   'https://www.internetworldstats.com/stats.htm',
   'https://www.reference.com/humanities-culture/purpose-browser-e61874e41999ede',
+  ...
+]
 ```
-
-### Step 3: [Extract data](/quickstart/build-your-first-extraction-script)

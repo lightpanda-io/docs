@@ -1,19 +1,47 @@
 ---
-title: Native MCP server
-description: Lightpanda ships a native Model Context Protocol server built into the browser binary. One binary, one command, full browser capabilities for your AI agent.
+title: MCP
+description: Use Lightpanda via the Model Context Protocol, locally or on the cloud.
 ---
+import { Callout, Tabs } from 'nextra/components'
 
-# Use Native MCP server
+# MCP
 
-Lightpanda v0.2.5 ships a **native Model Context Protocol (MCP) server** built directly into the browser binary. The MCP server shares the same process as the Zig-based JavaScript engine with no CDP intermediary and no extra processes.
+Use Lightpanda via the [Model Context Protocol](https://modelcontextprotocol.io) (MCP) to control the browser from AI applications.
+
+## Connect
+
+<Tabs items={['Local', 'Cloud']}>
+  <Tabs.Tab>
+Start the MCP server:
 
 ```sh copy
-lightpanda mcp
+./lightpanda mcp
+```
+  </Tabs.Tab>
+  <Tabs.Tab>
+<Callout type="info" emoji="ℹ️">
+This is still a work in progress version. The cloud version does not support all tools.
+</Callout>
+
+Lightpanda Cloud exposes the MCP server over [SSE](https://modelcontextprotocol.io/specification/2024-11-05/basic/transports#http-with-sse). Connect to the endpoint nearest to you:
+
+- `https://euwest.cloud.lightpanda.io/mcp/sse` (Europe West)
+- `https://uswest.cloud.lightpanda.io/mcp/sse` (US West)
+
+Pass your API token as a query parameter or in the `Authorization` header:
+
+```text copy
+https://euwest.cloud.lightpanda.io/mcp/sse?token=TOKEN
 ```
 
-The server communicates via **MCP JSON-RPC 2.0 over stdio**, making it compatible with Claude Desktop, Cursor, Windsurf, and any MCP-aware agent framework.
+```text copy
+https://euwest.cloud.lightpanda.io/mcp/sse
+Authorization: Bearer TOKEN
+```
+  </Tabs.Tab>
+</Tabs>
 
-## Tools and resources
+## Tools
 
 | Name | Description |
 |-|-|
@@ -30,7 +58,7 @@ The server communicates via **MCP JSON-RPC 2.0 over stdio**, making it compatibl
 | scroll | Scroll the page or a specific element. Returns the scroll position and current page URL and title. |
 | waitForSelector | Wait for an element matching a CSS selector to appear in the page. Returns the backend node ID of the matched element. |
 
-#### `goto`
+### `goto`
 
 Navigate to a URL and load the page into memory.
 
@@ -39,9 +67,9 @@ Navigate to a URL and load the page into memory.
  "params":{"name":"goto","arguments":{"url":"https://example.com"}}}
 ```
 
-**Response:** `"Navigated successfully."` - returned even if the URL is unreachable. Always verify with a follow-up content call (see [Known behaviors](#known-behaviors)).
+**Response:** `"Navigated successfully."` — returned even if the URL is unreachable. Always verify with a follow-up content call (see [Known behaviors](#known-behaviors)).
 
-#### `markdown`
+### `markdown`
 
 Extract the current page's content as clean, token-efficient markdown.
 
@@ -59,9 +87,9 @@ Extract the current page's content as clean, token-efficient markdown.
 
 </details>
 
-> Using `markdown` with an inline `url` is the most efficient single-call pattern - it navigates and extracts in one request. Essential for HTTP transport where sessions are stateless.
+> Using `markdown` with an inline `url` is the most efficient single-call pattern — it navigates and extracts in one request. Essential for HTTP transport where sessions are stateless.
 
-#### `links`
+### `links`
 
 Extract all hyperlinks from the loaded page as a newline-separated list of absolute URLs.
 
@@ -72,7 +100,7 @@ Extract all hyperlinks from the loaded page as a newline-separated list of absol
 
 **Response:** One URL per line, e.g. `"https://iana.org/domains/example"`.
 
-#### `evaluate`
+### `evaluate`
 
 Execute arbitrary JavaScript in the page context and return the result as a string.
 
@@ -85,7 +113,7 @@ Execute arbitrary JavaScript in the page context and return the result as a stri
 
 **Response:** `"Example Domain"`
 
-### Resources
+## Resources
 
 Two read-only resources are available after a page has been loaded via `resources/read`:
 
@@ -106,6 +134,73 @@ Two read-only resources are available after a page has been loaded via `resource
 
 > The `markdown` tool and the `mcp://page/markdown` resource return the same content. The difference is who initiates: **tools** are called by the agent during its workflow; **resources** are read by the host application (e.g. an IDE displaying page state in the background).
 
+## Options
+
+```bash
+--insecure-disable-tls-host-verification
+                Disables host verification on all HTTP requests. This is an
+                advanced option which should only be set if you understand
+                and accept the risk of disabling host verification.
+
+--obey-robots
+                Fetches and obeys the robots.txt (if available) of the web pages
+                we make requests towards.
+                Defaults to false.
+
+--http-proxy    The HTTP proxy to use for all HTTP requests.
+                A username:password can be included for basic authentication.
+                Defaults to none.
+
+--proxy-bearer-token
+                The <token> to send for bearer authentication with the proxy
+                Proxy-Authorization: Bearer <token>
+
+--http-max-concurrent
+                The maximum number of concurrent HTTP requests.
+                Defaults to 10.
+
+--http-max-host-open
+                The maximum number of open connection to a given host:port.
+                Defaults to 4.
+
+--http-connect-timeout
+                The time, in milliseconds, for establishing an HTTP connection
+                before timing out. 0 means it never times out.
+                Defaults to 0.
+
+--http-timeout
+                The maximum time, in milliseconds, the transfer is allowed
+                to complete. 0 means it never times out.
+                Defaults to 10000.
+
+--http-max-response-size
+                Limits the acceptable response size for any request
+                (e.g. XHR, fetch, script loading, ...).
+                Defaults to no limit.
+
+--log-level     The log level: debug, info, warn, error or fatal.
+                Defaults towarn.
+
+--log-format    The log format: pretty or logfmt.
+                Defaults to logfmt.
+
+--log-filter-scopes
+                Filter out too verbose logs per scope:
+                http, unknown_prop, event, ...
+
+--user-agent-suffix
+                Suffix to append to the Lightpanda/X.Y User-Agent
+
+--web-bot-auth-key-file
+                Path to the Ed25519 private key PEM file.
+
+--web-bot-auth-keyid
+                The JWK thumbprint of your public key.
+
+--web-bot-auth-domain
+                Your domain e.g. yourdomain.com
+```
+
 ## Connecting an AI agent
 
 ### Claude Desktop / Cursor / Windsurf
@@ -116,7 +211,7 @@ Add to your MCP host configuration:
 - **Cursor:** `.cursor/mcp.json` in your project
 - **Windsurf:** Cascade MCP settings
 
-```json
+```json copy
 {
   "mcpServers": {
     "lightpanda": {
@@ -127,7 +222,7 @@ Add to your MCP host configuration:
 }
 ```
 
-For robots.txt compliance, use `"args": ["mcp", "--obey_robots"]`.
+For robots.txt compliance, use `"args": ["mcp", "--obey-robots"]`.
 
 > Replace `/path/to/lightpanda` with the actual binary path, e.g. `/usr/local/bin/lightpanda`.
 
@@ -143,7 +238,7 @@ npx -y supergateway \
   --port 8000
 ```
 
-> By default, supergateway is **stateless**: each HTTP request spawns a fresh process. For stateful sessions, we use `--stateful --sessionTimeout <ms>` to the supergateway command.
+> By default, supergateway is **stateless**: each HTTP request spawns a fresh process. Use `--stateful --sessionTimeout <ms>` for stateful sessions.
 
 With robots.txt: `--stdio "lightpanda mcp --obey-robots"`
 
@@ -185,19 +280,19 @@ Always check the content result after navigation, not the `goto` response itself
 Lightpanda defaults to `--log-level warn`. Setting `info` surfaces HTTP requests, navigation events, resource loading, and robots.txt fetches. All logs go to **stderr** and never interfere with stdout.
 
 ```sh copy
-lightpanda mcp --log_level info --log_format pretty
+lightpanda mcp --log-level info --log-format pretty
 
 # Or pipe logs to a file
-lightpanda mcp --log_level info 2>lightpanda.log
+lightpanda mcp --log-level info 2>lightpanda.log
 ```
 
-Use `--log_level debug` for the most verbose output. Keep `warn` in production.
+Use `--log-level debug` for the most verbose output. Keep `warn` in production.
 
 ## References
 
-- [LP Domain & Native MCP - Lightpanda Blog](https://lightpanda.io/blog/posts/lp-domain-commands-and-native-mcp)
+- [LP Domain & Native MCP — Lightpanda Blog](https://lightpanda.io/blog/posts/lp-domain-commands-and-native-mcp)
 - [Lightpanda GitHub](https://github.com/lightpanda-io/browser)
 - [Lightpanda releases](https://github.com/lightpanda-io/browser/releases)
 - [MCP Specification](https://modelcontextprotocol.io/)
 - [supergateway (npm)](https://www.npmjs.com/package/supergateway)
-- [Lightpanda Cloud MCP (SSE)](https://lightpanda.io/docs/cloud-offer/tools/mcp)
+

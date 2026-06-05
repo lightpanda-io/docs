@@ -1,13 +1,14 @@
 import type { MetaRecord } from 'nextra'
 
 const meta: MetaRecord = {
-  'getting-started': 'Getting started',
-  tools: {
-    title: 'Tools',
+  cdp: {
+    title: 'CDP',
     theme: {
       collapsed: false,
     },
   },
+  mcp: 'MCP',
+  api: 'HTTP API',
 }
 
 export default meta

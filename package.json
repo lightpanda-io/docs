@@ -9,7 +9,7 @@
     "dev": "next -p 1414",
     "prebuild": "node scripts/generate-llms.mjs",
     "build": "NODE_ENV='production' next build",
-    "postbuild": "pagefind --site ./out --output-path ./out/_pagefind",
+    "postbuild": "pagefind --site ./out --output-path ./out/_pagefind && node scripts/generate-redirects.mjs",
     "typecheck": "npx -p typescript tsc --noEmit",
     "lint": "next lint && yarn dlx biome ci . --diagnostic-level=error",
     "biome-lint": "npx biome ci . --diagnostic-level=error",

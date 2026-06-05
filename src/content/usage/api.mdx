@@ -2,12 +2,17 @@
 title: API
 description: Use HTTP API calls to get Lightpanda's results directly.
 ---
+import { Tabs } from 'nextra/components'
 
 # HTTP API
 
+## Connect
+
+<Tabs items={['Cloud']}>
+  <Tabs.Tab>
 Lightpanda Cloud provides an HTTP API to easily retrieve results from Lightpanda without the burden of writing and running a CDP script.
 
-## Authentication
+### Authentication
 
 Every HTTP API request must include a bearer authorization header with your token.
 
@@ -23,6 +28,9 @@ curl -XPOST \
   https://euwest.cloud.lightpanda.io/api/fetch \
    --data '{"url":"https://lightpanda.io"}'
 ```
+  </Tabs.Tab>
+</Tabs>
+
 
 ## Fetch a URL
 

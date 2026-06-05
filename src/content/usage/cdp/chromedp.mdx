@@ -1,0 +1,122 @@
+---
+title: Chromedp
+description: Use Lightpanda with Chromedp via CDP, locally or on the cloud.
+---
+import { Tabs } from 'nextra/components'
+
+# Chromedp
+
+Use Lightpanda with [Chromedp](https://github.com/chromedp/chromedp), a Go client for the [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/) (CDP).
+
+More examples in [demo/chromedp](https://github.com/lightpanda-io/demo/tree/main/chromedp).
+
+<Tabs items={['Local', 'Cloud']}>
+  <Tabs.Tab>
+Start Lightpanda as a local CDP server (see [serve command](/run-locally/commands/serve) for all options):
+
+```sh copy
+./lightpanda serve --host 127.0.0.1 --port 9222
+```
+
+Connect Chromedp using `NewRemoteAllocator`:
+
+```go copy
+package main
+
+import (
+    "context"
+    "flag"
+    "log"
+
+    "github.com/chromedp/chromedp"
+)
+
+func main() {
+    ctx, cancel = chromedp.NewRemoteAllocator(ctx,
+        "ws://127.0.0.1:9222", chromedp.NoModifyURL,
+    )
+    defer cancel()
+
+    ctx, cancel := chromedp.NewContext(allocatorContext)
+    defer cancel()
+
+    var title string
+    if err := chromedp.Run(ctx,
+        chromedp.Navigate("https://wikipedia.com/"),
+        chromedp.Title(&title),
+    ); err != nil {
+        log.Fatalf("Failed getting page's title: %v", err)
+    }
+
+    log.Println("Got title of:", title)
+}
+```
+  </Tabs.Tab>
+  <Tabs.Tab>
+Export your API token and connect to the cloud endpoint:
+
+```sh copy
+export LPD_TOKEN="your token here"
+```
+
+```go copy
+package main
+
+import (
+	"context"
+	"log"
+	"os"
+
+	"github.com/chromedp/chromedp"
+)
+
+func main() {
+	ctx, cancel := chromedp.NewRemoteAllocator(context.Background(),
+		"wss://euwest.cloud.lightpanda.io/ws?token="+os.Getenv("LPD_TOKEN"), chromedp.NoModifyURL,
+	)
+	defer cancel()
+
+	ctx, cancel = chromedp.NewContext(ctx)
+	defer cancel()
+
+	var title string
+	if err := chromedp.Run(ctx,
+		chromedp.Navigate("https://lightpanda.io"),
+		chromedp.Title(&title),
+	); err != nil {
+		log.Fatalf("Failed getting title of lightpanda.io: %v", err)
+	}
+
+	log.Println("Got title of:", title)
+}
+```
+
+## Cloud options
+
+### Endpoints
+Depending on your location, connect using:
+- `wss://euwest.cloud.lightpanda.io/ws` (west Europe)
+- `wss://uswest.cloud.lightpanda.io/ws` (west US)
+
+### Browser
+
+By default the cloud serves [Lightpanda browsers](https://github.com/lightpanda-io/browser).
+Use `browser=chrome` to select Google Chrome, or `browser=lightpanda` to force Lightpanda.
+
+```text copy
+wss://euwest.cloud.lightpanda.io/ws?browser=chrome&token=TOKEN
+```
+
+### Proxies
+
+**fast_dc** — default, a single shared datacenter IP.
+
+**datacenter** — a pool of shared datacenter IPs with automatic rotation. Accepts an optional `country` query parameter (two-letter country code).
+
+```text copy
+wss://euwest.cloud.lightpanda.io/ws?proxy=datacenter&country=de&token=TOKEN
+```
+
+[Contact us](mailto:hello@lightpanda.io) for additional proxy options.
+  </Tabs.Tab>
+</Tabs>

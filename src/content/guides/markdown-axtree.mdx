@@ -3,10 +3,15 @@ title: Markdown and AXTree
 description: Convert any web page to clean, token-efficient Markdown and Accessibility tree directly from the browser, after JavaScript execution.
 ---
 import { Tabs } from 'nextra/components'
+import { Callout } from 'nextra/components'
 
 # Markdown and AXTree
 
 Lightpanda outputs web page content as Markdown and Accessibility tree directly from its browser engine, after JavaScript execution. No external HTML-to-Markdown converter needed.
+
+<Callout type="info" emoji="ℹ️">
+  This guide covers **three local approaches**: CLI, CDP, and MCP. For cloud usage, see the [Usage](/usage/cdp/puppeteer) section.
+</Callout>
 
 ## Overview
 
@@ -324,7 +329,7 @@ The MCP server exposes `markdown` and `semantic_tree` tools.
 | markdown | Get the page content in markdown format. If a url is provided, it navigates to that url first. |
 | semantic_tree | Get the page content as a simplified semantic DOM tree for AI reasoning. If a url is provided, it navigates to that url first. |
 
-> For full MCP server documentation — tools, resources, handshake protocol, agent configuration, and HTTP transport — see the [MCP server guide](/open-source/guides/mcp-server).
+> For full MCP server documentation — tools, resources, handshake protocol, agent configuration, and HTTP transport — see the [MCP server guide](/usage/mcp).
 
 ## References
 
