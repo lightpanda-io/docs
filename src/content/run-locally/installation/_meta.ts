@@ -3,7 +3,7 @@ import type { MetaRecord } from 'nextra'
 const meta: MetaRecord = {
   'one-liner': 'One-liner',
   docker: 'Docker',
-  'package-managers': 'Package manager (npm, brew)',
+  'package-managers': 'Package manager',
   'nightly-builds': 'Nightly builds',
   'system-requirements': 'System requirements',
   'build-from-sources': 'Build from sources',
