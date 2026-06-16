@@ -70,9 +70,10 @@ your schema — an object schema returns an object keyed by your fields (even wi
 a single field), and a bare array schema returns an array:
 
 ```js
-goto("https://news.ycombinator.com/");
+const page = new Page();
+await page.goto("https://news.ycombinator.com/");
 
-const data = extract({
+const data = page.extract({
   title: "title",
   stories: [{
     selector: "tr.athing",
@@ -90,7 +91,7 @@ data; // printed automatically as JSON
 Destructure when a single field is all you need:
 
 ```js
-const { stories } = extract({
+const { stories } = page.extract({
   stories: [{
     selector: "tr.athing",
     limit: 5,
@@ -119,19 +120,20 @@ Only recorded browser primitives are installed globally:
 
 | Primitive | Arguments | Runs in |
 |-----------|-----------|---------|
-| `goto` | `goto(url[, { timeout }])` | Browser session |
-| `extract` | `extract(schema)` or `extract({ schema })` | Browser page via extractor; returns a JS object or array |
-| `evaluate` | `evaluate(script[, { url, timeout, save }])` | Browser page JS context |
-| `click` | `click(selector)` or `click({ selector })` | Browser page |
-| `fill` | `fill(selector, value)` or `fill({ selector, value })` | Browser page |
-| `scroll` | `scroll()` or `scroll({ x, y })` | Browser page |
-| `waitForSelector` | `waitForSelector(selector[, { timeout }])` | Browser page |
-| `waitForScript` | `waitForScript(script[, { timeout }])` | Browser page JS context |
-| `waitForState` | `waitForState(state[, { timeout }])` | Browser page |
-| `hover` | `hover(selector)` or `hover({ selector })` | Browser page |
-| `press` | `press(selector, key)` or `press({ key[, selector] })` | Browser page |
-| `selectOption` | `selectOption(selector, value)` or `selectOption({ selector, value })` | Browser page |
-| `setChecked` | `setChecked(selector[, checked])` or `setChecked({ selector, checked })` | Browser page |
+| `new Page()` ||Browser session |
+| `page.goto` | `goto(url[, { timeout }])` | Browser page |
+| `page.extract` | `extract(schema)` or `extract({ schema })` | Browser page via extractor; returns a JS object or array |
+| `page.evaluate` | `evaluate(script[, { url, timeout, save }])` | Browser page JS context |
+| `page.click` | `click(selector)` or `click({ selector })` | Browser page |
+| `page.fill` | `fill(selector, value)` or `fill({ selector, value })` | Browser page |
+| `page.scroll` | `scroll()` or `scroll({ x, y })` | Browser page |
+| `page.waitForSelector` | `waitForSelector(selector[, { timeout }])` | Browser page |
+| `page.waitForScript` | `waitForScript(script[, { timeout }])` | Browser page JS context |
+| `page.waitForState` | `waitForState(state[, { timeout }])` | Browser page |
+| `page.hover` | `hover(selector)` or `hover({ selector })` | Browser page |
+| `page.press` | `press(selector, key)` or `press({ key[, selector] })` | Browser page |
+| `page.selectOption` | `selectOption(selector, value)` or `selectOption({ selector, value })` | Browser page |
+| `page.setChecked` | `setChecked(selector[, checked])` or `setChecked({ selector, checked })` | Browser page |
 
 `goto` returns at the `load` event (a fast snapshot). When a page's content is
 still loading (rendered by post-load JS), call `waitForState("networkidle")`
@@ -160,12 +162,13 @@ script.
 
 ## Navigation
 
-Use `goto(...)` to open a page:
+Use `goto(...)` to navigate on an URL:
 
 ```js
-goto("https://example.com");
+const page = new Page();
+await page.goto("https://example.com");
 
-goto({
+await page.goto({
   url: "https://example.com/app",
   timeout: 15000
 });
@@ -179,12 +182,12 @@ reached. Check the return value — or follow with `waitForState(...)` /
 
 ## Structured Extraction
 
-Use `extract(...)` to read data from the current page without writing page-side
+Use `page.extract(...)` to read data from the current page without writing page-side
 JavaScript. This is the preferred bridge from page content into local agent
 logic.
 
 ```js
-const result = extract({
+const result = page.extract({
   heading: "h1",
   links: [{
     selector: "a",
@@ -236,9 +239,9 @@ When passing an object directly to `extract(...)`, the runtime serializes it as
 the extractor schema. These forms are equivalent:
 
 ```js
-extract({ title: "h1" });
-extract({ schema: { title: "h1" } });
-extract('{ "title": "h1" }');
+page.extract({ title: "h1" });
+page.extract({ schema: { title: "h1" } });
+page.extract('{ "title": "h1" }');
 ```
 
 The wrapped form accepts only `schema`: the REPL's `save=` option does not
@@ -248,7 +251,7 @@ results in local variables instead.
 Use local variables to keep extracted data available to later script logic:
 
 ```js
-const page = extract({ title: "title" });
+const data = page.extract({ title: "title" });
 ```
 
 ## Page JavaScript
@@ -257,9 +260,9 @@ const page = extract({ title: "title" });
 context. Its script string runs where `window` and `document` exist.
 
 ```js
-goto("https://example.com");
+await page.goto("https://example.com");
 
-const title = evaluate("document.title");
+const title = page.evaluate("document.title");
 console.log(title);
 ```
 
@@ -269,10 +272,10 @@ Keep the boundary clear:
 const selector = "h1";
 
 // Good: local agent logic builds an extract schema.
-const data = extract({ heading: selector });
+const data = page.extract({ heading: selector });
 
 // Bad: page evaluate cannot see local agent variables.
-evaluate("document.querySelector(selector).textContent");
+page.evaluate("document.querySelector(selector).textContent");
 ```
 
 Page `evaluate(...)` cannot call `goto`, `extract`, or other agent primitives.
@@ -284,7 +287,7 @@ cannot express.
 expression is truthy or the timeout expires:
 
 ```js
-waitForScript("document.querySelectorAll('.row').length >= 5");
+page.waitForScript("document.querySelectorAll('.row').length >= 5");
 ```
 
 ## Interaction Primitives
@@ -293,20 +296,20 @@ The action primitives operate on the current page. Most take one object whose
 fields match the browser tool schema:
 
 ```js
-click({ selector: "a.login" });
-fill({ selector: "input[name='acct']", value: "$LP_HN_USERNAME" });
-fill({ selector: "input[name='pw']", value: "$LP_HN_PASSWORD" });
-press({ key: "Enter" });
+page.click({ selector: "a.login" });
+page.fill({ selector: "input[name='acct']", value: "$LP_HN_USERNAME" });
+page.fill({ selector: "input[name='pw']", value: "$LP_HN_PASSWORD" });
+page.press({ key: "Enter" });
 
-waitForSelector("#logout");
+page.waitForSelector("#logout");
 
-hover({ selector: "#menu" });
-selectOption({ selector: "select[name='country']", value: "FR" });
-setChecked({ selector: "input[name='terms']", checked: true });
-setChecked({ selector: "input[name='newsletter']", checked: false });
+page.hover({ selector: "#menu" });
+page.selectOption({ selector: "select[name='country']", value: "FR" });
+page.setChecked({ selector: "input[name='terms']", checked: true });
+page.setChecked({ selector: "input[name='newsletter']", checked: false });
 
-scroll({ y: 600 });
-scroll();
+page.scroll({ y: 600 });
+page.scroll();
 ```
 
 `setChecked` defaults `checked` to `true` when the field is omitted
@@ -326,7 +329,7 @@ Primitive failures throw JavaScript exceptions:
 
 ```js
 try {
-  waitForSelector({ selector: "#dashboard", timeout: 1000 });
+  page.waitForSelector({ selector: "#dashboard", timeout: 1000 });
 } catch (err) {
   console.error("dashboard did not appear:", err.message);
   throw err;
@@ -352,9 +355,10 @@ the local agent script, not in the page.
 ```js
 const HN = "https://news.ycombinator.com";
 
-goto(HN);
+const page = new Page();
+await page.goto(HN);
 
-const { stories } = extract({
+const { stories } = page.extract({
   stories: [{
     selector: "tr.athing",
     limit: 5,
@@ -370,8 +374,8 @@ for (const story of stories) {
   story.comments = [];
   if (!story.id) continue;
 
-  goto(`${HN}/item?id=${story.id}`);
-  const { comments } = extract({
+  await page.goto(`${HN}/item?id=${story.id}`);
+  const { comments } = page.extract({
     comments: [{
       selector: "tr.athing.comtr:has(.commtext)",
       limit: 3,
