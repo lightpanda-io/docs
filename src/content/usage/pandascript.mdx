@@ -8,9 +8,9 @@ import { Callout, Tabs } from 'nextra/components'
 
 A PandaScript is a web automation script that can be run directly by Lightpanda browser.
 
-No environment to setup like NodeJS or Python, no Puppeteer/Playwright to write, no CDP serialization cost, no LLM required: just vanilla Javascript with a small set of native primitives.
+No environment to set up like NodeJS or Python, no Puppeteer/Playwright to write, no CDP serialization cost, no LLM required: just vanilla Javascript with a small set of native primitives.
 
-Use normal Javascript variables, functions, loops, objects, arrays, `JSON.parse`, `JSON.stringify`, and other standard ECMAScript built-ins.
+Use normal JavaScript variables, functions, loops, objects, arrays, `JSON.parse`, `JSON.stringify`, and other standard ECMAScript built-ins.
 
 It's reproducible, deterministic and token-free (no LLM required).
 
@@ -45,7 +45,7 @@ web page's JavaScript context.
   primitive calls.
 - Tool failures throw JavaScript `Error` exceptions and stop execution unless
   you catch them.
-- The script's completion value — its last top-level expression — is printed
+- The script's completion value (its last top-level expression) is printed
   automatically (objects and arrays as JSON; other values coerced). End a
   script with the bare expression you want as output, e.g. a final
   `extract({ ... });` or `results;`. `console.log(...)` is for extra or debug
@@ -66,7 +66,7 @@ console.error("printed to stderr");
 Most primitives return the browser tool's result text as a JavaScript string.
 `extract(...)` is the exception: it returns extracted data as a normal
 JavaScript value, so local script logic can use it directly. The result mirrors
-your schema — an object schema returns an object keyed by your fields (even with
+your schema: an object schema returns an object keyed by your fields (even with
 a single field), and a bare array schema returns an array:
 
 ```js
@@ -145,7 +145,7 @@ before reading. `waitForState`'s `state` accepts `"load"`,
 The `[, { … }]` is an optional trailing options object: leading arguments are
 positional (`waitForSelector("#row", { timeout: 2000 })`), and the options ride
 in a final object. Passing a single object with everything
-(`waitForSelector({ selector: "#row", timeout: 2000 })`) is equivalent — that's
+(`waitForSelector({ selector: "#row", timeout: 2000 })`) is equivalent; that's
 the shape `/save` records into saved scripts. An option can't be a bare
 positional, though: `waitForSelector("#row", 2000)` is an error. A `null`
 positional omits that field (`press(null, "Enter")` presses on the focused
@@ -155,14 +155,14 @@ element), and setting the same field positionally and in the options object
 Script primitives address elements by CSS selector only. The tools that hand
 out `backendNodeId`s (`tree`, `findElement`, `nodeDetails`) aren't installed in
 the script context, and a raw node ID wouldn't survive replay anyway. When
-you're exploring in the REPL and have a `backendNodeId` — e.g. the leading
-number on a `/tree` line, or a `/findElement` hit — run `/nodeDetails
+you're exploring in the REPL and have a `backendNodeId` (e.g. the leading
+number on a `/tree` line, or a `/findElement` hit) run `/nodeDetails
 backendNodeId=<id>` to get a durable CSS `selector`, then paste that into your
 script.
 
 ## Navigation
 
-Use `goto(...)` to navigate on an URL:
+Use `goto(...)` to navigate to an URL:
 
 ```js
 const page = new Page();
@@ -177,8 +177,8 @@ await page.goto({
 The call returns a status string and throws if navigation fails. A timeout
 does **not** throw: the call returns `"Navigation started but the page did not
 finish loading before the timeout."` and the page stays in whatever state it
-reached. Check the return value — or follow with `waitForState(...)` /
-`waitForSelector(...)` — when completeness matters.
+reached. Check the return value, or follow with `waitForState(...)` /
+`waitForSelector(...)`, when completeness matters.
 
 ## Structured Extraction
 
@@ -217,23 +217,23 @@ Return shape follows the top-level schema:
 - `extract({ title: "h1" })` returns `{ title: "..." }`.
 - `extract({ title: "h1", links: [{ selector: "a" }] })` returns an object
   with both fields.
-- `extract({ links: [{ selector: "a" }] })` returns `{ links: [...] }` — an
+- `extract({ links: [{ selector: "a" }] })` returns `{ links: [...] }`. An
   object schema always returns an object, even with a single field.
 - `extract([{ selector: "a" }])` is shorthand for a single anonymous array
   extraction and returns the array directly.
 
-Every value is a string (trimmed text or a raw attribute) or `null` — parse
+Every value is a string (trimmed text or a raw attribute) or `null`; parse
 numbers in script logic. An array field that matches nothing yields `[]`
 without complaint (a page with zero comments is a valid result), but if
 *every* field in the schema misses, `extract(...)` throws
-`no schema selector matched any element` — treat that as "my selectors are
+`no schema selector matched any element`; treat that as "my selectors are
 wrong", not "the page is empty".
 
-`extract(...)` reads only the current page. For list-to-detail scraping —
-capture a list, then visit each row for more — capture the list, then loop in
-the script: `goto` each row's URL and `extract` the detail. The local agent
-context keeps the data across navigations, so the assembly happens in plain
-JavaScript. See the [complete example](#complete-example) below.
+`extract(...)` reads only the current page. For list-to-detail scraping:
+capture the list, then loop in the script (`goto` each row's URL and `extract`
+the detail). The local agent context keeps the data across navigations, so the
+assembly happens in plain JavaScript. See the [complete
+example](#complete-example) below.
 
 When passing an object directly to `extract(...)`, the runtime serializes it as
 the extractor schema. These forms are equivalent:
