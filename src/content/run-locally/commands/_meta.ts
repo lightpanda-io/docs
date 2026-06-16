@@ -1,8 +1,9 @@
 import type { MetaRecord } from 'nextra'
 
 const meta: MetaRecord = {
-  fetch: 'Fetch (+ options)',
-  serve: 'CDP server (+ options)',
+  fetch: 'Fetch',
+  serve: 'CDP server',
+  mcp: 'MCP',
 }
 
 export default meta

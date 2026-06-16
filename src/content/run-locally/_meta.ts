@@ -8,7 +8,7 @@ const meta: MetaRecord = {
     },
   },
   commands: {
-    title: 'Commands',
+    title: 'Commands reference',
     theme: {
       collapsed: false,
     },

@@ -1,61 +1,26 @@
 ---
-title: Fetch
-description: Fetch a webpage and dump its content using the Lightpanda CLI.
+title: MCP
+description: Starts an MCP (Model Context Protocol) server over stdio
 ---
 
-# Fetch
+# Serve
 
-Use `./lightpanda help` for all options.
+Start Lightpanda as a [Model Context Protocol](https://modelcontextprotocol.io) (MCP) server over stdio to control it with LLMs.
 
 ```sh copy
-./lightpanda fetch --obey-robots --dump html https://demo-browser.lightpanda.io/campfire-commerce/
-```
-```sh
-INFO  http : navigate . . . . . . . . . . . . . . . . . . . . [+0ms]
-      url = https://demo-browser.lightpanda.io/campfire-commerce/
-      method = GET
-      reason = address_bar
-      body = false
-
-INFO  browser : executing script . . . . . . . . . . . . . .  [+196ms]
-      src = https://demo-browser.lightpanda.io/campfire-commerce/script.js
-      kind = javascript
-      cacheable = true
-
-INFO  http : request complete . . . . . . . . . . . . . . . . [+223ms]
-      source = xhr
-      url = https://demo-browser.lightpanda.io/campfire-commerce/json/product.json
-      status = 200
-
-INFO  http : request complete . . . . . . . . . . . . . . . . [+234ms]
-      source = xhr
-      url = https://demo-browser.lightpanda.io/campfire-commerce/json/reviews.json
-      status = 200
-<!DOCTYPE html>
+./lightpanda mcp
 ```
 
 ## Options
 
 ```bash
-  --host <HOST>
-          Host of the CDP server.
-          Defaults to "127.0.0.1".
-  --port <INT>
-          Port of the CDP server.
-          Defaults to 9222.
-  --advertise-host <HOST>
-          The host to advertise, e.g. in the /json/version response. Useful,
-          for example, when --host is 0.0.0.0.
-          Defaults to --host value.
-  --cdp-max-connections <INT>
-          Maximum number of simultaneous CDP connections.
-          Defaults to 16.
-  --cdp-max-pending-connections <INT>
-          Maximum pending connections in the accept queue.
-          Defaults to 128.
+options:
   --cookie <PATH>
           Path to a JSON file to load cookies from (read-only).
           Defaults to no cookie loading.
+  --cookie-jar <PATH>
+          Path to a JSON file to save cookies to on exit (write-only).
+          Defaults to no cookie saving.
 
 common options:
   --insecure-disable-tls-host-verification
@@ -156,4 +121,8 @@ common options:
           Use ":memory:" for in-memory storage.
 ```
 
-See also [how to configure proxy](/guides/configure-a-proxy).
+Find details about the [MCP usage](/usage/mcp).
+
+## Connect a MCP client
+
+Once the server is running, connect to it using [your preferred LLM](/usage/mcp#connecting-an-ai-agent).

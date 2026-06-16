@@ -17,6 +17,9 @@ Start the MCP server:
 ```sh copy
 ./lightpanda mcp
 ```
+
+Find reference of [MCP command options](/run-locally/commands/mcp).
+
   </Tabs.Tab>
   <Tabs.Tab>
 <Callout type="info" emoji="ℹ️">
@@ -133,73 +136,6 @@ Two read-only resources are available after a page has been loaded via `resource
 ```
 
 > The `markdown` tool and the `mcp://page/markdown` resource return the same content. The difference is who initiates: **tools** are called by the agent during its workflow; **resources** are read by the host application (e.g. an IDE displaying page state in the background).
-
-## Options
-
-```bash
---insecure-disable-tls-host-verification
-                Disables host verification on all HTTP requests. This is an
-                advanced option which should only be set if you understand
-                and accept the risk of disabling host verification.
-
---obey-robots
-                Fetches and obeys the robots.txt (if available) of the web pages
-                we make requests towards.
-                Defaults to false.
-
---http-proxy    The HTTP proxy to use for all HTTP requests.
-                A username:password can be included for basic authentication.
-                Defaults to none.
-
---proxy-bearer-token
-                The <token> to send for bearer authentication with the proxy
-                Proxy-Authorization: Bearer <token>
-
---http-max-concurrent
-                The maximum number of concurrent HTTP requests.
-                Defaults to 10.
-
---http-max-host-open
-                The maximum number of open connection to a given host:port.
-                Defaults to 4.
-
---http-connect-timeout
-                The time, in milliseconds, for establishing an HTTP connection
-                before timing out. 0 means it never times out.
-                Defaults to 0.
-
---http-timeout
-                The maximum time, in milliseconds, the transfer is allowed
-                to complete. 0 means it never times out.
-                Defaults to 10000.
-
---http-max-response-size
-                Limits the acceptable response size for any request
-                (e.g. XHR, fetch, script loading, ...).
-                Defaults to no limit.
-
---log-level     The log level: debug, info, warn, error or fatal.
-                Defaults towarn.
-
---log-format    The log format: pretty or logfmt.
-                Defaults to logfmt.
-
---log-filter-scopes
-                Filter out too verbose logs per scope:
-                http, unknown_prop, event, ...
-
---user-agent-suffix
-                Suffix to append to the Lightpanda/X.Y User-Agent
-
---web-bot-auth-key-file
-                Path to the Ed25519 private key PEM file.
-
---web-bot-auth-keyid
-                The JWK thumbprint of your public key.
-
---web-bot-auth-domain
-                Your domain e.g. yourdomain.com
-```
 
 ## Connecting an AI agent
 
