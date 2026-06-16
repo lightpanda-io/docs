@@ -18,93 +18,127 @@ INFO  app : server running . . . . . . . . . . . . . . . . .  [+0ms]
 ## Options
 
 ```bash
---host          Host of the CDP server
-                Defaults to "127.0.0.1"
+options:
+  --host <HOST>
+          Host of the CDP server.
+          Defaults to "127.0.0.1".
+  --port <INT>
+          Port of the CDP server.
+          Defaults to 9222.
+  --advertise-host <HOST>
+          The host to advertise, e.g. in the /json/version response. Useful,
+          for example, when --host is 0.0.0.0.
+          Defaults to --host value.
+  --cdp-max-connections <INT>
+          Maximum number of simultaneous CDP connections.
+          Defaults to 16.
+  --cdp-max-pending-connections <INT>
+          Maximum pending connections in the accept queue.
+          Defaults to 128.
+  --cookie <PATH>
+          Path to a JSON file to load cookies from (read-only).
+          Defaults to no cookie loading.
 
---port          Port of the CDP server
-                Defaults to 9222
-
---advertise-host
-                The host to advertise, e.g. in the /json/version response.
-                Useful, for example, when --host is 0.0.0.0.
-                Defaults to --host value
-
---timeout       Inactivity timeout in seconds before disconnecting clients
-                Defaults to 10 (seconds). Limited to 604800 (1 week).
-
---cdp-max-connections
-                Maximum number of simultaneous CDP connections.
-                Defaults to 16.
-
---cdp-max-pending-connections
-                Maximum pending connections in the accept queue.
-                Defaults to 128.
-
---insecure-disable-tls-host-verification
-                Disables host verification on all HTTP requests. This is an
-                advanced option which should only be set if you understand
-                and accept the risk of disabling host verification.
-
---obey-robots
-                Fetches and obeys the robots.txt (if available) of the web pages
-                we make requests towards.
-                Defaults to false.
-
---http-proxy    The HTTP proxy to use for all HTTP requests.
-                A username:password can be included for basic authentication.
-                Defaults to none.
-
---proxy-bearer-token
-                The <token> to send for bearer authentication with the proxy
-                Proxy-Authorization: Bearer <token>
-
---http-max-concurrent
-                The maximum number of concurrent HTTP requests.
-                Defaults to 10.
-
---http-max-host-open
-                The maximum number of open connection to a given host:port.
-                Defaults to 4.
-
---http-connect-timeout
-                The time, in milliseconds, for establishing an HTTP connection
-                before timing out. 0 means it never times out.
-                Defaults to 0.
-
---http-timeout
-                The maximum time, in milliseconds, the transfer is allowed
-                to complete. 0 means it never times out.
-                Defaults to 10000.
-
---http-max-response-size
-                Limits the acceptable response size for any request
-                (e.g. XHR, fetch, script loading, ...).
-                Defaults to no limit.
-
---log-level     The log level: debug, info, warn, error or fatal.
-                Defaults towarn.
-
---log-format    The log format: pretty or logfmt.
-                Defaults to logfmt.
-
---log-filter-scopes
-                Filter out too verbose logs per scope:
-                http, unknown_prop, event, ...
-
---user-agent-suffix
-                Suffix to append to the Lightpanda/X.Y User-Agent
-
---web-bot-auth-key-file
-                Path to the Ed25519 private key PEM file.
-
---web-bot-auth-keyid
-                The JWK thumbprint of your public key.
-
---web-bot-auth-domain
-                Your domain e.g. yourdomain.com
+common options:
+  --insecure-disable-tls-host-verification
+          Disables host verification on all HTTP requests.
+          Only set this if you understand and accept the risk.
+  --obey-robots
+          Fetches and obeys robots.txt of the target page.
+          Defaults to false.
+  --disable-subframes
+          Skip loading <iframe> elements. The parser still registers them in the
+          DOM, but no child frame or Page.frameAttached events are produced.
+          Defaults to false.
+  --disable-workers
+          Skip loading dedicated Web Workers. The Worker constructor still
+          returns a Worker object, but no script fetch is initiated and its scope
+          never runs.
+          Defaults to false.
+  --enable-external-stylesheets
+          Fetch external <link rel=stylesheet> resources so their rules
+          contribute to computed styles (and therefore to visibility checks like
+          display, visibility, opacity, pointer-events).
+          Defaults to false.
+  --block-private-networks
+          Block HTTP requests to private/internal IP addresses after DNS
+          resolution.
+          Defaults to false.
+  --block-cidrs <LIST>
+          Additional CIDR ranges to block, comma-separated.
+          Prefix with '-' to allow (exempt from blocking).
+          e.g. --block-cidrs 10.0.0.0/8,-10.0.0.42/32
+          Can be combined with --block-private-networks.
+  --http-proxy <URL>
+          HTTP proxy for all HTTP requests.
+          username:password may be included for basic auth.
+          Defaults to none.
+  --proxy-bearer-token <TOKEN>
+          Token sent for bearer authentication with the proxy:
+          Proxy-Authorization: Bearer <token>.
+  --http-max-concurrent <INT>
+          Maximum number of concurrent HTTP requests.
+          Defaults to 10.
+  --http-max-host-open <INT>
+          Maximum open connections to a given host:port.
+          Defaults to 4.
+  --http-connect-timeout <INT>
+          Time in ms to establish an HTTP connection before timing out. 0 means
+          never.
+          Defaults to 0.
+  --http-timeout <INT>
+          Maximum time in ms the transfer is allowed to complete. 0 means never.
+          Defaults to 10000.
+  --http-max-response-size <INT>
+          Limits the acceptable response size for any request
+          e.g. XHR, fetch, script loading.
+          Defaults to no limit.
+  --ws-max-concurrent <INT>
+          Maximum number of concurrent WebSocket connections.
+          Defaults to 8.
+  --log-level <LEVEL>
+          The log level.
+          Defaults to warn.
+          Allowed values: "debug", "info", "warn", "error", "fatal".
+  --log-format <FORMAT>
+          The log format.
+          Defaults to logfmt.
+          Allowed values: "pretty", "logfmt".
+  --log-filter-scopes <SCOPES>
+          Filter out too-verbose logs per scope, comma-separated.
+          e.g. http, unknown_prop, event.
+  --user-agent <STRING>
+          Override the User-Agent header entirely. Must not impersonate other
+          browsers; any value containing "Mozilla" is forbidden. The browser
+          still sends Sec-Ch-Ua. Incompatible with --user-agent-suffix.
+  --user-agent-suffix <STRING>
+          Suffix appended to the Lightpanda/X.Y User-Agent.
+  --web-bot-auth-key-file <PATH>
+          Path to the Ed25519 private key PEM file.
+  --web-bot-auth-keyid <STRING>
+          The JWK thumbprint of your public key.
+  --web-bot-auth-domain <DOMAIN>
+          Your domain, e.g. yourdomain.com.
+  --http-cache-dir <PATH>
+          Directory used as a filesystem cache for network resources. Omitting
+          this disables caching.
+          Defaults to no caching.
+  --cookie <PATH>
+          Path to a JSON file to load cookies from (read-only).
+          Defaults to no cookie loading.
+  --cookie-jar <PATH>
+          Path to a JSON file to save cookies to on exit (write-only).
+          Defaults to no cookie saving.
+  --storage-engine <ENGINE>
+          The storage engine to use.
+          Defaults to none.
+          Allowed values: "none", "sqlite".
+  --storage-sqlite-path <PATH>
+          Path to the SQLite database file for persistent storage.
+          Use ":memory:" for in-memory storage.
 ```
 
-See also [how to configure proxy](/run-locally/configure-a-proxy).
+See also [how to configure proxy](/guides/configure-a-proxy).
 
 ## Connect a CDP client
 

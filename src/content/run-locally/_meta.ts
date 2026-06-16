@@ -8,12 +8,11 @@ const meta: MetaRecord = {
     },
   },
   commands: {
-    title: 'Commands',
+    title: 'Commands reference',
     theme: {
       collapsed: false,
     },
   },
-  'configure-a-proxy': 'Configure a proxy',
 }
 
 export default meta
