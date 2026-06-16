@@ -46,7 +46,7 @@ lightpanda agent
 
 Tell it what you want:
 
-```sh copy
+```console
 ❯ go to news.ycombinator.com and get me the top story title and points
 ```
 
@@ -54,14 +54,14 @@ The agent navigates, extracts, prints the answer.
 
 You can also use commands:
 
-```sh copy
+```console
 ❯ /goto news.ycombinator.com
 ❯ /links # This will print all the HTML links on the current webpage
 ```
 
 You can generate a reproducible [PandaScript](/usage/pandascript) from your current session:
 
-```sh copy
+```console
 ❯ /save <my_script>.js
 ```
 
@@ -228,7 +228,7 @@ All three require an LLM. `--no-llm` rejects them.
   to `!` with a "JS mode - esc to exit" ghost hint. Handy for poking at
   a page without wrapping every line in `/evaluate`:
 
-  ```
+  ```console
   ❯ !
   ! document.title
   "Hacker News"
@@ -249,8 +249,8 @@ All three require an LLM. `--no-llm` rejects them.
 
 ## One-shot mode (`--task`)
 
-```console
-./lightpanda agent --provider gemini \
+```sh copy
+lightpanda agent --provider gemini \
   --task "what is the top story on news.ycombinator.com?"
 ```
 
@@ -262,8 +262,8 @@ Combine with `-a <path>` / `--attach <path>` (repeatable) to feed
 local files to providers that accept attachments. For example, a list of
 items to look up, or a document to cross-check against a live page:
 
-```console
-./lightpanda agent -a invoice.pdf \
+```sh copy
+lightpanda agent -a invoice.pdf \
   --task "open shop.example.com/orders/1042 and check the order total matches the attached invoice"
 ```
 

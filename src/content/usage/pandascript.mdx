@@ -69,7 +69,7 @@ JavaScript value, so local script logic can use it directly. The result mirrors
 your schema: an object schema returns an object keyed by your fields (even with
 a single field), and a bare array schema returns an array:
 
-```js
+```js copy
 const page = new Page();
 await page.goto("https://news.ycombinator.com/");
 
@@ -90,7 +90,7 @@ data; // printed automatically as JSON
 
 Destructure when a single field is all you need:
 
-```js
+```js copy
 const { stories } = page.extract({
   stories: [{
     selector: "tr.athing",
@@ -164,7 +164,7 @@ script.
 
 Use `goto(...)` to navigate to an URL:
 
-```js
+```js copy
 const page = new Page();
 await page.goto("https://example.com");
 
@@ -186,7 +186,7 @@ Use `page.extract(...)` to read data from the current page without writing page-
 JavaScript. This is the preferred bridge from page content into local agent
 logic.
 
-```js
+```js copy
 const result = page.extract({
   heading: "h1",
   links: [{
@@ -238,7 +238,7 @@ example](#complete-example) below.
 When passing an object directly to `extract(...)`, the runtime serializes it as
 the extractor schema. These forms are equivalent:
 
-```js
+```js copy
 page.extract({ title: "h1" });
 page.extract({ schema: { title: "h1" } });
 page.extract('{ "title": "h1" }');
@@ -250,7 +250,7 @@ results in local variables instead.
 
 Use local variables to keep extracted data available to later script logic:
 
-```js
+```js copy
 const data = page.extract({ title: "title" });
 ```
 
@@ -259,7 +259,7 @@ const data = page.extract({ title: "title" });
 `evaluate(...)` is the explicit escape hatch into the current page's JavaScript
 context. Its script string runs where `window` and `document` exist.
 
-```js
+```js copy
 await page.goto("https://example.com");
 
 const title = page.evaluate("document.title");
@@ -268,7 +268,7 @@ console.log(title);
 
 Keep the boundary clear:
 
-```js
+```js copy
 const selector = "h1";
 
 // Good: local agent logic builds an extract schema.
@@ -286,7 +286,7 @@ cannot express.
 `waitForScript(...)` also evaluates in the page context, repeatedly, until the
 expression is truthy or the timeout expires:
 
-```js
+```js copy
 page.waitForScript("document.querySelectorAll('.row').length >= 5");
 ```
 
@@ -295,7 +295,7 @@ page.waitForScript("document.querySelectorAll('.row').length >= 5");
 The action primitives operate on the current page. Most take one object whose
 fields match the browser tool schema:
 
-```js
+```js copy
 page.click({ selector: "a.login" });
 page.fill({ selector: "input[name='acct']", value: "$LP_HN_USERNAME" });
 page.fill({ selector: "input[name='pw']", value: "$LP_HN_PASSWORD" });
@@ -327,7 +327,7 @@ recordings, resolved `LP_*` values are scrubbed back to placeholders.
 
 Primitive failures throw JavaScript exceptions:
 
-```js
+```js copy
 try {
   page.waitForSelector({ selector: "#dashboard", timeout: 1000 });
 } catch (err) {
@@ -352,7 +352,7 @@ This script opens Hacker News, extracts five stories, visits each comments
 page, and prints one JSON object. The looping and object assembly happen in
 the local agent script, not in the page.
 
-```js
+```js copy
 const HN = "https://news.ycombinator.com";
 
 const page = new Page();
