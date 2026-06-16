@@ -1,6 +1,7 @@
 import type { MetaRecord } from 'nextra'
 
 const meta: MetaRecord = {
+  'lightpanda-agent-tutorial': 'Use Lightpanda Agent',
   'retrieve-an-html-webpage': 'Retrieve an HTML webpage',
   'configure-a-proxy': 'Configure a proxy',
   'markdown-axtree': 'Get Markdown and AX Tree',
