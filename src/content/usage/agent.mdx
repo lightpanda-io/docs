@@ -59,7 +59,7 @@ You can also use slash commands:
 ❯ /links # This will print all the HTML links on the current webpage
 ```
 
-You can generate a reproducible PandaScript from your current session:
+You can generate a reproducible [PandaScript](/usage/pandascript) from your current session:
 
 ```sh copy
 ❯ /save <my_script>.js
@@ -154,7 +154,7 @@ Quoting is content-aware: `'…'`, `"…"`, and triple-quoted `'''…'''` /
 multi-line command and the REPL keeps the whole paste as one input; typed
 line by line, Enter submits at each newline.
 
-### Extracting data 
+### Extracting data
 
 `/extract` takes a JSON schema where each value tells the extractor what to
 lift off the page. The result is printed to stdout as a single JSON object.
@@ -189,7 +189,7 @@ These don't drive the browser, they control the REPL itself:
 | `/effort <level>`        | Sets reasoning budget. Saved to `.lp-agent.zon`.   |
 | `/verbosity <level>`     | Tunes the log level. Levels: low, medium, high.    |
 | `/usage`                 | Prints cumulative token usage and cache hit rate.  |
-| `/save [file] [prompt]`  | Writes the session to a script. `.js` is appended to the name if missing; trailing words guide the synthesizer.|
+| `/save [file] [prompt]`  | Writes the session to a [PandaScript](/usage/pandascript). `.js` is appended to the name if missing; trailing words guide the synthesizer.|
 | `/load <path>`           | Runs a script from disk against the current session.|
 | `/clear`                 | Forgets the conversation (history, usage, recorded actions, node IDs); keeps the page and cookies.|
 | `/reset`                 | Full reset: everything `/clear` does, plus a fresh browser session, dropping the page, cookies, and storage.|

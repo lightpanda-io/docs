@@ -4,7 +4,7 @@ const meta: MetaRecord = {
   cdp: {
     title: 'CDP',
     theme: {
-      collapsed: false,
+      collapsed: true,
     },
   },
   agent: 'Agent',
