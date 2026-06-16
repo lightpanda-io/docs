@@ -15,20 +15,20 @@ conversation with.
 
 Every session starts by navigating to a page, either by
 saying so ("go to this website") or by typing `/goto <url>`. There's
-no window to look at; the browser runs headlessly and you see its output
+no window to look at; the browser runs in headless mode and you see its output
 (extracted data, the agent's answer) in your terminal.
 
 The agent stacks three layers:
 
 1. **The browser** Loads webpages, runs JavaScript and handles the DOM.
    It's the same engine that powers Lightpanda CDP server.
-2. **The runtime** A small set of native tools that let's you drive the browser:
+2. **The runtime** A small set of native tools that lets you drive the browser:
    `goto`, `click`, `fill`, `extract`, `evaluate`, `search`, and more.
-   Each is available as a slash command (`/goto`, `/click`, ...).
+   Each is available as a command (`/goto`, `/click`, ...).
 3. **An LLM** Reads your natural language request and decides which tools to
-   call. Optional, the agent can also run without it.
+   call. It's optional; the agent can also run without it.
 
-## Quick start
+## Quickstart
 
 Set an API key for your preferred LLM provider:
 
@@ -52,7 +52,7 @@ Tell it what you want:
 
 The agent navigates, extracts, prints the answer.
 
-You can also use slash commands:
+You can also use commands:
 
 ```sh copy
 ❯ /goto news.ycombinator.com
@@ -89,8 +89,8 @@ while on the REPL.
 | Hugging Face    | `--provider huggingface`    | `HF_TOKEN`|
 | Ollama    | `--provider ollama`    | none (local)                         |
 
-You can set explicitly the provider with the CLI option `--provider` or the REPL command `/provider`.
-Otherwise the agent will pick one on this order:
+You can set the provider explicitly with the CLI option `--provider` or the REPL command `/provider`.
+Otherwise the agent will pick one in this order:
 
 1. **Remembered** - whatever you last selected with `/provider`,
    persisted per-directory in `.lp-agent.zon`, as long as its key is still
@@ -109,32 +109,32 @@ Otherwise the agent will pick one on this order:
 
 ### Models
 
-You can set explicitly a model with the CLI option `/model` or the REPL command `/model`.
+You can set the model explicitly with the CLI option `/model` or the REPL command `/model`.
 Otherwise the agent will pick either the last one persisted per-directory in `.lp-agent.zon`
 or a sensible per-provider default.
 
 The CLI option `--list-models` or pressing TAB on the REPL command `/model` prints the list of available models.
 
-The CLI option `--effot <none|minimal|low|medium|high|xhigh>` or the REPL command `/effort`
+The CLI option `--effort <none|minimal|low|medium|high|xhigh>` or the REPL command `/effort`
 sets the per-turn reasoning budget for thinking models.
 It maps to each provider's native reasoning-effort knob and is ignored by non-thinking models.
 The REPL defaults to `low` so turns stay snappy.
 `--task` defaults to `medium` where answer quality matters more than per-turn latency.
 Higher effort can mean fewer tool calls per task (the model plans better),
-so it's a real tradeoff rather than a pure slowdown
+so it's a real tradeoff rather than a pure slowdown.
 Effort selection persists in `.lp-agent.zon`.
 
 The CLI option `--system-prompt` swaps in your own system prompt.
 
-## Slash commands
+## Commands
 
 The REPL uses a small slash-command language for browser actions. Each line
-you type at the prompt is either a slash command, a `#` comment, a blank
+you type at the prompt is either a command, a `#` comment, a blank
 line, or (when an LLM is configured) a natural-language prompt.
 
-`/help` list all available slash commands, `/help <command>` for details.
+`/help` lists all available commands, `/help <command>` for details.
 
-Slash commands accept:
+commands accept:
 
 - A single positional value, when the tool has exactly one required field.
   `/goto 'https://example.com'`. The value can itself be quoted JSON when
@@ -204,7 +204,7 @@ a completely clean browser (no cookies, no current page, no storage).
 
 ### LLM-driven commands
 
-Three slash commands trigger an LLM turn rather than a direct tool call:
+Three commands trigger an LLM turn rather than a direct tool call:
 
 | Command          | What it does                                          |
 |------------------|-------------------------------------------------------|
@@ -239,7 +239,7 @@ All three require an LLM. `--no-llm` rejects them.
   `$LP_*` refs are still resolved at execution, console output is echoed
   back, and `Esc` exits. JS-mode lines are not recorded.
 - **Tab completion** (case-insensitive). Cycles through `/<tool>` and meta
-  slash commands. The dim grey suffix shown after the cursor is the first
+  commands. The dim gray suffix shown after the cursor is the first
   match.
 - **Persistent history.** Stored in `.lp-history` in the working directory.
 - **Stdout vs stderr.** The final assistant answer and data-producing slash
@@ -259,7 +259,7 @@ exits. On a TTY a spinner on stderr shows the tool currently running while
 the agent works; raise `--verbosity` for the full `[tool/result]` trace.
 
 Combine with `-a <path>` / `--attach <path>` (repeatable) to feed
-local files to providers that accept attachments — for example, a list of
+local files to providers that accept attachments. For example, a list of
 items to look up, or a document to cross-check against a live page:
 
 ```console
