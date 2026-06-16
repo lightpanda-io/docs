@@ -13,7 +13,6 @@ const meta: MetaRecord = {
       collapsed: false,
     },
   },
-  'configure-a-proxy': 'Configure a proxy',
 }
 
 export default meta
