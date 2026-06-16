@@ -36,7 +36,7 @@ Set an API key for your preferred LLM provider:
 export ANTHROPIC_API_KEY=<YOUR_ANTHROPIC_KEY>
 ```
 
-Or `OPENAI_API_KEY`, `GOOGLE_API_KEY`, or a local LLM through an Ollama server.
+Or `OPENAI_API_KEY`, `GOOGLE_API_KEY`, `HF_TOKEN`, or a local LLM through an Ollama server.
 
 Launch the REPL:
 
@@ -86,6 +86,7 @@ while on the REPL.
 | Anthropic | `--provider anthropic` | `ANTHROPIC_API_KEY`                  |
 | OpenAI    | `--provider openai`    | `OPENAI_API_KEY`                     |
 | Gemini    | `--provider gemini`    | `GOOGLE_API_KEY` or `GEMINI_API_KEY` |
+| Hugging Face    | `--provider huggingface`    | `HF_TOKEN`|
 | Ollama    | `--provider ollama`    | none (local)                         |
 
 You can set explicitly the provider with the CLI option `--provider` or the REPL command `/provider`.
@@ -96,7 +97,7 @@ Otherwise the agent will pick one on this order:
    set.
 2. **Auto-detected** - the first key found in priority order
    (`ANTHROPIC_API_KEY` → `GOOGLE_API_KEY`/`GEMINI_API_KEY` →
-   `OPENAI_API_KEY`). With several keys on the REPL, you'll be prompted to
+   `OPENAI_API_KEY` → `HF_TOKEN`). With several keys on the REPL, you'll be prompted to
    pick.
 3. **Local** - if no cloud key is set, the agent probes
    `http://localhost:11434/v1` (Ollama default server endpoint)
