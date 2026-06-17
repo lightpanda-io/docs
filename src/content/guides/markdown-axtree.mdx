@@ -54,7 +54,7 @@ lightpanda fetch --dump <format> [options] <URL>
 ### Basic example
 
 ```sh copy
-./lightpanda fetch --dump markdown https://example.com
+lightpanda fetch --dump markdown https://example.com
 ```
 
 <details>
@@ -76,10 +76,10 @@ Includes rendered iframe content in the output. Without it, iframe content is ex
 
 ```sh copy
 # Without iframe content (default)
-./lightpanda fetch --dump markdown https://example.com
+lightpanda fetch --dump markdown https://example.com
 
 # With iframe content included
-./lightpanda fetch --dump markdown --with-frames https://example.com
+lightpanda fetch --dump markdown --with-frames https://example.com
 ```
 
 On pages without iframes, output is identical either way.
@@ -90,10 +90,10 @@ Removes groups of tags from the output. Values can be combined with commas:
 
 ```sh copy
 # Remove JavaScript and CSS from output
-./lightpanda fetch --dump html --strip-mode js,css https://example.com
+lightpanda fetch --dump html --strip-mode js,css https://example.com
 
 # Remove all UI, scripts and styles
-./lightpanda fetch --dump html --strip-mode full https://example.com
+lightpanda fetch --dump html --strip-mode full https://example.com
 ```
 
 | Value | Tags removed |
@@ -108,7 +108,7 @@ Removes groups of tags from the output. Values can be combined with commas:
 The `semantic_tree` format returns the page's accessibility tree as structured JSON:
 
 ```sh copy
-./lightpanda fetch --dump semantic_tree https://example.com
+lightpanda fetch --dump semantic_tree https://example.com
 ```
 
 Each node includes:
@@ -156,7 +156,7 @@ Each node includes:
 The `semantic_tree_text` format outputs the same data in a compact readable form:
 
 ```sh copy
-./lightpanda fetch --dump semantic_tree_text https://example.com
+lightpanda fetch --dump semantic_tree_text https://example.com
 ```
 
 <details>
@@ -187,10 +187,10 @@ Unlike `--dump markdown` which processes a URL from scratch, `LP.getMarkdown` co
 
 ```sh copy
 # Start CDP server (default: ws://127.0.0.1:9222)
-./lightpanda serve
+lightpanda serve
 
 # Custom host and port
-./lightpanda serve --host 0.0.0.0 --port 9333
+lightpanda serve --host 0.0.0.0 --port 9333
 
 # Verify it's running
 curl http://127.0.0.1:9222/json/version
@@ -319,7 +319,7 @@ For `example.com`, the CDP accessibility tree contains **12 nodes**.
 Lightpanda includes a built-in MCP (Model Context Protocol) server for direct integration with AI tools and LLM frameworks.
 
 ```sh copy
-./lightpanda mcp
+lightpanda mcp
 ```
 
 The MCP server exposes `markdown` and `semantic_tree` tools.

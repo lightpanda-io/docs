@@ -15,51 +15,43 @@ Use Lightpanda via the [Model Context Protocol](https://modelcontextprotocol.io)
 Start the MCP server:
 
 ```sh copy
-./lightpanda mcp
+lightpanda mcp
 ```
 
 Find reference of [MCP command options](/run-locally/commands/mcp).
 
-  </Tabs.Tab>
-  <Tabs.Tab>
-<Callout type="info" emoji="ℹ️">
-This is still a work in progress version. The cloud version does not support all tools.
-</Callout>
-
-Lightpanda Cloud exposes the MCP server over [SSE](https://modelcontextprotocol.io/specification/2024-11-05/basic/transports#http-with-sse). Connect to the endpoint nearest to you:
-
-- `https://euwest.cloud.lightpanda.io/mcp/sse` (Europe West)
-- `https://uswest.cloud.lightpanda.io/mcp/sse` (US West)
-
-Pass your API token as a query parameter or in the `Authorization` header:
-
-```text copy
-https://euwest.cloud.lightpanda.io/mcp/sse?token=TOKEN
-```
-
-```text copy
-https://euwest.cloud.lightpanda.io/mcp/sse
-Authorization: Bearer TOKEN
-```
-  </Tabs.Tab>
-</Tabs>
-
 ## Tools
 
 | Name | Description |
-|-|-|
-| goto | Navigate to a specified URL and load the page in memory so it can be reused later for info extraction |
+|---|---|
+| goto | Navigate to a specified URL and load the page in memory so it can be reused later for info extraction. |
+| getUrl | Get the URL of the page currently loaded in the browser. |
+| getEnv | Read an `LP_*` environment variable by name, or list the `LP_*` names that are set when called without a name. |
+| getCookies | Get cookies stored in the browser. Defaults to the current page's host; pass `url` to filter another host or `all` to dump every cookie. |
+| consoleLogs | Get buffered console.log/warn/error messages from the current page, then clear the buffer. |
+| tree | Get the page content as a simplified semantic DOM tree for AI reasoning. If a url is provided, it navigates to that url first. |
 | markdown | Get the page content in markdown format. If a url is provided, it navigates to that url first. |
-| links | Extract all links in the opened page. If a url is provided, it navigates to that url first. |
-| evaluate | Evaluate JavaScript in the current page context. If a url is provided, it navigates to that url first. |
-| semantic_tree | Get the page content as a simplified semantic DOM tree for AI reasoning. If a url is provided, it navigates to that url first. |
+| html | Get the raw serialized HTML of the page, or a single node's outerHTML when a selector or backendNodeId is given. If a url is provided, it navigates to that url first. |
+| nodeDetails | Get details for a node by backendNodeId, including a ready-to-use CSS selector plus tag, role, name, attributes, and state. |
+| findElement | Find interactive elements by role and/or accessible name, returning their backend node IDs. |
 | interactiveElements | Extract interactive elements from the opened page. If a url is provided, it navigates to that url first. |
+| links | Extract all links in the opened page. If a url is provided, it navigates to that url first. |
+| extract | Extract structured data from the current page using a schema mapping output field names to CSS-selector specs. |
 | structuredData | Extract structured data (like JSON-LD, OpenGraph, etc) from the opened page. If a url is provided, it navigates to that url first. |
-| detectForms | Detect all forms on the page and return their structure including fields, types, and required status. If a url is provided, it navigates to that url first. |
+| search | Run a web search and return the results as markdown. |
 | click | Click on an interactive element. Returns the current page URL and title after the click. |
+| hover | Hover over an element, triggering mouseover and mouseenter events. |
 | fill | Fill text into an input element. Returns the filled value and current page URL and title. |
+| selectOption | Select an option in a `<select>` dropdown element by its value. Dispatches input and change events. |
+| setChecked | Check or uncheck a checkbox or radio button. Dispatches input, change, and click events. |
+| press | Press a keyboard key, dispatching keydown and keyup events. |
 | scroll | Scroll the page or a specific element. Returns the scroll position and current page URL and title. |
+| detectForms | Detect all forms on the page and return their structure including fields, types, and required status. If a url is provided, it navigates to that url first. |
+| evaluate | Evaluate JavaScript in the current page context. If a url is provided, it navigates to that url first. |
+| save | Save the session as a reusable [PandaScript](/usage/pandascript) (.js). |
 | waitForSelector | Wait for an element matching a CSS selector to appear in the page. Returns the backend node ID of the matched element. |
+| waitForState | Wait for the current page to reach a load state (e.g. `networkidle`), with no navigation. |
+| waitForScript | Wait until a JavaScript expression returns truthy, re-evaluating on each tick of the event loop. |
 
 ### `goto`
 
@@ -223,6 +215,30 @@ lightpanda mcp --log-level info 2>lightpanda.log
 ```
 
 Use `--log-level debug` for the most verbose output. Keep `warn` in production.
+
+  </Tabs.Tab>
+  <Tabs.Tab>
+<Callout type="info" emoji="ℹ️">
+This is still a work in progress version. The cloud version does not support all tools.
+</Callout>
+
+Lightpanda Cloud exposes the MCP server over [SSE](https://modelcontextprotocol.io/specification/2024-11-05/basic/transports#http-with-sse). Connect to the endpoint nearest to you:
+
+- `https://euwest.cloud.lightpanda.io/mcp/sse` (Europe West)
+- `https://uswest.cloud.lightpanda.io/mcp/sse` (US West)
+
+Pass your API token as a query parameter or in the `Authorization` header:
+
+```text copy
+https://euwest.cloud.lightpanda.io/mcp/sse?token=TOKEN
+```
+
+```text copy
+https://euwest.cloud.lightpanda.io/mcp/sse
+Authorization: Bearer TOKEN
+```
+  </Tabs.Tab>
+</Tabs>
 
 ## References
 

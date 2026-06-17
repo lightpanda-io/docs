@@ -8,7 +8,7 @@ description: Start Lightpanda as a local CDP server.
 Start Lightpanda as a [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/) (CDP) server to control it with clients like [Puppeteer](https://pptr.dev/), [Playwright](https://playwright.dev/) or [Chromedp](https://github.com/chromedp/chromedp).
 
 ```sh copy
-./lightpanda serve --obey-robots --host 127.0.0.1 --port 9222
+lightpanda serve --obey-robots --host 127.0.0.1 --port 9222
 ```
 ```sh
 INFO  app : server running . . . . . . . . . . . . . . . . .  [+0ms]
@@ -17,7 +17,7 @@ INFO  app : server running . . . . . . . . . . . . . . . . .  [+0ms]
 
 ## Options
 
-```bash
+```console
 options:
   --host <HOST>
           Host of the CDP server.
