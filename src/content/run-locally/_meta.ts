@@ -10,7 +10,7 @@ const meta: MetaRecord = {
   commands: {
     title: 'Commands reference',
     theme: {
-      collapsed: false,
+      collapsed: true,
     },
   },
 }
