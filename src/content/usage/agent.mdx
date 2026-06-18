@@ -36,7 +36,8 @@ Set an API key for your preferred LLM provider:
 export ANTHROPIC_API_KEY=<YOUR_ANTHROPIC_KEY>
 ```
 
-Or `OPENAI_API_KEY`, `GOOGLE_API_KEY`, `HF_TOKEN`, or a local LLM through an Ollama server.
+Or `OPENAI_API_KEY`, `GOOGLE_API_KEY`, `HF_TOKEN`, `AI_GATEWAY_API_KEY`,
+`MISTRAL_API_KEY`, or a local LLM through an Ollama or llama.cpp server.
 
 Launch the REPL:
 
@@ -81,13 +82,19 @@ The agent needs an LLM to interpret natural language. Set the relevant API
 key as an environment variable, or pass `--provider` explicitly, or set `/provider`
 while on the REPL.
 
-| Provider  | Flag                   | API key env                          |
-|-----------|------------------------|--------------------------------------|
-| Anthropic | `--provider anthropic` | `ANTHROPIC_API_KEY`                  |
-| OpenAI    | `--provider openai`    | `OPENAI_API_KEY`                     |
-| Gemini    | `--provider gemini`    | `GOOGLE_API_KEY` or `GEMINI_API_KEY` |
-| Hugging Face    | `--provider huggingface`    | `HF_TOKEN`|
-| Ollama    | `--provider ollama`    | none (local)                         |
+| Provider          | Flag                     | API key env                          |
+|-------------------|--------------------------|--------------------------------------|
+| Anthropic         | `--provider anthropic`   | `ANTHROPIC_API_KEY`                  |
+| OpenAI            | `--provider openai`      | `OPENAI_API_KEY`                     |
+| Gemini            | `--provider gemini`      | `GOOGLE_API_KEY` or `GEMINI_API_KEY` |
+| Hugging Face      | `--provider huggingface` | `HF_TOKEN`                           |
+| Vercel AI Gateway | `--provider vercel`      | `AI_GATEWAY_API_KEY`                 |
+| Mistral           | `--provider mistral`     | `MISTRAL_API_KEY`                    |
+| Ollama            | `--provider ollama`      | none (local)                         |
+| llama.cpp         | `--provider llama_cpp`   | none (local)                         |
+
+Set `HF_BILL_TO` to an organization name to bill Hugging Face requests to it
+rather than to your personal account.
 
 You can set the provider explicitly with the CLI option `--provider` or the REPL command `/provider`.
 Otherwise the agent will pick one in this order:
@@ -97,11 +104,14 @@ Otherwise the agent will pick one in this order:
    set.
 2. **Auto-detected** - the first key found in priority order
    (`ANTHROPIC_API_KEY` → `GOOGLE_API_KEY`/`GEMINI_API_KEY` →
-   `OPENAI_API_KEY` → `HF_TOKEN`). With several keys on the REPL, you'll be prompted to
+   `OPENAI_API_KEY` → `HF_TOKEN` → `AI_GATEWAY_API_KEY` →
+   `MISTRAL_API_KEY`). With several keys on the REPL, you'll be prompted to
    pick.
-3. **Local** - if no cloud key is set, the agent probes
-   `http://localhost:11434/v1` (Ollama default server endpoint)
-   and uses it if there's at least one model pulled.
+3. **Local** - if no cloud key is set, the agent probes the local
+   servers (Ollama at `http://localhost:11434/v1`, llama.cpp at
+   `http://localhost:8080/v1`) and uses one if it has at least one model
+   loaded. Local servers need no key and are never auto-detected from the
+   environment, so select them with `--provider ollama` / `--provider llama_cpp`.
    You can change the server URL with the `--base-url` CLI option.
 4. **No provider at all** - If the CLI option `--no-llm` is set
    it falls back to the basic REPL (slash commands only).
@@ -118,8 +128,12 @@ The CLI option `--list-models` or pressing TAB on the REPL command `/model` prin
 The CLI option `--effort <none|minimal|low|medium|high|xhigh>` or the REPL command `/effort`
 sets the per-turn reasoning budget for thinking models.
 It maps to each provider's native reasoning-effort knob and is ignored by non-thinking models.
-The REPL defaults to `low` so turns stay snappy.
+Effort resolves in order: an explicit `--effort` flag, then the value remembered
+in `.lp-agent.zon`, then the provider's own default, then the mode default.
+The REPL mode default is `low` so turns stay snappy.
 `--task` defaults to `medium` where answer quality matters more than per-turn latency.
+A few providers set their own default that wins over the mode default;
+Mistral defaults to `none` because its default model rejects reasoning effort.
 Higher effort can mean fewer tool calls per task (the model plans better),
 so it's a real tradeoff rather than a pure slowdown.
 Effort selection persists in `.lp-agent.zon`.
