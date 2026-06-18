@@ -12,7 +12,7 @@ import { basePath, redirects } from '../redirects.mjs'
 const root = dirname(dirname(fileURLToPath(import.meta.url)))
 const outDir = join(root, 'out')
 
-const stub = (href) => `<!doctype html>
+const stub = href => `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />

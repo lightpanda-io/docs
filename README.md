@@ -36,11 +36,10 @@ Fast web automation for AI agents, LLM training, scraping and testing:
 - Exceptionally fast execution (9x faster than Chrome)
 - Instant startup
 
-[<img width="350px" src="https://cdn.lightpanda.io/assets/images/github/execution-time-v2.svg">
-](https://github.com/lightpanda-io/demo)
+[<img width="350px" src="https://cdn.lightpanda.io/assets/images/github/execution-time-v2.svg">](https://github.com/lightpanda-io/demo)
 &emsp;
-[<img width="350px" src="https://cdn.lightpanda.io/assets/images/github/memory-frame-v2.svg">
-](https://github.com/lightpanda-io/demo)
+[<img width="350px" src="https://cdn.lightpanda.io/assets/images/github/memory-frame-v2.svg">](https://github.com/lightpanda-io/demo)
+
 </div>
 
 _chromedp requesting 933 real web pages over the network on a AWS EC2 m5.large instance.

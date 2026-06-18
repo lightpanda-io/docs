@@ -1,7 +1,7 @@
 'use client'
 
-import { type ReactNode } from 'react'
 import { Layout } from 'nextra-theme-docs'
+import type { ReactNode } from 'react'
 
 import { Canonical } from '@/components/lightpanda/Canonical'
 import { Footer } from '@/components/lightpanda/Footer'
