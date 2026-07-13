@@ -1,0 +1,42 @@
+---
+title: When to Use Local vs Cloud
+description: Decide when to run Lightpanda locally or on Lightpanda Cloud, and compare CDP, MCP, agent, HTTP API, proxy, and telemetry coverage across both.
+---
+
+import { Callout } from 'nextra/components'
+
+# When to use local vs cloud
+
+Lightpanda runs the same engine two ways. You can run the binary yourself, on your own machine or infrastructure, or connect to Lightpanda Cloud and let a remote browser do the work. The engine is identical. What differs is where the browser runs, which interfaces you can reach, and who sees the traffic.
+
+## Choose local or cloud
+
+**Run local when** you want full control and want nothing to leave your machine. The binary runs on your hardware, so pages you visit and data you extract stay in your infrastructure. Local gives you every interface: the [CDP server](/run-locally/commands/serve), the [MCP server](/usage/mcp) with all tools, and the built-in [AI agent](/usage/agent). You manage the process, the scaling, and the network egress yourself.
+
+**Use the cloud when** you do not want to run or scale browsers. You sign up, get a token, and connect a remote browser with no process to manage and no host to keep alive. Lightpanda Cloud runs the browser on its servers and adds the parts a hosted service needs: a [console](https://console.lightpanda.io) to manage your account and tokens and review recent sessions, usage-based plans with concurrency and monthly limits, a managed proxy pool that helps when a target blocks datacenter IPs, and an [HTTP API](/usage/api) that returns a page's HTML or Markdown from a single request with no CDP script. Because requests run on Lightpanda's servers, your target URLs and the fetched content pass through Lightpanda's infrastructure.
+
+## Confidentiality and telemetry
+
+The main difference is where your traffic goes.
+
+Running local, the browser runs on your machine. The pages you load, their content, and your cookies never reach Lightpanda. They only reach the sites you visit, and the proxy if you configure one. The binary does send anonymous usage telemetry to `telemetry.lightpanda.io`: whether a navigation used TLS, the kind of context (page, iframe, popup), and, for the agent, the LLM provider and model name. It never includes the URLs you visit or the page content. Telemetry is off in debug builds, and you can disable it in any build by setting the `LIGHTPANDA_DISABLE_TELEMETRY` environment variable. See [telemetry](/run-locally/installation/nightly-builds#telemetry).
+
+Running on the cloud, the browser runs on Lightpanda's servers, so your target URLs and the pages they return pass through Lightpanda's infrastructure. You can review your recent sessions in the [dashboard](https://console.lightpanda.io). If your workload cannot leave your own environment, run local.
+
+## Feature coverage
+
+This table shows which interfaces and features you can reach in each mode. Coverage is still expanding, so the cloud does not yet match local on every interface.
+
+<Callout type="info">
+Cloud coverage is a work in progress. The cloud exposes the MCP server over SSE with a subset of the tools available locally, and bring-your-own-proxy is on the roadmap.
+</Callout>
+
+| Interface / feature | Local | Cloud |
+| --- | --- | --- |
+| [CDP server](/run-locally/commands/serve) (`serve`) | Yes | Yes |
+| [MCP server](/usage/mcp) | Yes, all tools | Partial, subset of tools |
+| [AI agent](/usage/agent) | Yes | No |
+| [HTTP API](/usage/api) | No | Yes |
+| [Proxies](/guides/configure-a-proxy) | Yes, your own proxy | Yes, managed rotating pool with country selection |
+
+For CDP, both modes speak the same protocol: the same [Puppeteer](/usage/cdp/puppeteer), [Playwright](/usage/cdp/playwright), and [chromedp](/usage/cdp/chromedp) scripts run against a local endpoint or a cloud endpoint with your token. The [HTTP API](/usage/api) is cloud only. Locally, the [`fetch`](/run-locally/commands/fetch) command gives you the same one-shot HTML or Markdown from the command line. See [Getting started](/run-on-lightpanda-cloud/getting-started) to connect to the cloud.
