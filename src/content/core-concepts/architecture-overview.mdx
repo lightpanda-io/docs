@@ -9,7 +9,7 @@ import { Callout } from 'nextra/components'
 
 Lightpanda is a headless browser built in Zig to be driven by machines, not viewed by people. Its defining choice is that it has no rendering engine and never draws a page to a screen.
 
-It keeps the parts automation needs, a JavaScript engine, the DOM and its Web APIs, and a network layer, and drops the graphics pipeline that makes a normal browser heavy. A single native binary exposes that engine through four entry points, from a CDP server to a built-in AI agent.
+It fetches pages through a network layer, then runs a JavaScript engine to execute their scripts against an in-memory DOM and Web APIs, but drops the graphics pipeline that makes a normal browser heavy. A single native binary exposes that engine through several entry points, from a CDP server to a built-in AI agent.
 
 ## Why there's no rendering engine
 
@@ -17,17 +17,20 @@ A normal browser runs a rendering pipeline to turn a page into pixels for a huma
 
 Lightpanda drops the rendering pipeline. What remains is the set of components automation uses, the same ones detailed further down this page:
 
-- **Control surface.** The four entry points you drive it through: `serve` (CDP), `fetch`, `agent`, and `mcp`.
+- **Control surface.** The entry points you drive it through: `fetch`, `serve` (CDP), `agent`, `mcp`, and, on the cloud, the HTTP API.
+- **Network layer.** Fetches the main document and its subresources over HTTP.
+- **HTML parser.** Turns fetched HTML into that DOM.
 - **JavaScript engine.** Runs the page's scripts. Lightpanda uses V8, the same engine as Chrome.
 - **Web APIs and the DOM.** The in-memory document that scripts read and mutate.
-- **HTML parser.** Turns fetched HTML into that DOM.
-- **Network layer.** Fetches the main document and its subresources over HTTP.
 
 <Callout type="info">
-  Because Lightpanda does not render, it does not compute visual layout. APIs
-  that depend on pixel geometry (for example element bounding boxes) return
-  best-effort values, and `Page.captureScreenshot` returns a placeholder image,
-  not a real render. Reach for a full browser when you need actual pixels.
+  Because Lightpanda does not render, it does not compute a real visual
+  layout. Element size is a fair approximation from CSS and HTML attributes,
+  but element position is simulated from DOM depth and sibling order, not
+  real layout
+  ([`calculateDocumentPosition`](https://github.com/lightpanda-io/browser/blob/main/src/browser/webapi/Element.zig#L1411-L1468)).
+  `Page.captureScreenshot` returns a placeholder image, not a real render.
+  Reach for a full browser when you need actual pixels.
 </Callout>
 
 ## How the parts fit together
@@ -36,19 +39,7 @@ Lightpanda ships as a single native binary. At runtime it has one process. That 
 
 The stack, top to bottom:
 
-```
-Control surface   serve (CDP) · fetch · agent · mcp                       ← how you drive it
-                        │
-App               Network · SQLite storage · Arena pool · V8 Platform · Snapshot · Telemetry  ← process-wide
-                        │
-Browser           one V8 isolate · HTTP client
-                        │
-Session           cookie jar · Web Storage
-                        │
-Page              a document, a tab: DOM · Web APIs
-                        │
-Frame             a document frame or iframe: DOM · Web APIs
-```
+![The browser object hierarchy: the control surface drives the App, the process-wide shared state; nested inside it, Browser wraps one V8 isolate, Session owns the cookie jar and Web Storage, Page is the tab-level container for a frame tree, and Frame owns the DOM and Web APIs](https://cdn.lightpanda.io/website/assets/images/docs/browser-object-hierarchy.svg)
 
 Every box in the diagram maps to a directory in the [browser repository](https://github.com/lightpanda-io/browser):
 
@@ -58,22 +49,20 @@ Every box in the diagram maps to a directory in the [browser repository](https:/
 | `src/main.zig`, `src/App.zig` | `App` and its process-wide services |
 | `src/network/` | The `App`'s network layer (libcurl, robots.txt, WebSocket) |
 | `src/browser/` | Browser, Session, Page, Frame |
-| `src/browser/js/` | The Browser's JavaScript engine, a V8 isolate (thin wrappers over the V8 C++ API) |
-| `src/browser/webapi/` | Inside each Page and Frame: the Web APIs and the DOM |
-| `src/browser/parser/` | Inside each Page and Frame: the HTML parser (html5ever, Rust) |
 
 ### Entry points
 
-The same engine runs behind four commands. Each is a different way to drive it.
+The same engine runs behind these entry points. Each is a different way to drive it, and each has different availability across [local and cloud](/core-concepts/local-vs-cloud#feature-coverage):
 
-- [`serve`](/run-locally/commands/serve) starts a WebSocket CDP server. Clients like [Puppeteer](/usage/cdp/puppeteer), [Playwright](/usage/cdp/playwright), and [chromedp](/usage/cdp/chromedp) connect over the Chrome DevTools Protocol on port `9222` by default. This is the mode most automation uses.
 - [`fetch`](/run-locally/commands/fetch) loads one or more URLs and dumps the result to stdout as HTML or Markdown. It is a one-shot command with no server.
+- [`serve`](/run-locally/commands/serve) starts a CDP server on port `9222` by default. Clients like [Puppeteer](/usage/cdp/puppeteer), [Playwright](/usage/cdp/playwright), and [chromedp](/usage/cdp/chromedp) connect over the Chrome DevTools Protocol. This is the mode most automation uses.
 - [`agent`](/usage/agent) starts an interactive AI agent that browses the web from natural language and can record reproducible scripts.
 - [`mcp`](/usage/mcp) starts a Model Context Protocol server over stdio, so an LLM host can use the browser as a tool.
+- The [HTTP API](/usage/api) is a `POST /api/fetch` endpoint that returns a page's HTML or Markdown from a single request, no CDP script needed. It is the cloud's equivalent of the local `fetch` command.
 
 The agent-oriented modes stack the same engine under different amounts of the browser. With `serve`, your client drives the engine over CDP. With `mcp`, the binary also carries the tool server. With `agent`, it carries the whole loop, so no protocol sits between the model and the engine.
 
-![The browser agent stack: model, harness, browser driver, and engine layers across lightpanda serve, mcp, and agent, showing what the single binary covers in each mode](https://cdn.lightpanda.io/website/assets/images/blog/posts/the-browser-agent-stack-explained/browser-agent-stack-diagram-2.svg)
+![The browser agent stack: model, harness, browser driver, and engine layers across lightpanda serve, mcp, and agent, showing what the single binary covers in each mode](https://cdn.lightpanda.io/website/assets/images/docs/browser-agent-stack-diagram-2.svg)
 
 ### The browser engine
 
@@ -83,24 +72,18 @@ Below the entry points, one object hierarchy runs pages. It separates state that
 
 - **Browser** wraps a single V8 isolate. An isolate has thread affinity, so a browser is created and used on one thread. It also holds a per-browser HTTP client and borrows arenas from the `App` pool. A browser contains one session.
 - **Session** is a browsing context group. It owns the cookie jar (the session's cookie store) and Web Storage (`localStorage` and `sessionStorage`), the state that outlives navigation. This is per-session and separate from the `App`'s SQLite storage backend.
-- **Page** is one top-level document, the equivalent of a tab.
-- **Frame** is one document frame, either the main frame or an iframe.
+- **Page** is the tab-level container for a frame tree: one top-level browsing context that owns the root frame and any iframes below it.
+- **Frame** is one document frame, either the main frame or an iframe. It owns the DOM (`Document`) and the Web APIs (`Window`) scripts run against.
 
 Cookies and permissions belong to the session, so they survive when a page navigates. The isolate belongs to the browser, so it survives across pages but never crosses threads.
 
-**JavaScript engine.** Lightpanda runs page scripts on V8 and does not reimplement JavaScript. The Zig code in `src/browser/js/` is a thin wrapper around V8's C++ API: isolates, contexts, values, promises, and modules. The Web API objects that scripts touch are implemented in Zig, so `document`, `window`, and `fetch` are backed by native code, not more JavaScript. Startup is fast because of a V8 startup snapshot: a serialized, pre-initialized V8 heap embedded in the binary at build time. On each start V8 loads it instead of rebuilding its built-in objects from scratch, which removes most of the isolate warm-up cost.
-
-**Web APIs and the DOM.** These are implemented natively in Zig, grouped by area: the DOM (`Document`, `Element`, `Node`), events, `fetch` and networking, `Crypto`, observers (mutation, intersection, resize), and storage. Coverage is partial and grows over time. Lightpanda implements the APIs headless automation exercises, not the entire web platform. The source of truth for what exists is `src/browser/webapi/` in the browser repository. When a script calls one of these APIs it runs compiled Zig, which is why DOM-heavy pages stay cheap in both time and memory.
-
-**HTML parser.** Parsing is delegated to [html5ever](https://github.com/servo/html5ever), the spec-compliant Rust parser from the Servo project. Lightpanda calls it over a C ABI and builds the DOM tree from the parser's callbacks. This is why building the browser from source needs a Rust toolchain in addition to Zig.
-
 **Network layer.** It sits on top of [libcurl](https://curl.se/libcurl/), fetches the main document and subresources, manages the cookie jar, and can honor `robots.txt` when you pass `--obey-robots`.
 
-<Callout type="warning">
-  Lightpanda is fast, so it is easy to send a high volume of requests. Respect
-  `robots.txt` and avoid hammering small sites. Pass `--obey-robots` to have
-  Lightpanda follow `robots.txt` for you.
-</Callout>
+**HTML parser.** Parsing is delegated to [html5ever](https://github.com/servo/html5ever), the spec-compliant Rust parser from the Servo project. Lightpanda calls it over a C ABI from `src/browser/parser/` and builds the DOM tree from the parser's callbacks. This is why building the browser from source needs a Rust toolchain in addition to Zig.
+
+**JavaScript engine.** Lightpanda runs page scripts on V8 and does not reimplement JavaScript. The Zig code in `src/browser/js/` is a thin wrapper around V8's C++ API: isolates, contexts, values, promises, and modules. The Web API objects that scripts touch are implemented in Zig, so `document`, `window`, and `fetch` are backed by native code, not more JavaScript. Startup is fast because of a V8 startup snapshot: a serialized, pre-initialized V8 heap embedded in the binary at build time. On each start V8 loads it instead of rebuilding its built-in objects from scratch, which removes most of the isolate warm-up cost.
+
+**Web APIs and the DOM.** These are implemented natively in Zig, grouped by area: the DOM (`Document`, `Element`, `Node`), events, `fetch` and networking, `Crypto`, observers (mutation, intersection, resize), and storage. Coverage is partial and grows over time. Lightpanda implements the APIs headless automation exercises, not the entire web platform. See the [web-platform-tests dashboard](https://perf.lightpanda.io/wpt) for current pass rates by API area. The source of truth for what exists is `src/browser/webapi/` in the browser repository. When a script calls one of these APIs it runs compiled Zig, which is why DOM-heavy pages stay cheap in both time and memory.
 
 ## Memory model
 

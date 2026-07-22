@@ -11,9 +11,11 @@ Lightpanda is an AI-native headless browser built from scratch for automation an
 
 Most browser automation today runs on headless Chrome, through tools like Puppeteer or Playwright. Headless Chrome still computes graphical output, even though nothing renders it to a screen. Running hundreds or thousands of instances is heavy on RAM and CPU, and instances need frequent restarts to stay stable. That overhead exists because Chrome was built for a human sitting in front of a monitor, not for a script driving it at scale.
 
+Puppeteer and Playwright talk to Chrome over CDP, the Chrome DevTools Protocol, and its bias runs deeper than rendering. CDP can query and mutate the DOM directly, but it has no DOM-level command for user interaction. To click an element, for example, a client has to look up its rendered pixel coordinates, move a virtual mouse there, and dispatch a click event: three round trips and a rendering dependency for what is conceptually one action. CDP was designed for a human debugging a browser visually, not for a script that already knows which DOM node it wants to act on. See [CDP under the hood](https://lightpanda.io/blog/posts/cdp-under-the-hood) for more on where this breaks down in practice.
+
 ## How Lightpanda solves it
 
-Lightpanda drops the graphical rendering engine entirely and rebuilds the rest around automation: JavaScript execution, the DOM, and the Web APIs a script needs. The result is around 9x faster execution and 16x less peak memory than headless Chrome.
+Lightpanda drops the graphical rendering engine entirely and rebuilds the rest around automation: JavaScript execution, the DOM, and the Web APIs a script needs. The result is around [9x faster execution and 16x less peak memory](/core-concepts/benchmarks) than headless Chrome.
 
 Lightpanda meets you at the interface you already use:
 

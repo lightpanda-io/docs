@@ -9,9 +9,9 @@ import { Callout } from 'nextra/components'
 
 Lightpanda publishes three benchmarks against headless Chrome:
 
-- **Crawling at scale**: following every link on a 933-page demo site.
-- **Single-page automation**: repeated load-and-extract cycles over CDP.
-- **AI agent task completion**: task accuracy on AssistantBench and GAIA.
+- **[Crawling at scale](#crawling-at-scale)**: following every link on a 933-page demo site.
+- **[Single-page automation](#single-page-automation)**: repeated load-and-extract cycles over CDP.
+- **[AI agent task completion](#ai-agent-task-completion)**: task accuracy on AssistantBench and GAIA.
 
 Across all three, Lightpanda uses less memory and CPU than Chrome and finishes faster. Each section below states the source of its numbers. For exact commands and raw output, see [Reproduce these results](#reproduce-these-results).
 
@@ -46,6 +46,8 @@ Chrome runs one browser with multiple tabs, since that's how most people scale a
 | 100 | 0:05.23 | 410.2M | 1:09.37 | 4.2G |
 
 At 25 parallel tasks, the point where both browsers are near their best throughput, Lightpanda finishes in 4.81 seconds using 123MB, against Chrome's 46.70 seconds and 2.0GB: about 9x faster and 16x lighter. Chrome's duration plateaus past 5 tabs because its tabs share a process and start contending for resources. Lightpanda keeps improving up to 25 processes, since each process is fully isolated and the machine still has headroom.
+
+![Memory peak scaling with parallel tabs/processes: Lightpanda stays under 500MB at 100 processes while Chrome climbs past 4GB](https://cdn.lightpanda.io/website/assets/images/docs/benchmarks-crawler_memory_scaling.png)
 
 ## Single-page automation
 
