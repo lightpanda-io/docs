@@ -1,0 +1,44 @@
+---
+title: Limits and Billing
+description: Lightpanda Cloud plans, browser-hour and concurrent-session limits, usage-based billing, and how to manage your subscription from the console.
+---
+
+import { Callout } from 'nextra/components'
+
+# Limits and billing
+
+Lightpanda Cloud bills by browser time. Each plan includes a monthly pool of browser hours and a cap on how many sessions you can run at once. You start on the free plan, and you only pay when you need more hours or more concurrency.
+
+## Plans
+
+Three plans cover the range from testing to production. Every plan lets you bring your own proxy.
+
+| Plan | Price | Browser hours / month | Concurrent sessions | Support |
+| --- | --- | --- | --- | --- |
+| Explorer | Free | 10 | 5 | Community (Discord) |
+| Builder | $19 / month, then $0.08 / hour | 300 | 30 | Email and Slack |
+| Enterprise | Custom | Custom | Custom | Dedicated, with SLA |
+
+For high-volume needs, on-premise, or a private cloud, [contact us](mailto:hello@lightpanda.io) about Enterprise.
+
+<Callout type="info">
+Plans, limits, and prices can change. Check the [pricing page](https://lightpanda.io/pricing) and your [console](https://console.lightpanda.io) for the current values on your account.
+</Callout>
+
+## How usage is measured
+
+Two limits apply to every plan: how many browser hours you use in a billing period, and how many sessions you run at the same time.
+
+**Browser hours** are the total time your sessions stay open. A session that runs for six minutes uses 0.1 browser hours. Usage is metered by the second and summed over your billing period, so short sessions cost little. This is the number that counts against your monthly pool and, on Builder, drives the overage rate.
+
+**Concurrent sessions** are the sessions open at one instant. Explorer allows 5, Builder allows 30. This limit is about parallelism, not total volume: with 30 concurrent sessions you can still run thousands of sessions a day, as long as no more than 30 overlap.
+
+## When you reach a limit
+
+If you open more sessions than your concurrency limit allows, the extra sessions are rejected with HTTP `429 Too Many Requests`. Retry once a running session ends, or upgrade for more concurrency.
+
+When you use up your monthly browser hours, the behavior depends on your plan. Explorer stops until the next billing period. Builder keeps running and bills the overage at $0.08 per hour.
+
+## Manage your subscription
+
+You manage billing from the [console](https://console.lightpanda.io). The billing page shows your current plan and usage, lets you upgrade to Builder, and opens the Stripe customer portal where you can update your payment method, download invoices, and cancel.
