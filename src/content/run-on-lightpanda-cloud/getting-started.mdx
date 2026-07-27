@@ -10,7 +10,7 @@ Lightpanda Cloud gives you a remote browser you reach with an API token. You sig
 
 ## Create an account and token
 
-Sign up at [console.lightpanda.io/signup](https://console.lightpanda.io/signup). After you sign up, you receive an email with a link to generate your API token. The link is valid for 7 days.
+Sign up at [console.lightpanda.io/signup](https://console.lightpanda.io/signup). After you sign up, you receive an email with a link to generate your API token.
 
 <Callout type="warning">
 Your token is shown once, when you generate it. Save it somewhere safe. If you lose it, generate a new one from the console.
@@ -20,9 +20,7 @@ Your token is shown once, when you generate it. Save it somewhere safe. If you l
 
 Your token authenticates every request. Export it, then point your CDP client at the cloud endpoint. Any client that speaks CDP connects the same way.
 
-```sh copy
-export LPD_TOKEN="your token here"
-```
+Prefer not to hand-write the snippet? The [script generator](https://console.lightpanda.io/tools/script-generator) in the console walks you through your client and region, then hands you a ready-to-paste connection snippet with your token already filled in.
 
 <Tabs items={['CDP URL', 'Puppeteer', 'Playwright', 'Chromedp']}>
   <Tabs.Tab>
@@ -33,6 +31,10 @@ wss://euwest.cloud.lightpanda.io/ws?token=YOUR_TOKEN&browser=lightpanda
 ```
   </Tabs.Tab>
   <Tabs.Tab>
+```sh copy
+export LPD_TOKEN="your token here"
+```
+
 ```js copy
 import puppeteer from 'puppeteer-core';
 
@@ -44,6 +46,10 @@ const browser = await puppeteer.connect({
 See the [Puppeteer page](/usage/cdp/puppeteer) for a complete script.
   </Tabs.Tab>
   <Tabs.Tab>
+```sh copy
+export LPD_TOKEN="your token here"
+```
+
 ```js copy
 import { chromium } from 'playwright-core';
 
@@ -55,6 +61,10 @@ const browser = await chromium.connectOverCDP(
 See the [Playwright page](/usage/cdp/playwright) for a complete script.
   </Tabs.Tab>
   <Tabs.Tab>
+```sh copy
+export LPD_TOKEN="your token here"
+```
+
 ```go copy
 ctx, cancel := chromedp.NewRemoteAllocator(context.Background(),
     "wss://euwest.cloud.lightpanda.io/ws?token="+os.Getenv("LPD_TOKEN"), chromedp.NoModifyURL,
@@ -68,12 +78,12 @@ See the [Chromedp page](/usage/cdp/chromedp) for a complete script.
 
 ### Endpoints and browser
 
-Connect to the region nearest you:
+Connect to the region nearest your script:
 
 - `wss://euwest.cloud.lightpanda.io/ws` (west Europe)
 - `wss://uswest.cloud.lightpanda.io/ws` (west US)
 
-The cloud serves Lightpanda by default. Add `browser=chrome` to run Google Chrome instead, or `browser=lightpanda` to force Lightpanda. To route traffic through a proxy, see [Configure a proxy](/guides/configure-a-proxy).
+The cloud serves Lightpanda by default. For debugging, append `browser=chrome` to run Google Chrome instead, since Chrome isn't intended for production traffic. Append `browser=lightpanda` to force Lightpanda explicitly. To route traffic through a proxy, see [Configure a proxy](/guides/configure-a-proxy).
 
 ## Other ways to connect
 
