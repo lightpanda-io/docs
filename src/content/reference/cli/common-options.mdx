@@ -1,0 +1,142 @@
+---
+title: Common Options
+description: Options shared by every Lightpanda CLI command.
+---
+
+# Common Options
+
+Every Lightpanda command ([fetch](/reference/cli/fetch), [serve](/reference/cli/serve), [mcp](/reference/cli/mcp), [agent](/reference/cli/agent)) accepts the following options in addition to its own.
+
+## Options
+
+```console
+common options:
+  --block-cidrs <LIST>
+          Additional CIDR ranges to block, comma-separated.
+          Prefix with '-' to allow (exempt from blocking).
+          e.g. --block-cidrs 10.0.0.0/8,-10.0.0.42/32
+          Can be combined with --block-private-networks.
+  --block-private-networks
+          Block HTTP requests to private/internal IP addresses after DNS
+          resolution.
+          Defaults to false.
+  --block-urls <LIST>
+          URL patterns to block, comma-separated. Patterns are matched
+          case-insensitively against the full URL and '*' is a wildcard.
+          e.g. --block-urls "*doubleclick*,*://*/*.png"
+  --ca-cert <PATH>
+          Load TLS root certificates from a PEM file. Can be passed
+          multiple times. When any --ca-cert or --ca-path is given, the
+          system trust store is replaced by these certificates.
+  --ca-path <PATH>
+          Load TLS root certificates from every file in a directory. Unlike
+          openssl, the directory does not need to be c_rehash'ed. Can be
+          passed multiple times. When any --ca-cert or --ca-path is given,
+          the system trust store is replaced by these certificates.
+  --cookie <PATH>
+          Path to a JSON file to load cookies from (read-only).
+          Defaults to no cookie loading.
+  --cookie-jar <PATH>
+          Path to a JSON file to save cookies to on exit (write-only).
+          Defaults to no cookie saving.
+  --disable-subframes
+          Skip loading <iframe> elements. The parser still registers them in the
+          DOM, but no child frame or Page.frameAttached events are produced.
+          Defaults to false.
+  --disable-workers
+          Skip loading dedicated Web Workers. The Worker constructor still
+          returns a Worker object, but no script fetch is initiated and its scope
+          never runs.
+          Defaults to false.
+  --enable-external-stylesheets
+          Fetch external <link rel=stylesheet> resources so their rules
+          contribute to computed styles (and therefore to visibility checks like
+          display, visibility, opacity, pointer-events).
+          Defaults to false, except in agent mode with an LLM, where it is on.
+  --http-cache-dir <PATH>
+          Directory used as a filesystem cache for network resources. Omitting
+          this disables caching.
+          Defaults to no caching.
+  --http-connect-timeout <INT>
+          Time in ms to establish an HTTP connection before timing out. 0 means
+          never.
+          Defaults to 0.
+  --http-max-concurrent <INT>
+          Maximum number of concurrent HTTP requests.
+          Defaults to 40.
+  --http-max-host-open <INT>
+          Maximum open connections to a given host:port.
+          Defaults to 6.
+  --http-max-response-size <INT>
+          Limits the acceptable response size for any request
+          e.g. XHR, fetch, script loading.
+          Defaults to 1 GiB.
+  --http-proxy <URL>
+          HTTP proxy for all HTTP requests.
+          username:password may be included for basic auth.
+          Defaults to none.
+  --http-timeout <INT>
+          Maximum time in ms the transfer is allowed to complete. 0 means never.
+          Defaults to 10000.
+  --insecure-disable-tls-host-verification
+          Disables host verification on all HTTP requests.
+          Only set this if you understand and accept the risk.
+  --log-filter-scopes <SCOPES>
+          Filter logs per scope, comma-separated, applied left-to-right.
+          "-X" (or bare "X") filters out a scope, "+X" filters it in, and
+          "all" targets every scope. e.g. "http,unknown_prop" hides those
+          two; "-all,+cdp" hides everything except cdp.
+  --log-format <FORMAT>
+          The log format.
+          Defaults to logfmt.
+          Allowed values: "pretty", "logfmt".
+  --log-level <LEVEL>
+          The log level.
+          Defaults to warn.
+          Allowed values: "debug", "info", "warn", "error", "fatal".
+  --obey-robots
+          Fetches and obeys robots.txt of the target page.
+          Defaults to false.
+  --proxy-bearer-token <TOKEN>
+          Token sent for bearer authentication with the proxy:
+          Proxy-Authorization: Bearer <token>.
+  --storage-engine <ENGINE>
+          The storage engine to use.
+          Defaults to none.
+          Allowed values: "none", "sqlite".
+  --storage-sqlite-path <PATH>
+          Path to the SQLite database file for persistent storage.
+          Use ":memory:" for in-memory storage.
+  --user-agent <STRING>
+          Override the User-Agent header entirely. Must not impersonate other
+          browsers; any value containing "Mozilla" is forbidden. The browser
+          still sends Sec-Ch-Ua. Incompatible with --user-agent-suffix.
+  --user-agent-suffix <STRING>
+          Suffix appended to the Lightpanda/X.Y User-Agent.
+  --v8-flags-unsafe <FLAGS>
+          Flags passed as-is to the V8 JavaScript engine, space-separated.
+          e.g. --v8-flags-unsafe "--expose-gc --stack-size 1000".
+          Unsupported escape hatch: V8 does not validate flags against the
+          prebuilt snapshot, so an incompatible flag can misbehave or
+          crash at any point.
+  --v8-max-heap-mb <INT>
+          Maximum V8 heap size in megabytes, per browser instance. Values
+          below ~16 are clamped by V8 and all behave the same.
+          Defaults to the V8 default (based on available memory).
+  --watchdog-ms <INT>
+          Terminates JavaScript when the browser stalls — stays busy for
+          this long without returning to its network poll (e.g. a page
+          stuck in an endless script loop). In serve mode the CDP
+          connection is then closed. Unlike fetch's --terminate-ms, an idle
+          or normally-working page never trips this.
+          Defaults to [a very generous] 30000, disable by setting to 0.
+  --web-bot-auth-domain <DOMAIN>
+          Your domain, e.g. yourdomain.com.
+  --web-bot-auth-key-file <PATH>
+          Path to the Ed25519 private key PEM file.
+  --web-bot-auth-keyid <STRING>
+          The JWK thumbprint of your public key.
+  --ws-max-concurrent <INT>
+          Maximum number of concurrent WebSocket connections.
+          Defaults to 8.
+```

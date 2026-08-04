@@ -1,0 +1,71 @@
+---
+title: CLI Reference
+description: Reference of the Lightpanda command-line interface.
+---
+
+# CLI Reference
+
+Lightpanda ships as a single binary. You call it with a command name, followed by the command's arguments:
+
+```sh
+lightpanda <command> [arguments]
+```
+
+The available commands are:
+
+| Command | Description |
+|---|---|
+| [`agent`](/reference/cli/agent) | Starts an interactive AI agent that can browse the web |
+| [`fetch`](/reference/cli/fetch) | Fetches the specified URL |
+| `help` | Displays this message |
+| [`mcp`](/reference/cli/mcp) | Starts an MCP (Model Context Protocol) server (stdio or HTTP) |
+| [`run`](#run) | Runs a saved script (no LLM), then exits |
+| [`serve`](/reference/cli/serve) | Starts a WebSocket CDP server |
+| [`version`](#version) | Displays the version of lightpanda |
+
+Use `lightpanda help <command>` for more information about a command.
+
+Every command also accepts a shared set of [common options](/reference/cli/common-options).
+
+## run
+
+Run a saved script, then exit. No LLM calls, no API key needed. See [how to run a saved script](/run-locally/commands#run).
+
+```sh copy
+lightpanda run script.js
+```
+
+```console
+usage: lightpanda run <SCRIPT> [COMMON_OPTIONS]
+
+Arguments:
+<SCRIPT>
+          Path to a .js script to run, then exit. Produce one with
+          `lightpanda agent --task "..." --save script.js`, or `/save` from
+          the agent REPL.
+          Caution: .js files can contain evaluate(...) calls that run
+          arbitrary JavaScript in the page. Only run scripts you trust, the
+          same way you would a shell script.
+```
+
+The command also accepts the [common options](/reference/cli/common-options).
+
+Find the script format in the [PandaScript guide](/usage/pandascript).
+
+## version
+
+Displays the version of lightpanda.
+
+```sh copy
+lightpanda version
+```
+
+```console
+usage: lightpanda version [OPTIONS]
+
+options:
+  --check
+          Checks whether a newer release of lightpanda is available. When one is
+          found, prints the running version, the latest release, and how to
+          update.
+```
