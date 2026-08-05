@@ -1,0 +1,70 @@
+---
+title: HTTP API
+description: Reference of the Lightpanda Cloud HTTP API endpoints.
+---
+
+# HTTP API
+
+Fetch a URL and retrieve the rendered page. See [how to use the HTTP API](/usage/api) for practical documentation.
+
+## Fetch a URL
+
+The `POST /api/fetch` endpoint returns a JSON message containing the page's content.
+
+### Request
+
+The request requires a bearer authorization header with your token and the `Content-Type: application/json` header.
+
+The endpoint accepts the following parameters:
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `url` | string | Yes | — | The URL to fetch. |
+| `output_format` | `html` \| `markdown` | No | `html` | — |
+| `wait_ms` | uint | No | `5000` | Time to wait before retrieving the page, in milliseconds. `0` also falls back to the default; it doesn't mean "don't wait". |
+| `wait_event` | `DOMContentLoaded` \| `load` \| `networkAlmostIdle` \| `networkIdle` | No | `networkIdle` | Event to wait for before retrieving the page. |
+| `raw` | bool | No | `false` | If true, the raw HTML or markdown is returned directly, without the JSON wrapper, with `Content-Type: text/html` or `text/plain` respectively. |
+| `proxy_name` | string | No | `fast_dc` | — |
+| `country` | string | No | — | Only used with the `datacenter` proxy. |
+
+```sh copy
+curl -XPOST \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Content-Type: application/json" \
+  https://euwest.cloud.lightpanda.io/api/fetch \
+  --data '{
+    "url": "https://lightpanda.io",
+    "output_format": "markdown",
+    "wait_ms": 50000,
+    "wait_event": "networkIdle",
+    "raw": false
+  }'
+```
+
+### Response
+
+If the request sets `raw` to `false`, a JSON response is returned.
+
+| Field | Type | Description |
+|---|---|---|
+| `data` | string | The page's content, in the format specified by the `output_format` parameter. |
+| `status` | int | The response status code. |
+| `headers` | object, optional | The HTTP headers returned by the server. |
+
+```json copy
+{
+  "data": "\n# Example Domain\n\nThis domain is for use in documentation examples without needing permission. Avoid use in operations.\n\n[Learn more](https://iana.org/domains/example)\n",
+  "status": 200,
+  "headers": {
+    "age": "10026",
+    "allow": "GET, HEAD",
+    "cf-cache-status": "HIT",
+    "cf-ray": "9f0dd9374a2320ab-IAD",
+    "content-encoding": "br",
+    "content-type": "text/html",
+    "date": "Thu, 23 Apr 2026 15:19:47 GMT",
+    "last-modified": "Sat, 18 Apr 2026 00:51:00 GMT",
+    "server": "cloudflare"
+  }
+}
+```
