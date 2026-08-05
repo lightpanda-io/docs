@@ -17,7 +17,7 @@ The available commands are:
 |---|---|
 | [`agent`](/reference/cli/agent) | Starts an interactive AI agent that can browse the web |
 | [`fetch`](/reference/cli/fetch) | Fetches the specified URL |
-| `help` | Displays this message |
+| [`help`](#help) | Displays this message |
 | [`mcp`](/reference/cli/mcp) | Starts an MCP (Model Context Protocol) server (stdio or HTTP) |
 | [`run`](#run) | Runs a saved script (no LLM), then exits |
 | [`serve`](/reference/cli/serve) | Starts a WebSocket CDP server |
@@ -26,6 +26,14 @@ The available commands are:
 Use `lightpanda help <command>` for more information about a command.
 
 Every command also accepts a shared set of [common options](/reference/cli/common-options).
+
+## help
+
+Show the command list above, or `lightpanda help <command>` for one command's own reference.
+
+```sh copy
+lightpanda help [command]
+```
 
 ## run
 
