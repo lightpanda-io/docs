@@ -2,7 +2,6 @@
 title: PandaScript
 description: Built-in automation script for Lightpanda
 ---
-import { Callout, Tabs } from 'nextra/components'
 
 # PandaScript
 
@@ -17,7 +16,7 @@ It's reproducible, deterministic and token-free (no LLM required).
 To run a PandaScript:
 
 ```sh copy
-lightpanda agent <my_script>.js
+lightpanda run <my_script>.js
 ```
 
 ## Runtime Environment
@@ -36,28 +35,26 @@ web page's JavaScript context.
 - The global `evaluate(...)` primitive runs JavaScript in the page context,
   distinct from the agent context's own native `eval`.
 - Agent variables persist for the lifetime of one script run, across
-  navigations and primitive calls. A later `lightpanda agent script.js` run
-  starts with a fresh agent context.
-- The installed primitives are synchronous and blocking. Do not write an
-  `async`/`await` automation contract around them. Scripts compile as classic
-  scripts, so top-level `await` is a `SyntaxError`; promise callbacks
-  (`.then`) only run after the script body finishes, never in between
-  primitive calls.
+  navigations and primitive calls. A later `lightpanda run script.js` starts
+  with a fresh agent context.
+- `goto` is the one asynchronous primitive: always `await page.goto(...)`.
+  Every other page method (`extract`, `evaluate`, `click`, `fill`, and the
+  rest) is synchronous and blocking. The script body runs inside an async
+  wrapper, so top-level `await` is allowed, unlike a plain classic script.
 - Tool failures throw JavaScript `Error` exceptions and stop execution unless
   you catch them.
-- The script's completion value (its last top-level expression) is printed
-  automatically (objects and arrays as JSON; other values coerced). End a
-  script with the bare expression you want as output, e.g. a final
-  `extract({ ... });` or `results;`. `console.log(...)` is for extra or debug
-  output and does not JSON-format objects.
+- The script's output is whatever it `return`s from the top level (objects
+  and arrays printed as JSON; other values coerced). End a script with
+  `return extract({ ... });` or `return results;`. A bare trailing expression
+  is not printed. `console.log(...)` is for extra or debug output and does
+  not JSON-format objects.
 
-The agent context includes a small `console` object:
+The agent context includes a small `console` object, split across the two
+output streams. Find every method in the
+[PandaScript reference](/reference/pandascript#console).
 
 ```js
 console.log("printed to stdout");
-console.info("printed to stdout");
-console.debug("printed to stdout");
-console.warn("printed to stderr");
 console.error("printed to stderr");
 ```
 
@@ -85,7 +82,7 @@ const data = page.extract({
   }]
 });
 
-data; // printed automatically as JSON
+return data; // printed automatically as JSON
 ```
 
 Destructure when a single field is all you need:
@@ -111,54 +108,15 @@ for (const story of stories) {
 returns an object or array, that text is JSON.
 
 Primitive arguments must be JSON-serializable. Strings, numbers, booleans,
-arrays, plain objects, and `null` work. `undefined`, functions, symbols, and
-cyclic objects do not.
+arrays, plain objects, and `null` work. Find what the other values throw in the
+[PandaScript reference](/reference/pandascript#calling-conventions).
 
 ## Installed Primitives
 
-Only recorded browser primitives are installed globally:
-
-| Primitive | Arguments | Runs in |
-|-----------|-----------|---------|
-| `new Page()` ||Browser session |
-| `page.goto` | `goto(url[, { timeout }])` | Browser page |
-| `page.extract` | `extract(schema)` or `extract({ schema })` | Browser page via extractor; returns a JS object or array |
-| `page.evaluate` | `evaluate(script[, { url, timeout, save }])` | Browser page JS context |
-| `page.click` | `click(selector)` or `click({ selector })` | Browser page |
-| `page.fill` | `fill(selector, value)` or `fill({ selector, value })` | Browser page |
-| `page.scroll` | `scroll()` or `scroll({ x, y })` | Browser page |
-| `page.waitForSelector` | `waitForSelector(selector[, { timeout }])` | Browser page |
-| `page.waitForScript` | `waitForScript(script[, { timeout }])` | Browser page JS context |
-| `page.waitForState` | `waitForState(state[, { timeout }])` | Browser page |
-| `page.hover` | `hover(selector)` or `hover({ selector })` | Browser page |
-| `page.press` | `press(selector, key)` or `press({ key[, selector] })` | Browser page |
-| `page.selectOption` | `selectOption(selector, value)` or `selectOption({ selector, value })` | Browser page |
-| `page.setChecked` | `setChecked(selector[, checked])` or `setChecked({ selector, checked })` | Browser page |
-
-`goto` returns at the `load` event (a fast snapshot). When a page's content is
-still loading (rendered by post-load JS), call `waitForState("networkidle")`
-before reading. `waitForState`'s `state` accepts `"load"`,
-`"domcontentloaded"`, `"networkalmostidle"`, `"networkidle"`, or `"done"`.
-`goto`'s `timeout` defaults to 10000 ms; the `waitFor*` timeouts default to
-5000 ms.
-
-The `[, { … }]` is an optional trailing options object: leading arguments are
-positional (`waitForSelector("#row", { timeout: 2000 })`), and the options ride
-in a final object. Passing a single object with everything
-(`waitForSelector({ selector: "#row", timeout: 2000 })`) is equivalent; that's
-the shape `/save` records into saved scripts. An option can't be a bare
-positional, though: `waitForSelector("#row", 2000)` is an error. A `null`
-positional omits that field (`press(null, "Enter")` presses on the focused
-element), and setting the same field positionally and in the options object
-(`goto(url, { url: ... })`) is an `invalid arguments` error.
-
-Script primitives address elements by CSS selector only. The tools that hand
-out `backendNodeId`s (`tree`, `findElement`, `nodeDetails`) aren't installed in
-the script context, and a raw node ID wouldn't survive replay anyway. When
-you're exploring in the REPL and have a `backendNodeId` (e.g. the leading
-number on a `/tree` line, or a `/findElement` hit) run `/nodeDetails
-backendNodeId=<id>` to get a durable CSS `selector`, then paste that into your
-script.
+Only recorded browser primitives are installed globally: `new Page()`, then
+`goto`, `extract`, `evaluate`, the interaction methods and the `waitFor*`
+methods as methods on the page. Find the full table, the calling conventions
+and the timeouts in the [PandaScript reference](/reference/pandascript#primitives).
 
 ## Navigation
 
@@ -174,11 +132,10 @@ await page.goto({
 });
 ```
 
-The call returns a status string and throws if navigation fails. A timeout
-does **not** throw: the call returns `"Navigation started but the page did not
-finish loading before the timeout."` and the page stays in whatever state it
-reached. Check the return value, or follow with `waitForState(...)` /
-`waitForSelector(...)`, when completeness matters.
+The call resolves to the same page object (`await page.goto(url) === page`),
+and rejects if navigation fails or times out (`"navigation timed out"`).
+Follow with `waitForState(...)` / `waitForSelector(...)` when completeness
+matters.
 
 ## Structured Extraction
 
@@ -200,27 +157,8 @@ const result = page.extract({
 });
 ```
 
-The schema forms are:
-
-| Schema value | Meaning |
-|--------------|---------|
-| `"<selector>"` | Text of the first matching element, or `null` |
-| `""` | Text of the current matched element inside a `fields` block |
-| `["<selector>"]` | Text of all matching elements |
-| `{ selector: "<selector>", attr: "<name>" }` | Attribute from the first match |
-| `[{ selector: "<selector>", attr: "<name>" }]` | Attribute from all matches |
-| `[{ selector: "<selector>", fields: { ... } }]` | Array of records, with fields resolved relative to each matched element |
-| `limit: N` | Cap array extraction to `N` matches |
-
-Return shape follows the top-level schema:
-
-- `extract({ title: "h1" })` returns `{ title: "..." }`.
-- `extract({ title: "h1", links: [{ selector: "a" }] })` returns an object
-  with both fields.
-- `extract({ links: [{ selector: "a" }] })` returns `{ links: [...] }`. An
-  object schema always returns an object, even with a single field.
-- `extract([{ selector: "a" }])` is shorthand for a single anonymous array
-  extraction and returns the array directly.
+Find every schema form in the
+[PandaScript reference](/reference/pandascript#extraction-schema).
 
 Every value is a string (trimmed text or a raw attribute) or `null`; parse
 numbers in script logic. An array field that matches nothing yields `[]`
@@ -234,19 +172,6 @@ capture the list, then loop in the script (`goto` each row's URL and `extract`
 the detail). The local agent context keeps the data across navigations, so the
 assembly happens in plain JavaScript. See the [complete
 example](#complete-example) below.
-
-When passing an object directly to `extract(...)`, the runtime serializes it as
-the extractor schema. These forms are equivalent:
-
-```js copy
-page.extract({ title: "h1" });
-page.extract({ schema: { title: "h1" } });
-page.extract('{ "title": "h1" }');
-```
-
-The wrapped form accepts only `schema`: the REPL's `save=` option does not
-exist in scripts (`extract({ schema: ..., save: ... })` is rejected). Keep
-results in local variables instead.
 
 Use local variables to keep extracted data available to later script logic:
 
@@ -315,9 +240,10 @@ page.scroll();
 `setChecked` defaults `checked` to `true` when the field is omitted
 (`setChecked("#chk")` checks the box). `press`'s leading positional is the
 optional `selector`, not `key`: a bare `press("Enter")` binds `"Enter"` to
-`selector` and fails. Press on the focused element with
-`press({ key: "Enter" })` or `press(null, "Enter")`; target an element with
-`press("#search", "Enter")` or `press({ key: "Enter", selector: "#search" })`.
+`selector` and fails. Press on the document (not necessarily the focused
+element) with `press({ key: "Enter" })` or `press(null, "Enter")`; target an
+element with `press("#search", "Enter")` or
+`press({ key: "Enter", selector: "#search" })`.
 
 `$LP_*` placeholders in string arguments are resolved inside the Lightpanda
 process. This keeps credentials out of recorded scripts and LLM prompts. In
@@ -342,9 +268,12 @@ Common failures:
 |-------|---------|
 | `ReferenceError: document is not defined` | You tried to use browser DOM APIs in the agent context. Use `extract(...)` or page `evaluate(...)`. |
 | `ReferenceError: require is not defined` | Agent scripts are not Node.js scripts. |
-| `no page loaded - run goto(url) first` | A page-dependent primitive ran before navigation. |
+| `no page loaded - run page.goto(url) first` | A page-dependent primitive ran before navigation. |
 | `invalid arguments` | A primitive received the wrong number or shape of arguments, or a non-JSON-serializable value. |
 | `extract: no schema selector matched any element` | Every field in the schema missed. Fix the selectors; an empty page section yields `null`/`[]` per field, not this error. |
+
+Find the complete list in the
+[PandaScript reference](/reference/pandascript#errors).
 
 ## Complete Example
 
@@ -388,5 +317,5 @@ for (const story of stories) {
   story.comments = comments;
 }
 
-stories; // printed automatically as JSON
+return stories; // printed automatically as JSON
 ```
