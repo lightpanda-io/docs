@@ -1,0 +1,145 @@
+---
+title: PandaScript Reference
+description: Primitives, calling conventions, extraction schema and errors of the PandaScript runtime.
+---
+
+# PandaScript Reference
+
+A PandaScript is a plain JavaScript automation script that Lightpanda runs directly, with no LLM call. Learn the execution model and see complete examples in the [PandaScript usage page](/usage/pandascript).
+
+```sh copy
+lightpanda run <my_script>.js
+```
+
+The script context installs two globals, `Page` and [`console`](#console), and nothing else from the browser toolset. A script creates a page with `new Page()`, then calls every primitive below as a method on that page. Every `timeout` is in milliseconds.
+
+## Navigation
+
+| Primitive | Arguments | Returns | Comment |
+|-----------|-----------|---------|---------|
+| `page.goto` | `goto(url[, { timeout = 10000 }])` | The same page object it was called on | Returns at the `load` event, a fast snapshot that skips content rendered by post-load JavaScript. Follow it with [`waitForState`](#waiting) when the page keeps rendering. |
+| `page.close` | `close()` | Nothing | Stales the handle, so later calls on it fail. The page itself is reclaimed on the next `goto` or at script end. |
+
+## Extraction and page scripting
+
+`evaluate` runs a JavaScript string inside the page, where `window` and `document` exist, and `extract` resolves its schema selectors there too. That code runs in the page, so it cannot see the variables of your agent script.
+
+| Primitive | Arguments | Returns | Comment |
+|-----------|-----------|---------|---------|
+| `page.extract` | `extract(schema)` or `extract({ schema })` | An object or an array, shaped by the schema | Schema forms are listed [below](#extraction-schema). |
+| `page.evaluate` | `evaluate(script[, { url, timeout = 10000, save }])` | The page value as a string, JSON-encoded when it is an object or array | `url` navigates before running the script, and `timeout` bounds that navigation, not the script. |
+
+### Extraction schema
+
+`page.extract(...)` takes a schema object mapping output field names to CSS-selector specs. The schema forms are:
+
+| Schema value | Meaning | Comment |
+|--------------|---------|---------|
+| `"<selector>"` | Text of the first matching element, or `null` | |
+| `""` | Text of the element currently matched | Only inside a `fields` block |
+| `["<selector>"]` | Text of all matching elements | Only the first element is read, so `["a", "b"]` extracts `"a"` and silently drops `"b"` |
+| `{ selector: "<selector>", attr: "<name>" }` | Attribute from the first match | `href` and `src` resolve to absolute URLs |
+| `[{ selector: "<selector>", attr: "<name>" }]` | Attribute from all matches | |
+| `[{ selector: "<selector>", fields: { ... } }]` | Array of records, with fields resolved relative to each matched element | Fields accept any shape above, so arrays nest for per-item sub-lists |
+| `[{ selector: "<selector>", limit: N }]` | At most `N` matches | Object-array form only, the `["<selector>"]` shorthand has no equivalent |
+
+**Passing the schema.** These three calls are equivalent:
+
+```js copy
+page.extract({ title: "h1" });
+page.extract({ schema: { title: "h1" } });
+page.extract('{ "title": "h1" }');
+```
+
+The object form accepts only the `schema` key, so the REPL's `save` option is rejected in scripts.
+
+**What you get back.** Every extracted value is a string (trimmed text or a raw attribute) or `null`; parse numbers yourself. The result mirrors the top-level schema:
+
+| Schema | Result |
+|--------|--------|
+| An object, `{ title: "h1" }` | An object keyed by your fields, even with a single field |
+| A bare array, `[{ selector: "a" }]` | The array itself |
+| An array field matching nothing | `[]` |
+| Every field in the schema missing | Throws `no schema selector matched any element` |
+
+## Interaction
+
+Every interaction below reports the page URL and title reached after the action, so a script can tell whether it triggered a navigation. A `click` returns, in full:
+
+```
+Clicked element (selector: a.login). Page url: https://example.com/app, title: Dashboard
+```
+
+`scroll` is the exception and reports only its position.
+
+| Primitive | Arguments | Returns |
+|-----------|-----------|---------|
+| `page.click` | `click(selector)` or `click({ selector })` | `Clicked element (<target>)` |
+| `page.fill` | `fill(selector, value)` or `fill({ selector, value })` | `Filled element (<target>) with "<value>"` |
+| `page.hover` | `hover(selector)` or `hover({ selector })` | `Hovered element (<target>)` |
+| `page.press` | `press(selector, key)` or `press({ key[, selector] })` | `Pressed key '<key>'` |
+| `page.selectOption` | `selectOption(selector, value)` or `selectOption({ selector, value })` | `Selected option '<value>' (<target>)` |
+| `page.setChecked` | `setChecked(selector[, checked = true])` or `setChecked({ selector, checked = true })` | `Set element (<target>) to checked` or `to unchecked` |
+| `page.scroll` | `scroll({ x = 0, y = 0 })`, never a selector | `Scrolled to x: <x>, y: <y>` |
+
+## Waiting
+
+| Primitive | Arguments | Returns | Comment |
+|-----------|-----------|---------|---------|
+| `page.waitForSelector` | `waitForSelector(selector[, { timeout = 5000 }])` | `Element found. backendNodeId: <id>` | A script cannot act on that ID, since every primitive takes a CSS selector. |
+| `page.waitForScript` | `waitForScript(script[, { timeout = 5000 }])` | `Script returned truthy.` | Re-evaluates the script in the page context until it returns truthy. |
+| `page.waitForState` | `waitForState(state[, { timeout = 5000 }])` | `Page reached <state>.` | Takes one of the states below. |
+
+The states `waitForState` accepts:
+
+| `state` | Resolves when |
+|---------|---------------|
+| `"load"` | The `load` event fires: the frame and all its subresources, including async scripts, have finished loading. |
+| `"domcontentloaded"` | The HTML is parsed and deferred scripts have run. Subresources (images, stylesheets, async scripts) may still be loading. |
+| `"networkalmostidle"` | At most 2 requests stay in flight for 500 ms straight. |
+| `"networkidle"` | Zero requests stay in flight for 500 ms straight. |
+| `"done"` | The page goes fully idle: no scheduled JavaScript work and no network activity. Every `waitForState` call eventually resolves to this, even if the requested state is never reached. |
+
+## Console
+
+`console` is the second and last global. It carries five methods, split across the two output streams:
+
+| Methods | Write to |
+|---------|----------|
+| `console.log`, `console.info`, `console.debug` | stdout |
+| `console.warn`, `console.error` | stderr |
+
+They print for you to read. A script's own output is whatever it `return`s from the top level, which is where objects and arrays get JSON-formatted.
+
+## Calling conventions
+
+**Positional and options arguments.** Each primitive takes its leading arguments positionally, with an optional trailing options object for the rest:
+
+- Mix a positional with an options object: `waitForSelector("#row", { timeout: 2000 })`.
+- Or pass one object with everything: `waitForSelector({ selector: "#row", timeout: 2000 })`. This is equivalent, and it's the shape `/save` records into saved scripts.
+- An option can never be passed as a bare positional: `waitForSelector("#row", 2000)` is an error.
+- A `null` positional omits that argument: `press(null, "Enter")` presses on the document, not necessarily the focused element.
+- Setting the same field both positionally and in the options object is an error: `goto(url, { url: ... })` throws `invalid arguments`.
+- Arguments must be JSON-serializable. `undefined`, functions, and symbols throw `invalid arguments`; a cyclic object throws V8's own `TypeError: Converting circular structure to JSON` instead, since it fails before Lightpanda's own check runs.
+
+**Selectors, not node IDs.** Script primitives address elements by CSS selector only. `tree`, `findElement`, and `nodeDetails` hand out `backendNodeId`s but aren't installed in the script context, and a raw node ID wouldn't survive replay anyway. When you're exploring in the REPL and have a `backendNodeId` (the leading number on a `/tree` line, or a `/findElement` hit), run `/nodeDetails backendNodeId=<id>` to get a durable CSS `selector`, then paste that into your script.
+
+**Secrets via `$LP_*` placeholders.** String arguments can contain `$LP_*` placeholders, resolved inside the Lightpanda process. This keeps credentials out of recorded scripts and LLM prompts. Recordings scrub resolved `LP_*` values back to placeholders.
+
+## Errors
+
+Primitive failures throw JavaScript exceptions. The complete list:
+
+| Error | Meaning |
+|-------|---------|
+| `Page must be called with new` | `Page(...)` was called without `new`. Use `new Page()`. |
+| `extract is not defined` (or `click`, `fill`, ...) | Primitives are methods on the page object, not globals. Use `page.extract(...)`, not a bare `extract(...)`. |
+| `page is not navigated or has been closed` | A method ran on a fresh `new Page()`, or on a closed page, before `await page.goto(url)`. |
+| `page handle is no longer valid` | A re-`goto` on the same page object that failed or timed out: the old frame is torn down before the new navigation's outcome is known, so a rejected re-navigation leaves the handle bound to a removed frame. A **successful** re-goto rebinds the same object to the new frame and keeps working; sibling pages from other `new Page()` calls are unaffected either way. |
+| `ReferenceError: document is not defined` | You tried to use browser DOM APIs in the agent context. Use `extract(...)` or page `evaluate(...)`. |
+| `ReferenceError: require is not defined` | Agent scripts are not Node.js scripts. |
+| `no page loaded - run page.goto(url) first` | A page-dependent primitive ran before navigation. |
+| `invalid arguments` | A primitive received the wrong number or shape of arguments, or a value that stringifies to `undefined` (like a bare function or symbol). A cyclic object throws a different, native error instead. |
+| `extract: no schema selector matched any element` | Every field in the schema missed. Fix the selectors; an empty page section yields `null`/`[]` per field, not this error. |
+| `navigation timed out` | `goto` did not finish loading before its timeout. Also `navigation failed`, `navigation cancelled`, and `navigation abandoned` for the other navigation outcomes. |
+| `<tool> failed: <ZigErrorName>` | Fallback for any other tool failure, e.g. `click failed: NodeNotFound` when a selector matches nothing. |
