@@ -219,15 +219,10 @@ Which tool the agent picks depends on the model and its own reasoning, not a fix
 
 ## Known behaviors
 
-### `goto` always returns success
+### `goto` doesn't fail on an HTTP error page or a timeout
 
-`goto` returns `"Navigated successfully."` even for invalid or unreachable URLs. The failure surfaces on the next content call:
+A genuine navigation failure (DNS resolution, connection refused, ...) makes `goto` return an error directly: `"navigation failed: CouldntResolveHost"` (`isError: true`). Two cases still report success though:
 
-```
-# Navigation failed
-
-Reason: CouldntResolveHost
-```
-
-Always check the content result after navigation, not the `goto` response itself.
+- **A timeout** doesn't fail: `"Navigation started but the page did not finish loading before the timeout."`
+- **An HTTP error page** (404, 500, ...) is still a successful navigation at the network level: `"Navigated successfully."` Check the content result to tell an error page from real content.
 

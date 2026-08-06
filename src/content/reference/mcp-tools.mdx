@@ -21,7 +21,7 @@ Every call goes through the MCP `tools/call` method, with `name` and `arguments`
 {"result":{"content":[{"type":"text","text":"Filled element (selector: #search) with \"lightpanda\". Page url: https://example.com, title: Example Domain"}],"isError":false}}
 ```
 
-The result comes back as `{"result":{"content":[{"type":"text","text":"..."}],"isError":false}}`. `goto` itself returns `"Navigated successfully."` even if the URL is unreachable, so verify with a follow-up content call (see [Known behaviors](/usage/mcp#known-behaviors)).
+The result comes back as `{"result":{"content":[{"type":"text","text":"..."}],"isError":false}}`. `goto` returns an error directly on a genuine navigation failure (e.g. `navigation failed: CouldntResolveHost`); a timeout or an HTTP error page (404/500) still reports `"Navigated successfully."` (see [Known behaviors](/usage/mcp#known-behaviors)).
 
 ## Navigation and search
 
@@ -29,7 +29,7 @@ These tools bring a page into the browser:
 
 | Name | Arguments | Description |
 |---|---|---|
-| `goto` | `url`, `timeout?` | Navigate to a specified URL and load the page in memory so it can be reused later for info extraction. |
+| `goto` | `url`, `timeout?`, `waitUntil?` | Navigate to a specified URL and load the page in memory so it can be reused later for info extraction. `waitUntil` accepts the same states as `waitForState` and defaults to `load`; prefer `domcontentloaded` plus a follow-up `waitForSelector` on pages whose late scripts (ads) hold `load` back, and avoid `done` on pages with constant background activity, since it can run to the timeout. |
 | `search` | `query`, `timeout?` | Run a web search and return results as markdown. When `BRAVE_API_KEY` or `TAVILY_API_KEY` is set, queries that search API (Brave preferred) and returns a numbered list of `{title, url, snippet}`. Otherwise (or on API failure) falls back to scraping the DuckDuckGo HTML endpoint; degraded results, may rate-limit on bursty traffic. Prefer this over goto-ing google.com/search directly (Google blocks the browser on User-Agent/TLS). Browser state after this call is unspecified; to interact with a result, use `goto` with its URL; do not assume the browser DOM matches the results page. |
 
 ## Reading the page
