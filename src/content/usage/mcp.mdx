@@ -178,12 +178,13 @@ Execute arbitrary JavaScript in the page context and return the result as a stri
 
 ### Resources
 
-Two read-only resources are available after a page has been loaded, read via `resources/read`:
+Three read-only resources are available via `resources/read`. The two page resources need a loaded page; `mcp://skill/pandascript` doesn't, so an MCP host can fetch it up front to teach its own LLM how to write PandaScript before ever touching the browser.
 
 | URI | MIME type | Description |
 |-|-|-|
 | `mcp://page/html` | `text/html` | The serialized HTML DOM of the current page |
 | `mcp://page/markdown` | `text/markdown` | The token-efficient markdown representation of the current page (identical output to the `markdown` tool) |
+| `mcp://skill/pandascript` | `text/markdown` | The PandaScript skill documentation |
 
 ```json copy
 {"jsonrpc":"2.0","id":4,"method":"resources/read",
