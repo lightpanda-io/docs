@@ -17,7 +17,7 @@ The script context installs two globals, `Page` and [`console`](#console), and n
 
 | Primitive | Arguments | Returns | Comment |
 |-----------|-----------|---------|---------|
-| `page.goto` | `goto(url[, { timeout = 10000 }])` | The same page object it was called on | Returns at the `load` event, a fast snapshot that skips content rendered by post-load JavaScript. Follow it with [`waitForState`](#waiting) when the page keeps rendering. |
+| `page.goto` | `goto(url[, { timeout = 10000, waitUntil = "load" }])` | The same page object it was called on | Resolves once `waitUntil` is reached. `waitUntil` takes the same states as [`waitForState`](#waiting): `load` (default, a fast snapshot that skips content rendered by post-load JavaScript), `domcontentloaded`, `networkalmostidle`, `networkidle`, or `done`. |
 | `page.close` | `close()` | Nothing | Stales the handle, so later calls on it fail. The page itself is reclaimed on the next `goto` or at script end. |
 
 ## Extraction and page scripting
@@ -86,8 +86,8 @@ Clicked element (selector: a.login). Page url: https://example.com/app, title: D
 
 | Primitive | Arguments | Returns | Comment |
 |-----------|-----------|---------|---------|
-| `page.waitForSelector` | `waitForSelector(selector[, { timeout = 5000 }])` | `Element found. backendNodeId: <id>` | A script cannot act on that ID, since every primitive takes a CSS selector. |
-| `page.waitForScript` | `waitForScript(script[, { timeout = 5000 }])` | `Script returned truthy.` | Re-evaluates the script in the page context until it returns truthy. |
+| `page.waitForSelector` | `waitForSelector(selector[, { timeout }])` | `Element found. backendNodeId: <id>` | `timeout` defaults to 5000ms once the page has reached `load`, or 15000ms (the navigation budget plus 5000) if it hasn't yet. A script cannot act on that ID, since every primitive takes a CSS selector. |
+| `page.waitForScript` | `waitForScript(script[, { timeout }])` | `Script returned truthy.` | Same default-`timeout` rule as `waitForSelector`. Re-evaluates the script in the page context until it returns truthy. |
 | `page.waitForState` | `waitForState(state[, { timeout = 5000 }])` | `Page reached <state>.` | Takes one of the states below. |
 
 The states `waitForState` accepts:

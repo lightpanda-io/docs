@@ -116,7 +116,7 @@ arrays, plain objects, and `null` work. Find what the other values throw in the
 Only recorded browser primitives are installed globally: `new Page()`, then
 `goto`, `extract`, `evaluate`, the interaction methods and the `waitFor*`
 methods as methods on the page. Find the full table, the calling conventions
-and the timeouts in the [PandaScript reference](/reference/pandascript#primitives).
+and the timeouts in the [PandaScript reference](/reference/pandascript).
 
 ## Navigation
 
@@ -132,10 +132,11 @@ await page.goto({
 });
 ```
 
-The call resolves to the same page object (`await page.goto(url) === page`),
-and rejects if navigation fails or times out (`"navigation timed out"`).
-Follow with `waitForState(...)` / `waitForSelector(...)` when completeness
-matters.
+The call resolves to the same page object (`await page.goto(url) === page`)
+once it reaches `waitUntil` (`load` by default), and rejects if navigation
+fails or times out (`"navigation timed out"`). Pass `waitUntil: "networkidle"`
+(or another state) to wait past `load` directly, or follow with
+`waitForState(...)` / `waitForSelector(...)` when completeness matters.
 
 ## Structured Extraction
 
