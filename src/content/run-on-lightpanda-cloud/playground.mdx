@@ -104,6 +104,8 @@ Every run is capped:
 
 A run that reaches 5 minutes stops and reports `timeout running program`. Output beyond 256 KB is dropped, and the run is flagged as truncated.
 
+These caps apply to the script process. The browser it drives is an ordinary cloud session, so it also counts toward your [plan limits](/run-on-lightpanda-cloud/limits-and-billing).
+
 ## Review past runs
 
 Every run is kept. [Runs](https://console.lightpanda.io/playground/script-runs) under Playground lists them with their state, start time, and duration, and you can filter the list by script. Open a run to read the output it produced.
