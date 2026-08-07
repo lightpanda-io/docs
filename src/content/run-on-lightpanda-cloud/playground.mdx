@@ -7,11 +7,11 @@ import { Tabs, Callout } from 'nextra/components'
 
 # Playground
 
-The playground is a code editor in the console that runs your automation scripts on Lightpanda Cloud. You write JavaScript or TypeScript, pick the browser and region to run against, and read the output on the same screen. Nothing runs on your machine.
+The playground is a code editor in the console that runs your automation scripts on Lightpanda Cloud.
 
 ## Write and run a script
 
-Open [Scripts](https://console.lightpanda.io/playground/scripts) under Playground in the console and create one. The editor opens on the Playwright example below. Both clients reach your cloud browser through `CDP_WS_URL`, and both examples work unchanged in either language:
+Open [Scripts](https://console.lightpanda.io/playground/scripts) under Playground in the console and create one. The editor opens on the Playwright example below:
 
 <Tabs items={['Playwright', 'Puppeteer']}>
   <Tabs.Tab>
@@ -58,20 +58,18 @@ await browser.disconnect();
   </Tabs.Tab>
 </Tabs>
 
-Name the script, set the language to JavaScript or TypeScript in the Settings panel, then select Run script. The Output tab fills in as the run proceeds, with anything your script writes to stderr shown in red. Edits are saved as you type, so a script you leave is there when you come back.
-
 ## Connect with CDP_WS_URL
 
 Your script never carries a token. The playground sets one environment variable, `CDP_WS_URL`, which holds the WebSocket address your client uses to reach the browser over the [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/) (CDP). The playground assembles it from the choices in the Default variables panel:
 
-| Variable | Values | What it controls |
+| Default variable | Values | What it controls |
 | --- | --- | --- |
 | Region | `euwest`, `uswest` | Which region serves the browser |
 | Token | one of your active tokens | Which token the run authenticates with |
 | Browser | `lightpanda`, `chrome` | Which browser runs. Chrome is for debugging, not production traffic |
 | Proxy | one of your proxies, or none | The outbound IP the browser uses |
 
-Pass `process.env.CDP_WS_URL` to whichever client you use. With Playwright that is `chromium.connectOverCDP`, and with Puppeteer it is the `browserWSEndpoint` option.
+Pass `process.env.CDP_WS_URL` to whichever client you use.
 
 <Callout type="info">
 `console.log(process.env.CDP_WS_URL)` prints `***`, not the URL. The URL carries an access token created for the run, and run output is stored in the console, so the playground masks the URL wherever it appears in output.
