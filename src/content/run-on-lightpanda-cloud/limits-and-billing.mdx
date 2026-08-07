@@ -1,17 +1,15 @@
 ---
-title: Limits and Billing
-description: Lightpanda Cloud plans, browser-hour and concurrent-session limits, usage-based billing, and how to manage your subscription from the console.
+title: Limits and billing
+description: Understand how Lightpanda Cloud bills browser time, and what happens when you reach a plan limit.
 ---
 
 import { Callout } from 'nextra/components'
 
 # Limits and billing
 
-Lightpanda Cloud bills by browser time. Each plan includes a monthly pool of browser hours and a cap on how many sessions you can run at once. You start on the free plan, and you only pay when you need more hours or more concurrency.
+Lightpanda Cloud bills by browser time. You start on the free plan, and you can upgrade when you need more hours or more concurrency.
 
 ## Plans
-
-Three plans cover the range from testing to production. Every plan lets you bring your own proxy.
 
 - **Explorer** is free, with a browser-hour pool and concurrency limit sized for testing, and community support on Discord.
 - **Builder** is for production workloads: a larger monthly pool of browser hours and concurrent sessions, billed at a per-hour rate once you go over the included hours, plus email and Slack support.
@@ -21,9 +19,9 @@ Three plans cover the range from testing to production. Every plan lets you brin
 For current prices, hour pools, and concurrency limits, see the [pricing page](https://lightpanda.io/pricing).
 </Callout>
 
-## How usage is measured
+Upgrade, download invoices, or cancel from the [billing page](https://console.lightpanda.io/account/subscription-billing) in the console, which opens the Stripe customer portal.
 
-Two limits apply to every plan: how many browser hours you use in a billing period, and how many sessions you run at the same time.
+## How usage is measured
 
 **Browser hours** are the total time your sessions stay open, metered by the second and summed over your billing period, so short sessions cost little. This is the number that counts against your monthly pool and, on paid plans, drives the overage rate.
 
@@ -33,8 +31,6 @@ Two limits apply to every plan: how many browser hours you use in a billing peri
 
 If you open more sessions than your concurrency limit allows, the extra sessions are rejected with HTTP `429 Too Many Requests`. Retry once a running session ends, or upgrade for more concurrency.
 
-When you use up your monthly browser hours, the behavior depends on your plan. The free plan stops until its monthly pool resets. Paid plans keep running and bill the overage at the per-hour rate shown on the [pricing page](https://lightpanda.io/pricing).
+When you use up your monthly browser hours, the behavior depends on your plan. The free plan stops until its monthly pool resets. Paid plans keep running and bill the overage at your plan's per-hour rate.
 
-## Manage your subscription
-
-You manage billing from the [console](https://console.lightpanda.io). The billing page shows your current plan and usage, lets you upgrade to Builder, and opens the Stripe customer portal where you can update your payment method, download invoices, and cancel.
+Some limits do not depend on your plan. A CDP connection closes after 15 minutes, whatever your pool has left, so split long jobs across sessions. An MCP session closes after 5 minutes without a request, so an active one keeps running.
