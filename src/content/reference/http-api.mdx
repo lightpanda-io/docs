@@ -25,7 +25,7 @@ The endpoint accepts the following parameters:
 | `wait_event` | `DOMContentLoaded` \| `load` \| `networkAlmostIdle` \| `networkIdle` | No | `networkIdle` | Event to wait for before retrieving the page. |
 | `raw` | bool | No | `false` | If true, the raw HTML or markdown is returned directly, without the JSON wrapper, with `Content-Type: text/html` or `text/plain` respectively. |
 | `proxy_name` | string | No | `fast_dc` | — |
-| `country` | string | No | — | Only used with the `datacenter` proxy. |
+| `country` | string | No | — | Two-letter country code, case-insensitive. Only used with the `datacenter` proxy. |
 
 ```sh copy
 curl -XPOST \
