@@ -1,26 +1,31 @@
 ---
 title: Getting started
-description: Start using remote browsers easily with Lightpanda cloud.
+description: Start using remote browsers easily with Lightpanda Cloud.
 ---
 import { Tabs, Callout } from 'nextra/components'
 
 # Getting started
 
-Lightpanda Cloud gives you a remote browser you reach with an API token. You sign up, generate a token, and point your CDP client at a cloud endpoint. There is no browser process to install or keep alive.
+Lightpanda Cloud runs the browser for you. With no process to install or keep alive, an API token is all you need to drive it over CDP, MCP, or the HTTP API.
 
 ## Create an account and token
 
-Sign up at [console.lightpanda.io/signup](https://console.lightpanda.io/signup). After you sign up, you receive an email with a link to generate your API token.
+Sign up at [console.lightpanda.io/signup](https://console.lightpanda.io/signup). We'll email you a link to generate your API token.
 
 <Callout type="warning">
 Your token is shown once, when you generate it. Save it somewhere safe. If you lose it, generate a new one from the console.
 </Callout>
 
-## Connect a browser
+## Connect your CDP client to Lightpanda Cloud
 
-Your token authenticates every request. Export it, then point your CDP client at the cloud endpoint. Any client that speaks CDP connects the same way.
+<Callout type="info">
+To generate a ready-to-use snippet, you can use the [script generator](https://console.lightpanda.io/tools/script-generator) in the console.
+</Callout>
 
-Prefer not to hand-write the snippet? The [script generator](https://console.lightpanda.io/tools/script-generator) in the console walks you through your client and region, then hands you a ready-to-paste connection snippet with your token already filled in.
+Connect to the region nearest your script. The snippets below all use `euwest`:
+
+- `wss://euwest.cloud.lightpanda.io/ws` (west Europe)
+- `wss://uswest.cloud.lightpanda.io/ws` (west US)
 
 <Tabs items={['CDP URL', 'Puppeteer', 'Playwright', 'Chromedp']}>
   <Tabs.Tab>
@@ -31,9 +36,13 @@ wss://euwest.cloud.lightpanda.io/ws?token=YOUR_TOKEN&browser=lightpanda
 ```
   </Tabs.Tab>
   <Tabs.Tab>
+We recommend storing your token in an environment variable rather than hard-coding it in your script:
+
 ```sh copy
 export LPD_TOKEN="your token here"
 ```
+
+Then connect Puppeteer:
 
 ```js copy
 import puppeteer from 'puppeteer-core';
@@ -46,9 +55,13 @@ const browser = await puppeteer.connect({
 See the [Puppeteer page](/usage/cdp/puppeteer) for a complete script.
   </Tabs.Tab>
   <Tabs.Tab>
+We recommend storing your token in an environment variable rather than hard-coding it in your script:
+
 ```sh copy
 export LPD_TOKEN="your token here"
 ```
+
+Then connect Playwright:
 
 ```js copy
 import { chromium } from 'playwright-core';
@@ -61,9 +74,13 @@ const browser = await chromium.connectOverCDP(
 See the [Playwright page](/usage/cdp/playwright) for a complete script.
   </Tabs.Tab>
   <Tabs.Tab>
+We recommend storing your token in an environment variable rather than hard-coding it in your script:
+
 ```sh copy
 export LPD_TOKEN="your token here"
 ```
+
+Then connect Chromedp:
 
 ```go copy
 ctx, cancel := chromedp.NewRemoteAllocator(context.Background(),
@@ -76,22 +93,17 @@ See the [Chromedp page](/usage/cdp/chromedp) for a complete script.
   </Tabs.Tab>
 </Tabs>
 
-### Endpoints and browser
+For troubleshooting, your recent sessions and their logs are on the [sessions page](https://console.lightpanda.io/sessions) in the console.
 
-Connect to the region nearest your script:
+### Connection options
 
-- `wss://euwest.cloud.lightpanda.io/ws` (west Europe)
-- `wss://uswest.cloud.lightpanda.io/ws` (west US)
+The cloud serves Lightpanda by default. For debugging, append `browser=chrome` to run Google Chrome instead, since Chrome isn't intended for production traffic. Append `browser=lightpanda` to force Lightpanda explicitly.
 
-The cloud serves Lightpanda by default. For debugging, append `browser=chrome` to run Google Chrome instead, since Chrome isn't intended for production traffic. Append `browser=lightpanda` to force Lightpanda explicitly. To route traffic through a proxy, see [Configure a proxy](/guides/configure-a-proxy).
+The same URL takes a `proxy` parameter to route the session through a shared proxy, or through one you added on the [proxies page](https://console.lightpanda.io/proxies) in the console.
 
-## Other ways to connect
+## Other features: HTTP API and MCP
 
-CDP is not the only option. The cloud also exposes:
+The cloud also exposes:
 
-- **[HTTP API](/usage/api)**: fetch a page's HTML or Markdown in a single request, with no CDP script.
-- **[MCP](/usage/mcp)**: drive the browser from AI applications over the Model Context Protocol.
-
-## Manage your account
-
-Sign in to the [console](https://console.lightpanda.io) with your email and password. From there you create and revoke tokens, review recent sessions and their logs, track usage, manage billing, and configure proxies. See [Console](/run-on-lightpanda-cloud/console) for a tour and [Limits and billing](/run-on-lightpanda-cloud/limits-and-billing) for plans and how usage is charged.
+- an **[HTTP API](/usage/api)** to fetch a page's HTML or Markdown in a single request, with no CDP script.
+- an **[MCP](/usage/mcp)** server to drive the browser from AI applications over the Model Context Protocol.
