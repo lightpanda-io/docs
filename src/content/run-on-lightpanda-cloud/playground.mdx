@@ -7,11 +7,11 @@ import { Tabs, Callout } from 'nextra/components'
 
 # Playground
 
-The playground is a code editor in the console that runs your automation scripts on Lightpanda Cloud.
+The playground is a [code editor](https://console.lightpanda.io/playground/scripts) in the console that runs your automation scripts on Lightpanda Cloud.
 
 ## Write and run a script
 
-Open [Scripts](https://console.lightpanda.io/playground/scripts) under Playground in the console and create one. The editor opens on the Playwright example below:
+Your script reaches the browser through `CDP_WS_URL`, an environment variable the playground sets for you:
 
 <Tabs items={['Playwright', 'Puppeteer']}>
   <Tabs.Tab>
@@ -58,9 +58,9 @@ await browser.disconnect();
   </Tabs.Tab>
 </Tabs>
 
-## Connect with CDP_WS_URL
+## What CDP_WS_URL contains
 
-Your script never carries a token. The playground sets one environment variable, `CDP_WS_URL`, which holds the WebSocket address your client uses to reach the browser over the [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/) (CDP). The playground assembles it from the choices in the Default variables panel:
+You do not need to hard-code a token in your script. `CDP_WS_URL` holds the WebSocket address your client uses to reach the browser over the [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/) (CDP), assembled from the choices in the Default variables panel:
 
 | Default variable | Values | What it controls |
 | --- | --- | --- |
@@ -102,8 +102,6 @@ Every run is capped:
 
 A run that reaches 5 minutes stops and reports `timeout running program`. Output beyond 256 KB is dropped, and the run is flagged as truncated.
 
-These caps apply to the script process. The browser it drives is an ordinary cloud session, so it also counts toward your [plan limits](/run-on-lightpanda-cloud/limits-and-billing).
+These caps apply to the script process. The browser session driven by the script also counts toward your [plan limits](/run-on-lightpanda-cloud/limits-and-billing).
 
-## Review past runs
-
-Every run is kept. [Runs](https://console.lightpanda.io/playground/script-runs) under Playground lists them with their state, start time, and duration, and you can filter the list by script. Open a run to read the output it produced.
+The [Runs page](https://console.lightpanda.io/playground/script-runs) shows your run history and output for the past 30 days.
