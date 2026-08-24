@@ -38,7 +38,7 @@ options:
           any --dump output.
           Defaults to false.
   --strip-mode <STRIP>
-          Comma-separated list of tag groups to remove from dump.
+          Tag group to remove from dump. Can be passed multiple times.
           Defaults to no-strip.
           Allowed values:
               js        Script and link[as=script, rel=preload].
@@ -65,7 +65,7 @@ options:
           --wait-until condition is met.
   --wait-until <UNTIL>
           Wait until the specified event. Checked before other --wait-* options.
-          Defaults to 'done'. If --wait-selector, --wait-script or
+          Defaults to 'load'. If --wait-selector, --wait-script or
           --wait-script-file specified, defaults to none.
           Allowed values: "load", "domcontentloaded", "networkalmostidle",
           "networkidle", "done".
