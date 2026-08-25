@@ -69,7 +69,7 @@ You can generate a reproducible [PandaScript](/usage/pandascript) from your curr
 Then after exiting you can replay the script directly with Lightpanda (no LLM needed) with:
 
 ```sh copy
-lightpanda agent <my_script>.js
+lightpanda run <my_script>.js
 ```
 
 See our documentation on [PandaScript](/usage/pandascript) for more details.
@@ -78,67 +78,46 @@ See our documentation on [PandaScript](/usage/pandascript) for more details.
 
 ### Providers and API keys
 
-The agent needs an LLM to interpret natural language. Set the relevant API
-key as an environment variable, or pass `--provider` explicitly, or set `/provider`
-while on the REPL.
+The agent needs an LLM to interpret natural language. Set the relevant
+provider's API key as an environment variable, pass `--provider` explicitly,
+or set `/provider` on the REPL. See the [full list of providers, flags, and
+API key env vars](/reference/cli/agent#options).
 
-| Provider          | Flag                     | API key env                          |
-|-------------------|--------------------------|--------------------------------------|
-| Anthropic         | `--provider anthropic`   | `ANTHROPIC_API_KEY`                  |
-| OpenAI            | `--provider openai`      | `OPENAI_API_KEY`                     |
-| Gemini            | `--provider gemini`      | `GOOGLE_API_KEY` or `GEMINI_API_KEY` |
-| Hugging Face      | `--provider huggingface` | `HF_TOKEN`                           |
-| Vercel AI Gateway | `--provider vercel`      | `AI_GATEWAY_API_KEY`                 |
-| Mistral           | `--provider mistral`     | `MISTRAL_API_KEY`                    |
-| Ollama            | `--provider ollama`      | none (local)                         |
-| llama.cpp         | `--provider llama_cpp`   | none (local)                         |
-
-Set `HF_BILL_TO` to an organization name to bill Hugging Face requests to it
-rather than to your personal account.
-
-You can set the provider explicitly with the CLI option `--provider` or the REPL command `/provider`.
-Otherwise the agent will pick one in this order:
+Without an explicit choice, the agent resolves a provider in this order:
 
 1. **Remembered** - whatever you last selected with `/provider`,
    persisted per-directory in `.lp-agent.zon`, as long as its key is still
    set.
-2. **Auto-detected** - the first key found in priority order
-   (`ANTHROPIC_API_KEY` → `GOOGLE_API_KEY`/`GEMINI_API_KEY` →
-   `OPENAI_API_KEY` → `HF_TOKEN` → `AI_GATEWAY_API_KEY` →
-   `MISTRAL_API_KEY`). With several keys on the REPL, you'll be prompted to
-   pick.
-3. **Local** - if no cloud key is set, the agent probes the local
-   servers (Ollama at `http://localhost:11434/v1`, llama.cpp at
-   `http://localhost:8080/v1`) and uses one if it has at least one model
-   loaded. Local servers need no key and are never auto-detected from the
-   environment, so select them with `--provider ollama` / `--provider llama_cpp`.
-   You can change the server URL with the `--base-url` CLI option.
-4. **No provider at all** - If the CLI option `--no-llm` is set
-   it falls back to the basic REPL (slash commands only).
-   Natural language and LLM-driven commands (`/login`, `/logout`) will not work.
+2. **Auto-detected** - the first API key found in the environment, checked
+   in a fixed priority order. With several keys set on the REPL, you'll be
+   prompted to pick.
+3. **Local** - if no cloud key is set, the agent probes for a running
+   Ollama or llama.cpp server and uses it if a model is loaded. Local
+   servers need no key and are never auto-detected, so select them
+   explicitly with `--provider ollama` / `--provider llama_cpp`. You can
+   change the server URL with the `--base-url` CLI option.
+4. **No provider at all** - with `--no-llm`, the agent falls back to the
+   basic REPL (slash commands only); natural language and LLM-driven
+   commands (`/login`, `/logout`) won't work.
+
+Set `HF_BILL_TO` to an organization name to bill Hugging Face requests to it
+rather than to your personal account.
 
 ### Models
 
-You can set the model explicitly with the CLI option `/model` or the REPL command `/model`.
-Otherwise the agent will pick either the last one persisted per-directory in `.lp-agent.zon`
-or a sensible per-provider default.
+Set the model with the CLI option `--model` or the REPL command `/model`;
+otherwise the agent uses the last one persisted in `.lp-agent.zon` or a
+sensible per-provider default. `--list-models` (CLI) or TAB-completing
+`/model` (REPL) prints the available models.
 
-The CLI option `--list-models` or pressing TAB on the REPL command `/model` prints the list of available models.
+`--effort <level>` / `/effort` sets the per-turn reasoning budget for
+thinking models. Higher effort can mean fewer tool calls per task, since the
+model plans better, so it's a real tradeoff rather than a pure slowdown —
+the REPL defaults to `low` so turns stay snappy, while `--task` defaults to
+`medium`. See the [full resolution order and per-provider
+defaults](/reference/cli/agent#options).
 
-The CLI option `--effort <none|minimal|low|medium|high|xhigh>` or the REPL command `/effort`
-sets the per-turn reasoning budget for thinking models.
-It maps to each provider's native reasoning-effort knob and is ignored by non-thinking models.
-Effort resolves in order: an explicit `--effort` flag, then the value remembered
-in `.lp-agent.zon`, then the provider's own default, then the mode default.
-The REPL mode default is `low` so turns stay snappy.
-`--task` defaults to `medium` where answer quality matters more than per-turn latency.
-A few providers set their own default that wins over the mode default;
-Mistral defaults to `none` because its default model rejects reasoning effort.
-Higher effort can mean fewer tool calls per task (the model plans better),
-so it's a real tradeoff rather than a pure slowdown.
-Effort selection persists in `.lp-agent.zon`.
-
-The CLI option `--system-prompt` swaps in your own system prompt.
+`--system-prompt` swaps in your own system prompt.
 
 ## Commands
 
@@ -194,23 +173,13 @@ than a V8 stack trace.
 
 ### Meta commands
 
-These don't drive the browser, they control the REPL itself:
+Meta commands don't drive the browser, they control the REPL itself:
+`/help`, `/provider`, `/model`, `/effort`, `/verbosity`, `/usage`, `/save`,
+`/load`, `/clear`, `/reset`, `/quit`. See the [full command
+list](/reference/cli/agent#repl-commands) for what each one does. They're
+never recorded into saved scripts.
 
-| Command                  | What it does                                       |
-|--------------------------|----------------------------------------------------|
-| `/help`                  | Lists tools. `/help <tool>` prints the JSON schema.|
-| `/provider [name]`       | Lists or switches provider.                        |
-| `/model [name]`          | Lists or switches model for the active provider.   |
-| `/effort <level>`        | Sets reasoning budget. Saved to `.lp-agent.zon`.   |
-| `/verbosity <level>`     | Tunes the log level. Levels: low, medium, high.    |
-| `/usage`                 | Prints cumulative token usage and cache hit rate.  |
-| `/save [file] [prompt]`  | Writes the session to a [PandaScript](/usage/pandascript). `.js` is appended to the name if missing; trailing words guide the synthesizer.|
-| `/load <path>`           | Runs a script from disk against the current session.|
-| `/clear`                 | Forgets the conversation (history, usage, recorded actions, node IDs); keeps the page and cookies.|
-| `/reset`                 | Full reset: everything `/clear` does, plus a fresh browser session, dropping the page, cookies, and storage.|
-| `/quit`                  | Exits the REPL.                                    |
-
-Meta commands are never recorded.
+`/save` writes the session to a [PandaScript](/usage/pandascript).
 
 Use `/clear` when you want to test a new prompt against the current
 page without losing your login or cookies. Use `/reset` when you need
@@ -219,14 +188,9 @@ a completely clean browser (no cookies, no current page, no storage).
 ### LLM-driven commands
 
 Three commands trigger an LLM turn rather than a direct tool call:
-
-| Command          | What it does                                          |
-|------------------|-------------------------------------------------------|
-| `/login`         | Fills credentials from `$LP_*` env vars.              |
-| `/logout`        | Finds the logout control and signs out.               |
-| `/acceptCookies` | Dismisses the consent banner.                         |
-
-All three require an LLM. `--no-llm` rejects them.
+`/login`, `/logout`, and `/acceptCookies`. See the [full command
+list](/reference/cli/agent#repl-commands) for what each one does. All three
+require an LLM — `--no-llm` rejects them.
 
 ## REPL features
 
@@ -270,7 +234,8 @@ lightpanda agent --provider gemini \
 
 `--task` runs a single user turn, prints the final answer to stdout, and
 exits. On a TTY a spinner on stderr shows the tool currently running while
-the agent works; raise `--verbosity` for the full `[tool/result]` trace.
+the agent works; raise `--verbosity` for the full `[tool/result]` trace. It
+conflicts with the positional script argument.
 
 Combine with `-a <path>` / `--attach <path>` (repeatable) to feed
 local files to providers that accept attachments. For example, a list of
@@ -281,9 +246,5 @@ lightpanda agent -a invoice.pdf \
   --task "open shop.example.com/orders/1042 and check the order total matches the attached invoice"
 ```
 
-Text files are inlined
-into the prompt (max 512 KiB each); binary files (image, audio, pdf) are
-base64-encoded inline (max 20 MiB each). Unsupported MIME types fail before
-any browser work runs.
-
-`--task` conflicts with the positional script argument.
+See the [full flag reference](/reference/cli/agent#options) for supported
+file types and size limits.

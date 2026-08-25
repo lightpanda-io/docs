@@ -1,0 +1,146 @@
+---
+title: Agent
+description: Starts an interactive AI agent that can browse the web
+---
+
+# Agent
+
+Start Lightpanda as an interactive AI agent that can browse the web. See [how to run the agent](/run-locally/commands#agent) for practical documentation.
+
+## Options
+
+```console
+usage: lightpanda agent [SCRIPT] [OPTIONS] [COMMON_OPTIONS]
+
+Arguments:
+[SCRIPT]
+          Optional path to a .js script. Runs the script (no LLM calls) and
+          exits; `lightpanda run SCRIPT` is the preferred spelling. With no
+          script and no --task, the REPL starts; from there /load runs a
+          script and /save exports the session to a file.
+          Caution: .js files can contain evaluate(...) calls that run
+          arbitrary JavaScript in the page. Only run scripts you trust, the
+          same way you would a shell script.
+
+Options:
+  -a, --attach <PATH>
+          Feed a local file to the model alongside --task. Repeatable, one
+          file per flag. Text files are inlined (max 512 KiB each);
+          images/audio/pdf are base64-encoded (max 20 MiB each).
+          Unsupported MIME types fail before any browser work runs.
+          Requires --task.
+  --base-url <URL>
+          Override the API base URL for the provider. Defaults to the
+          provider's standard endpoint.
+          Ollama default: http://localhost:11434/v1.
+          llama.cpp default: http://localhost:8080/v1.
+          Hugging Face default is the serverless router
+              (https://router.huggingface.co/v1);
+              point this at a dedicated Inference Endpoint to use one.
+  --effort <LEVEL>
+          Per-turn reasoning budget, mapped to each provider's native
+          thinking/reasoning knob. Default: low in the REPL (snappy turns),
+          medium in one-shot --task mode, unless the provider sets its own
+          default (Mistral defaults to none, as its default model rejects
+          effort). In the REPL, use /effort to change it.
+          Allowed values: none, minimal, low, medium, high, xhigh.
+  --list-models
+          Print the model IDs usable with `agent` for --provider, one per
+          line, sorted, and exit. Auto-detects the provider from env when
+          --provider is omitted.
+  --model <MODEL>
+          The model name to use. Defaults to a sensible default per
+          provider. In the REPL, use /model to list and change models for
+          the active provider.
+  --no-llm
+          Force the basic REPL even when an API key is present or
+          --provider is set. Useful for testing slash commands without
+          burning tokens, or for disabling the LLM in a saved command
+          without editing the existing flags. Wins over --provider.
+  --provider <PROVIDER>
+          The AI provider. When omitted, lightpanda auto-detects an API
+          key from your environment (ANTHROPIC_API_KEY, OPENAI_API_KEY,
+          GOOGLE_API_KEY/GEMINI_API_KEY, HF_TOKEN, AI_GATEWAY_API_KEY,
+          MISTRAL_API_KEY). With exactly one key set: that provider is
+          used. With multiple keys on a TTY: you'll be prompted to pick;
+          in non-interactive contexts, pass --provider explicitly. With
+          no keys set: falls back to the basic REPL (slash commands only,
+          no natural-language input, no LOGIN / ACCEPT_COOKIES keywords).
+
+          Local servers (ollama, llama_cpp) are never auto-detected (they
+          need no key); select them explicitly with --provider ollama /
+          --provider llama_cpp.
+
+          Allowed values: "anthropic", "openai", "gemini", "huggingface",
+                          "vercel", "mistral", "ollama", "llama_cpp".
+          In the REPL, use /provider to list and change providers.
+  --save <PATH>
+          Synthesize a replayable .js script from the --task run and write
+          it to PATH, instead of printing the answer. Replay it later with
+          `run PATH` (no LLM calls). Overwrites PATH if it exists.
+          Requires --task.
+  --system-prompt <STRING>
+          Override the default system prompt.
+  --task <STRING>
+          One-shot mode: run a single user turn, print the final answer
+          to stdout, and exit. Conflicts with the positional script. With
+          --save, the answer is suppressed and a script is written instead.
+  --verbosity <LEVEL>
+          Stderr chatter level. Default: high when --task captures stderr
+          to a pipe or file; low otherwise. low/medium also raise
+          --log-level to err (mutes page-side console.error spam) unless
+          --log-level is set explicitly.
+          Allowed values:
+              low  silent in --task mode (final answer to stdout only);
+                   spinner + summary in REPL.
+              medium  + one `● [tool: ...]` line per call.
+              high    + the matching `[result: ...]` body (required by the
+                        benchmarks harness).
+```
+
+The provider, model, effort, and verbosity you choose in the REPL are remembered per-directory in `.lp-agent.zon` and reused on the next run.
+
+API keys are read from the environment: `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GOOGLE_API_KEY`/`GEMINI_API_KEY`, `HF_TOKEN`, `AI_GATEWAY_API_KEY`, or `MISTRAL_API_KEY`. The local servers (Ollama, llama.cpp) do not require an API key.
+
+## Examples
+
+```sh
+lightpanda agent                                (auto-detects API key from env)
+lightpanda agent --provider anthropic --model claude-sonnet-4-6
+lightpanda agent --provider huggingface         (HF serverless router, HF_TOKEN)
+lightpanda agent --provider ollama --model qwen3.5:latest
+lightpanda agent --no-llm                       (basic slash-command-only REPL)
+lightpanda agent --task "..." --save out.js     (synthesize a replayable script)
+```
+
+The command also accepts the [common options](/reference/cli/common-options).
+
+## REPL commands
+
+Inside the REPL, slash commands work alongside natural-language input:
+
+| Command | Description |
+|---|---|
+| `/help [command]` | List commands, or show help for one |
+| `/quit` | Exit the REPL |
+| `/verbosity <level>` | Set agent verbosity (`low`, `medium`, `high`) |
+| `/effort <level>` | Set per-turn reasoning effort (`none`, `minimal`, `low`, `medium`, `high`, `xhigh`) |
+| `/stream [on\|off]` | Toggle streaming of assistant text |
+| `/searchEngine <engine>` | Change the web search engine (`auto`, `tavily`, `brave`, `exa`, `duckduckgo`) |
+| `/usage` | Show token usage and cache stats for this session |
+| `/clear` | Clear conversation history and usage (keeps page and cookies) |
+| `/reset` | Reset conversation and browser session (drops page and cookies) |
+| `/save [filename.js] [prompt]` | Save this session to a file as a [PandaScript](/usage/pandascript) |
+| `/load <path>` | Load and run a script from disk |
+| `/model [name]` | Change the model |
+| `/provider [name]` | Change the provider, or `null` to disable the LLM |
+
+Three commands send a prebuilt prompt to the model instead of configuring the REPL:
+
+| Command | Description |
+|---|---|
+| `/login` | Log in using `$LP_*` credentials |
+| `/logout` | Log out of the current site |
+| `/acceptCookies` | Dismiss the cookie consent banner |
+
+Every browser tool is also callable directly as a slash command with `key=value` arguments, with no LLM call, e.g. `/goto url=https://example.com`, `/tree`, or `/nodeDetails backendNodeId=12`.

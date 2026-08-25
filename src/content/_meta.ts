@@ -22,6 +22,7 @@ const meta: MetaRecord = {
   usage: 'Usage',
   guides: 'Guides',
   'core-concepts': 'Core concepts',
+  reference: 'Reference',
 }
 
 export default meta

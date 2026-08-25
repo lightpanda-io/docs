@@ -7,12 +7,7 @@ const meta: MetaRecord = {
       collapsed: false,
     },
   },
-  commands: {
-    title: 'Commands reference',
-    theme: {
-      collapsed: true,
-    },
-  },
+  commands: 'Commands',
 }
 
 export default meta
