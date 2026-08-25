@@ -8,200 +8,55 @@ import { Callout, Tabs } from 'nextra/components'
 
 Use Lightpanda via the [Model Context Protocol](https://modelcontextprotocol.io) (MCP) to control the browser from AI applications.
 
-## Connect
+## Connect the MCP server
 
 <Tabs items={['Local', 'Cloud']}>
   <Tabs.Tab>
-Start the MCP server:
+Run Lightpanda as an MCP server on your own machine. Your AI application reaches it in one of two ways, and both expose the same tools.
+
+### stdio (default)
+
+The server reads JSON-RPC from stdin and writes replies to stdout, one message per line. This is what MCP hosts use: they spawn the binary and write to those streams directly.
 
 ```sh copy
 lightpanda mcp
 ```
 
-Find reference of [MCP command options](/run-locally/commands/mcp).
-
-## Tools
-
-| Name | Description |
-|---|---|
-| goto | Navigate to a specified URL and load the page in memory so it can be reused later for info extraction. |
-| getUrl | Get the URL of the page currently loaded in the browser. |
-| getEnv | Read an `LP_*` environment variable by name, or list the `LP_*` names that are set when called without a name. |
-| getCookies | Get cookies stored in the browser. Defaults to the current page's host; pass `url` to filter another host or `all` to dump every cookie. |
-| consoleLogs | Get buffered console.log/warn/error messages from the current page, then clear the buffer. |
-| tree | Get the page content as a simplified semantic DOM tree for AI reasoning. If a url is provided, it navigates to that url first. |
-| markdown | Get the page content in markdown format. If a url is provided, it navigates to that url first. |
-| html | Get the raw serialized HTML of the page, or a single node's outerHTML when a selector or backendNodeId is given. If a url is provided, it navigates to that url first. |
-| nodeDetails | Get details for a node by backendNodeId, including a ready-to-use CSS selector plus tag, role, name, attributes, and state. |
-| findElement | Find interactive elements by role and/or accessible name, returning their backend node IDs. |
-| interactiveElements | Extract interactive elements from the opened page. If a url is provided, it navigates to that url first. |
-| links | Extract all links in the opened page. If a url is provided, it navigates to that url first. |
-| extract | Extract structured data from the current page using a schema mapping output field names to CSS-selector specs. |
-| structuredData | Extract structured data (like JSON-LD, OpenGraph, etc) from the opened page. If a url is provided, it navigates to that url first. |
-| search | Run a web search and return the results as markdown. |
-| click | Click on an interactive element. Returns the current page URL and title after the click. |
-| hover | Hover over an element, triggering mouseover and mouseenter events. |
-| fill | Fill text into an input element. Returns the filled value and current page URL and title. |
-| selectOption | Select an option in a `<select>` dropdown element by its value. Dispatches input and change events. |
-| setChecked | Check or uncheck a checkbox or radio button. Dispatches input, change, and click events. |
-| press | Press a keyboard key, dispatching keydown and keyup events. |
-| scroll | Scroll the page or a specific element. Returns the scroll position and current page URL and title. |
-| detectForms | Detect all forms on the page and return their structure including fields, types, and required status. If a url is provided, it navigates to that url first. |
-| evaluate | Evaluate JavaScript in the current page context. If a url is provided, it navigates to that url first. |
-| save | Save the session as a reusable [PandaScript](/usage/pandascript) (.js). |
-| waitForSelector | Wait for an element matching a CSS selector to appear in the page. Returns the backend node ID of the matched element. |
-| waitForState | Wait for the current page to reach a load state (e.g. `networkidle`), with no navigation. |
-| waitForScript | Wait until a JavaScript expression returns truthy, re-evaluating on each tick of the event loop. |
-
-### `goto`
-
-Navigate to a URL and load the page into memory.
-
-```json
-{"jsonrpc":"2.0","id":2,"method":"tools/call",
- "params":{"name":"goto","arguments":{"url":"https://example.com"}}}
-```
-
-**Response:** `"Navigated successfully."` — returned even if the URL is unreachable. Always verify with a follow-up content call (see [Known behaviors](#known-behaviors)).
-
-### `markdown`
-
-Extract the current page's content as clean, token-efficient markdown.
-
-```json
-{"jsonrpc":"2.0","id":3,"method":"tools/call",
- "params":{"name":"markdown","arguments":{"url":"https://example.com"}}}
-```
-
-<details>
-<summary>Response example</summary>
-
-```json
-{"result":{"content":[{"type":"text","text":"\n# Example Domain\n\nThis domain is for use in illustrative examples in documents...\n\n[More information...](https://www.iana.org/domains/example)\n"}],"isError":false}}
-```
-
-</details>
-
-> Using `markdown` with an inline `url` is the most efficient single-call pattern — it navigates and extracts in one request. Essential for HTTP transport where sessions are stateless.
-
-### `links`
-
-Extract all hyperlinks from the loaded page as a newline-separated list of absolute URLs.
-
-```json
-{"jsonrpc":"2.0","id":4,"method":"tools/call",
- "params":{"name":"links","arguments":{"url":"https://example.com"}}}
-```
-
-**Response:** One URL per line, e.g. `"https://iana.org/domains/example"`.
-
-### `evaluate`
-
-Execute arbitrary JavaScript in the page context and return the result as a string.
-
-```json
-{"jsonrpc":"2.0","id":5,"method":"tools/call",
- "params":{"name":"evaluate","arguments":{
-   "script":"document.title",
-   "url":"https://example.com"}}}
-```
-
-**Response:** `"Example Domain"`
-
-## Resources
-
-Two read-only resources are available after a page has been loaded via `resources/read`:
-
-| URI | MIME type | Description |
-|-|-|-|
-| `mcp://page/html` | `text/html` | Raw serialized HTML DOM of the loaded page |
-| `mcp://page/markdown` | `text/markdown` | Markdown representation (identical output to the `markdown` tool) |
-
-```json
-{"jsonrpc":"2.0","id":6,"method":"resources/read",
- "params":{"uri":"mcp://page/html"}}
-```
-
-```json
-{"jsonrpc":"2.0","id":7,"method":"resources/read",
- "params":{"uri":"mcp://page/markdown"}}
-```
-
-> The `markdown` tool and the `mcp://page/markdown` resource return the same content. The difference is who initiates: **tools** are called by the agent during its workflow; **resources** are read by the host application (e.g. an IDE displaying page state in the background).
-
-## Connecting an AI agent
-
-### Claude Desktop / Cursor / Windsurf
-
-Add to your MCP host configuration:
-
-- **Claude Desktop:** Settings > Developer > Edit Config
-- **Cursor:** `.cursor/mcp.json` in your project
-- **Windsurf:** Cascade MCP settings
+Nothing is printed on start: the server waits for input. Type one message per line and each reply prints back. The page stays loaded between calls, so the second one needs no `url`:
 
 ```json copy
-{
-  "mcpServers": {
-    "lightpanda": {
-      "command": "/path/to/lightpanda",
-      "args": ["mcp"]
-    }
-  }
-}
+{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"goto","arguments":{"url":"https://example.com"}}}
+{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"markdown","arguments":{}}}
 ```
 
-For robots.txt compliance, use `"args": ["mcp", "--obey-robots"]`.
+### HTTP transport
 
-> Replace `/path/to/lightpanda` with the actual binary path, e.g. `/usr/local/bin/lightpanda`.
-
-### HTTP transport via supergateway
-
-Lightpanda MCP natively supports only stdio. To expose it over HTTP, use [supergateway](https://www.npmjs.com/package/supergateway) as a bridge.
+Pass `--port` to serve MCP over HTTP instead of stdio, with an independent browsing session per client. Add `--host 0.0.0.0` to accept connections from outside the machine:
 
 ```sh copy
-npx -y supergateway \
-  --stdio "lightpanda mcp" \
-  --outputTransport streamableHttp \
-  --stateful --sessionTimeout 180000 \
-  --port 8000
+lightpanda mcp --port 8000
 ```
 
-> By default, supergateway is **stateless**: each HTTP request spawns a fresh process. Use `--stateful --sessionTimeout <ms>` for stateful sessions.
-
-With robots.txt: `--stdio "lightpanda mcp --obey-robots"`
-
-#### Calling the HTTP endpoint
+Clients send JSON-RPC to `/mcp` in a POST request:
 
 ```sh copy
 # Initialize
 curl -X POST http://localhost:8000/mcp \
   -H "Content-Type: application/json" \
-  -H "Accept: application/json, text/event-stream" \
   -d '{"jsonrpc":"2.0","id":1,"method":"initialize",
         "params":{"protocolVersion":"2024-11-05","capabilities":{},
                   "clientInfo":{"name":"curl-test","version":"1.0"}}}'
 
-# Extract markdown (pass url inline - HTTP is stateless by default)
+# Extract markdown
 curl -X POST http://localhost:8000/mcp \
   -H "Content-Type: application/json" \
-  -H "Accept: application/json, text/event-stream" \
   -d '{"jsonrpc":"2.0","id":2,"method":"tools/call",
         "params":{"name":"markdown","arguments":{"url":"https://example.com"}}}'
 ```
 
-## Known behaviors
+Calls with no `Mcp-Session-Id` header use the always-present `default` session, which is what the two calls above do. An `initialize` call creates a new session and returns its id in that header; send that id back on later calls to stay in it. Find the session model and the `session_new`, `session_list` and `session_close` tools in the [MCP tools reference](/reference/mcp-tools#session).
 
-### `goto` always returns success
-
-`goto` returns `"Navigated successfully."` even for invalid or unreachable URLs. The failure surfaces on the next content call:
-
-```
-# Navigation failed
-
-Reason: CouldntResolveHost
-```
-
-Always check the content result after navigation, not the `goto` response itself.
+Find all options in the [mcp command reference](/run-locally/commands/mcp#options).
 
 ### Debugging
 
@@ -227,24 +82,147 @@ Lightpanda Cloud exposes the MCP server over [SSE](https://modelcontextprotocol.
 - `https://euwest.cloud.lightpanda.io/mcp/sse` (Europe West)
 - `https://uswest.cloud.lightpanda.io/mcp/sse` (US West)
 
-Pass your API token as a query parameter or in the `Authorization` header:
+Pass your API token either as a `token` query parameter or in an `Authorization: Bearer TOKEN` header:
 
 ```text copy
 https://euwest.cloud.lightpanda.io/mcp/sse?token=TOKEN
 ```
+  </Tabs.Tab>
+</Tabs>
 
-```text copy
-https://euwest.cloud.lightpanda.io/mcp/sse
-Authorization: Bearer TOKEN
+## Connect an AI agent
+
+### Claude Desktop / Cursor / Windsurf
+<Tabs items={['Local', 'Cloud']}>
+  <Tabs.Tab>
+Add to your MCP host configuration:
+
+- **Claude Desktop:** Settings > Developer > Edit Config
+- **Cursor:** `.cursor/mcp.json` in your project
+- **Windsurf:** Cascade MCP settings
+
+```json copy
+{
+  "mcpServers": {
+    "lightpanda": {
+      "command": "/path/to/lightpanda",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+For robots.txt compliance, use `"args": ["mcp", "--obey-robots"]`.
+
+> Replace `/path/to/lightpanda` with the actual binary path, e.g. `/usr/local/bin/lightpanda`.
+
+  </Tabs.Tab>
+  <Tabs.Tab>
+MCP hosts that only support stdio, like Claude Desktop, need a bridge to reach the SSE endpoint. Use [mcp-remote](https://www.npmjs.com/package/mcp-remote) in the same MCP host configuration described for local use:
+
+```json copy
+{
+  "mcpServers": {
+    "lightpanda-cloud": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://euwest.cloud.lightpanda.io/mcp/sse?token=TOKEN"
+      ]
+    }
+  }
+}
 ```
   </Tabs.Tab>
 </Tabs>
 
-## References
+## Tools and resources
 
-- [LP Domain & Native MCP — Lightpanda Blog](https://lightpanda.io/blog/posts/lp-domain-commands-and-native-mcp)
-- [Lightpanda GitHub](https://github.com/lightpanda-io/browser)
-- [Lightpanda releases](https://github.com/lightpanda-io/browser/releases)
-- [MCP Specification](https://modelcontextprotocol.io/)
-- [supergateway (npm)](https://www.npmjs.com/package/supergateway)
+The server exposes tools to navigate, read, extract data from and interact with web pages, plus two read-only page resources. Find the complete list in the [MCP tools reference](/reference/mcp-tools).
+
+### `markdown`
+
+Extract the current page's content as clean, token-efficient markdown.
+
+```json copy
+{"jsonrpc":"2.0","id":2,"method":"tools/call",
+ "params":{"name":"markdown","arguments":{"url":"https://example.com"}}}
+```
+
+<details>
+<summary>Response example</summary>
+
+```json
+{"result":{"content":[{"type":"text","text":"\n# Example Domain\n\nThis domain is for use in documentation examples without needing permission. Avoid use in operations.\n\n[Learn more](https://iana.org/domains/example)\n"}],"isError":false}}
+```
+
+</details>
+
+> Using `markdown` with an inline `url` is the most efficient single-call pattern: it navigates and extracts in one request.
+
+### `evaluate`
+
+Execute arbitrary JavaScript in the page context and return the result as a string.
+
+```json copy
+{"jsonrpc":"2.0","id":3,"method":"tools/call",
+ "params":{"name":"evaluate","arguments":{
+   "script":"document.title",
+   "url":"https://example.com"}}}
+```
+
+```json
+{"result":{"content":[{"type":"text","text":"Example Domain"}],"isError":false}}
+```
+
+### Resources
+
+Three read-only resources are available via `resources/read`. The two page resources need a loaded page; `mcp://skill/pandascript` doesn't, so an MCP host can fetch it up front to teach its own LLM how to write PandaScript before ever touching the browser.
+
+| URI | MIME type | Description |
+|-|-|-|
+| `mcp://page/html` | `text/html` | The serialized HTML DOM of the current page |
+| `mcp://page/markdown` | `text/markdown` | The token-efficient markdown representation of the current page (identical output to the `markdown` tool) |
+| `mcp://skill/pandascript` | `text/markdown` | The PandaScript skill documentation |
+
+```json copy
+{"jsonrpc":"2.0","id":4,"method":"resources/read",
+ "params":{"uri":"mcp://page/html"}}
+```
+
+```json copy
+{"jsonrpc":"2.0","id":5,"method":"resources/read",
+ "params":{"uri":"mcp://page/markdown"}}
+```
+
+<details>
+<summary>Response example</summary>
+
+```json
+{"result":{"contents":[{"uri":"mcp://page/markdown","mimeType":"text/markdown","text":"\n# Example Domain\n\nThis domain is for use in documentation examples without needing permission. Avoid use in operations.\n\n[Learn more](https://iana.org/domains/example)\n"}]}}
+```
+
+</details>
+
+> The `markdown` tool and the `mcp://page/markdown` resource return the same content. The difference is who initiates: **tools** are called by the agent during its workflow; **resources** are read by the host application (e.g. an IDE displaying page state in the background).
+
+## Example prompts
+
+Once connected to an AI agent, you prompt the agent in natural language and it decides which tool to call. For example:
+
+- "Go to example.com and summarize the page" reaches for `goto`, then `markdown`.
+- "What links are on this page?" reaches for `links`.
+- "Fill in the search box with 'lightpanda' and submit" reaches for `fill`, then `press`.
+
+Which tool the agent picks depends on the model and its own reasoning, not a fixed mapping: the pairings above are illustrative, not guaranteed.
+
+## Known behaviors
+
+### `goto` doesn't fail on an HTTP error page or a timeout
+
+A genuine navigation failure (DNS resolution, connection refused, ...) makes `goto` return an error directly: `"navigation failed: CouldntResolveHost"` (`isError: true`). Two cases still report success though:
+
+- **A timeout** doesn't fail: `"Navigation started but the page did not finish loading before the timeout."`
+- **An HTTP error page** (404, 500, ...) is still a successful navigation at the network level: `"Navigated successfully."` Check the content result to tell an error page from real content.
 
