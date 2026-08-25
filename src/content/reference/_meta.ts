@@ -7,6 +7,7 @@ const meta: MetaRecord = {
       collapsed: true,
     },
   },
+  'http-api': 'HTTP API',
   'mcp-tools': 'MCP tools',
   pandascript: 'PandaScript',
 }
