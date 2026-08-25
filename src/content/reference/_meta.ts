@@ -8,6 +8,7 @@ const meta: MetaRecord = {
     },
   },
   'mcp-tools': 'MCP tools',
+  pandascript: 'PandaScript',
 }
 
 export default meta
