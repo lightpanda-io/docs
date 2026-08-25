@@ -56,7 +56,7 @@ curl -X POST http://localhost:8000/mcp \
 
 Calls with no `Mcp-Session-Id` header use the always-present `default` session, which is what the two calls above do. An `initialize` call creates a new session and returns its id in that header; send that id back on later calls to stay in it. Find the session model and the `session_new`, `session_list` and `session_close` tools in the [MCP tools reference](/reference/mcp-tools#session).
 
-Find all options in the [mcp command reference](/run-locally/commands/mcp#options).
+Find all options in the [mcp command reference](/reference/cli/mcp).
 
 ### Debugging
 

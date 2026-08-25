@@ -12,6 +12,9 @@ import { basePath, redirects } from '../redirects.mjs'
 const root = dirname(dirname(fileURLToPath(import.meta.url)))
 const outDir = join(root, 'out')
 
+// A target that already carries its own fragment (e.g. `#serve`) must not
+// also inherit the visitor's `location.hash`, or the two concatenate into an
+// invalid double-fragment URL.
 const stub = (href) => `<!doctype html>
 <html lang="en">
   <head>
@@ -20,7 +23,7 @@ const stub = (href) => `<!doctype html>
     <meta name="robots" content="noindex" />
     <meta http-equiv="refresh" content="0; url=${href}" />
     <link rel="canonical" href="${href}" />
-    <script>location.replace(${JSON.stringify(href)} + location.hash)</script>
+    <script>location.replace(${JSON.stringify(href)}${href.includes('#') ? '' : ' + location.hash'})</script>
   </head>
   <body>
     <p>Redirecting to <a href="${href}">${href}</a>…</p>

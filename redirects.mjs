@@ -15,7 +15,7 @@ export const redirects = {
   '/quickstart/build-your-first-extraction-script': '/quickstart',
   '/quickstart/go-to-production-with-lightpanda-cloud': '/quickstart',
   '/open-source/installation': '/run-locally/installation/one-liner',
-  '/open-source/usage': '/run-locally/commands/serve',
+  '/open-source/usage': '/run-locally/commands#serve',
   '/open-source/systems-requirements': '/run-locally/installation/system-requirements',
   '/open-source/guides/build-from-sources': '/run-locally/installation/build-from-sources',
   '/open-source/guides/configure-a-proxy': '/guides/configure-a-proxy',
@@ -28,4 +28,8 @@ export const redirects = {
   '/cloud-offer/tools/cdp': '/usage/cdp/puppeteer',
   '/cloud-offer/tools/mcp': '/usage/mcp',
   '/cloud-offer/tools/api': '/usage/api',
+  '/run-locally/commands/fetch': '/run-locally/commands#fetch',
+  '/run-locally/commands/serve': '/run-locally/commands#serve',
+  '/run-locally/commands/mcp': '/run-locally/commands#mcp',
+  '/run-locally/commands/agent': '/run-locally/commands#agent',
 }
