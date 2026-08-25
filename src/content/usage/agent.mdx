@@ -151,16 +151,9 @@ line by line, Enter submits at each newline.
 ### Extracting data
 
 `/extract` takes a JSON schema where each value tells the extractor what to
-lift off the page. The result is printed to stdout as a single JSON object.
-
-Supported value forms:
-
-- `"<sel>"`: `textContent.trim()` of the first match.
-- `""`: the matched element's own text (only inside a `fields` block).
-- `["<sel>"]`: text of every match. Sugar for `[{"selector": "<sel>"}]`.
-- `{"selector": "<sel>", "attr": "<name>"}`: attribute of the first match.
-- `[{"selector": "<sel>", "fields": {…}}]`: array of records, each
-  `fields` value resolved relative to the matched element.
+lift off the page: the same schema `page.extract` uses in
+[PandaScript](/reference/pandascript#extraction-schema). The result is
+printed to stdout as a single JSON object.
 
 A selector that matches nothing yields a null or empty field, not an error.
 That's deliberate, but it means a stale selector fails quietly. If a run
