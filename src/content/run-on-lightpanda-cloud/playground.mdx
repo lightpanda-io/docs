@@ -1,0 +1,107 @@
+---
+title: Playground
+description: Write and run browser automation scripts from the Lightpanda Cloud console, with Puppeteer and Playwright preinstalled and no local setup.
+---
+
+import { Tabs, Callout } from 'nextra/components'
+
+# Playground
+
+The playground is a [code editor](https://console.lightpanda.io/playground/scripts) in the console that runs your automation scripts on Lightpanda Cloud.
+
+## Write and run a script
+
+Your script reaches the browser through `CDP_WS_URL`, an environment variable the playground sets for you:
+
+<Tabs items={['Playwright', 'Puppeteer']}>
+  <Tabs.Tab>
+```js copy
+import { chromium } from 'playwright-core';
+
+// Connect Playwright's chromium driver to the browser.
+const browser = await chromium.connectOverCDP(process.env.CDP_WS_URL);
+
+const context = await browser.newContext({});
+const page = await context.newPage();
+
+await page.goto('https://wikipedia.com/');
+
+const title = await page.locator('h1').textContent();
+console.log(title);
+
+await page.close();
+await context.close();
+await browser.close();
+```
+  </Tabs.Tab>
+  <Tabs.Tab>
+```js copy
+import puppeteer from 'puppeteer-core';
+
+// Connect Puppeteer to the browser.
+const browser = await puppeteer.connect({
+  browserWSEndpoint: process.env.CDP_WS_URL,
+});
+
+const context = await browser.createBrowserContext();
+const page = await context.newPage();
+
+await page.goto('https://wikipedia.com/');
+
+const title = await page.$eval('h1', el => el.textContent);
+console.log(title);
+
+await page.close();
+await context.close();
+await browser.disconnect();
+```
+  </Tabs.Tab>
+</Tabs>
+
+## What CDP_WS_URL contains
+
+You do not need to hard-code a token in your script. `CDP_WS_URL` holds the WebSocket address your client uses to reach the browser over the [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/) (CDP), assembled from the choices in the Default variables panel:
+
+| Default variable | Values | What it controls |
+| --- | --- | --- |
+| Region | `euwest`, `uswest` | Which region serves the browser |
+| Token | one of your active tokens | Which token the run authenticates with |
+| Browser | `lightpanda`, `chrome` | Which browser runs. Chrome is for debugging, not production traffic |
+| Proxy | one of your proxies, or none | The outbound IP the browser uses |
+
+Pass `process.env.CDP_WS_URL` to whichever client you use.
+
+<Callout type="info">
+`console.log(process.env.CDP_WS_URL)` prints `***`, not the URL. The URL carries an access token created for the run, and run output is stored in the console, so the playground masks the URL wherever it appears in output.
+</Callout>
+
+## What the runtime provides
+
+Scripts run in an isolated container. Both CDP clients are preinstalled at fixed versions, so there is no install step:
+
+| Package | Version |
+| --- | --- |
+| `playwright-core` | 1.50.0 |
+| `puppeteer-core` | 24.0.0 |
+
+The rest of the environment is fixed too:
+
+- **Language.** JavaScript and TypeScript both run through [tsx](https://tsx.is/), so `import` syntax and top-level `await` work in either without configuration.
+- **Packages.** You cannot install anything beyond the two clients above.
+- **Filesystem.** Read-only, apart from a writable `/tmp`.
+
+Every run is capped:
+
+| Limit | Value |
+| --- | --- |
+| Run time | 5 minutes |
+| Memory | 256 MB |
+| CPU | 1 core |
+| Output captured | 256 KB |
+| Processes | 64 |
+
+A run that reaches 5 minutes stops and reports `timeout running program`. Output beyond 256 KB is dropped, and the run is flagged as truncated.
+
+These caps apply to the script process. The browser session driven by the script also counts toward your [plan limits](/run-on-lightpanda-cloud/limits-and-billing).
+
+The [Runs page](https://console.lightpanda.io/playground/script-runs) shows your run history and output for the past 30 days.

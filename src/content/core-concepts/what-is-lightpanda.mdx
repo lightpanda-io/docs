@@ -1,0 +1,32 @@
+---
+title: What Is Lightpanda?
+description: Learn what Lightpanda is, why it's built from scratch instead of forking Chrome, and how it fits into your browser automation stack.
+---
+
+# What is Lightpanda?
+
+Lightpanda is an AI-native headless browser built from scratch for automation and AI agents: crawling, scraping, testing, and running agents that need to interact with dynamic web pages. It is not a fork of Chromium, Blink, or WebKit: it is a new browser, written in Zig. The project started after its founders spent years running large-scale web crawls on headless Chrome and hit its cost and reliability limits.
+
+## The problem with Chrome for automation
+
+Most browser automation today runs on headless Chrome, through tools like Puppeteer or Playwright. Headless Chrome still computes graphical output, even though nothing renders it to a screen. Running hundreds or thousands of instances is heavy on RAM and CPU, and instances need frequent restarts to stay stable. That overhead exists because Chrome was built for a human sitting in front of a monitor, not for a script driving it at scale.
+
+Puppeteer and Playwright talk to Chrome over CDP, the Chrome DevTools Protocol, and its bias runs deeper than rendering. CDP can query and mutate the DOM directly, but it has no DOM-level command for user interaction. To click an element, for example, a client has to look up its rendered pixel coordinates, move a virtual mouse there, and dispatch a click event: three round trips and a rendering dependency for what is conceptually one action. CDP was designed for a human debugging a browser visually, not for a script that already knows which DOM node it wants to act on. See [CDP under the hood](https://lightpanda.io/blog/posts/cdp-under-the-hood) for more on where this breaks down in practice.
+
+## How Lightpanda solves it
+
+Lightpanda drops the graphical rendering engine entirely and rebuilds the rest around automation: JavaScript execution, the DOM, and the Web APIs a script needs. The result is around [9x faster execution and 16x less peak memory](/core-concepts/benchmarks) than headless Chrome.
+
+Lightpanda meets you at the interface you already use:
+
+- **CDP**: [Puppeteer](https://pptr.dev/), [Playwright](https://playwright.dev/), and [Chromedp](https://github.com/chromedp/chromedp) connect to it the same way they connect to Chrome. Point the client at Lightpanda's endpoint and keep your existing scripts.
+- **MCP**: control the browser from AI applications over the [Model Context Protocol](https://modelcontextprotocol.io).
+- **HTTP API**: retrieve results directly over HTTP, without writing or running a CDP script.
+
+Beyond these, Lightpanda ships `lightpanda agent`, which runs in the same process as the browser instead of talking to it over CDP. Describe a task in plain English or with slash commands, and it drives the browser directly. You can export the result as PandaScript, a plain JavaScript replay that runs with no LLM and no API key at runtime.
+
+See [Architecture overview](/core-concepts/architecture-overview) for how it's put together.
+
+## Local or cloud
+
+You can run Lightpanda yourself or connect to Lightpanda Cloud and skip managing the browser process. See [When to use local vs cloud](/core-concepts/local-vs-cloud) to pick.
