@@ -61,6 +61,8 @@ await context.close();
 await browser.close();
 ```
 
+In the [playground](/run-on-lightpanda-cloud/playground), the console builds this URL for you and exposes it as `CDP_WS_URL`. Pass `process.env.CDP_WS_URL` to `connectOverCDP` there, since `LPD_TOKEN` does not exist in that runtime.
+
 ## Cloud options
 
 ### Endpoints

@@ -7,6 +7,7 @@ const meta: MetaRecord = {
       collapsed: true,
     },
   },
+  'mcp-tools': 'MCP tools',
 }
 
 export default meta

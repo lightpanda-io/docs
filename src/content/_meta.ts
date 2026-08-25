@@ -21,6 +21,7 @@ const meta: MetaRecord = {
   'run-on-lightpanda-cloud': 'Run on Lightpanda Cloud',
   usage: 'Usage',
   guides: 'Guides',
+  'core-concepts': 'Core concepts',
   reference: 'Reference',
 }
 
