@@ -1,0 +1,149 @@
+---
+title: MCP tools
+description: Reference of the tools and resources exposed by the Lightpanda MCP server.
+---
+
+# MCP tools
+
+The Lightpanda MCP server exposes these tools and resources, started with [`lightpanda mcp`](/reference/cli/mcp). See [how to use MCP](/usage/mcp) for practical documentation.
+
+In the Arguments column, `?` marks an optional argument, and `selector` / `backendNodeId` marks a pair where one of the two is required. Prefer `selector` for reproducibility; it also wins when you pass both. `backendNodeId` values come from a prior `tree`, `links` or `findElement` call.
+
+## Calling a tool
+
+Every call goes through the MCP `tools/call` method, with `name` and `arguments` populated from the tables below.
+
+```json
+{"jsonrpc":"2.0","id":2,"method":"tools/call",
+ "params":{"name":"fill","arguments":{"selector":"#search","value":"lightpanda"}}}
+```
+```json
+{"result":{"content":[{"type":"text","text":"Filled element (selector: #search) with \"lightpanda\". Page url: https://example.com, title: Example Domain"}],"isError":false}}
+```
+
+The result comes back as `{"result":{"content":[{"type":"text","text":"..."}],"isError":false}}`. `goto` returns an error directly on a genuine navigation failure (e.g. `navigation failed: CouldntResolveHost`); a timeout or an HTTP error page (404/500) still reports `"Navigated successfully."` (see [Known behaviors](/usage/mcp#known-behaviors)).
+
+## Navigation and search
+
+These tools bring a page into the browser:
+
+| Name | Arguments | Description |
+|---|---|---|
+| `goto` | `url`, `timeout?`, `waitUntil?` | Navigate to a specified URL and load the page in memory so it can be reused later for info extraction. `waitUntil` accepts the same states as `waitForState` and defaults to `load`; prefer `domcontentloaded` plus a follow-up `waitForSelector` on pages whose late scripts (ads) hold `load` back, and avoid `done` on pages with constant background activity, since it can run to the timeout. |
+| `search` | `query`, `timeout?` | Run a web search and return results as markdown. When `BRAVE_API_KEY`, `TAVILY_API_KEY` or `EXA_API_KEY` is set, queries that search API (in that preference order) and returns a numbered list of `{title, url, snippet}`. Otherwise (or on API failure) falls back to scraping the DuckDuckGo HTML endpoint; degraded results, may rate-limit on bursty traffic. Prefer this over goto-ing google.com/search directly (Google blocks the browser on User-Agent/TLS). Browser state after this call is unspecified; to interact with a result, use `goto` with its URL; do not assume the browser DOM matches the results page. |
+
+## Reading the page
+
+These tools read the loaded page without modifying it:
+
+| Name | Arguments | Description |
+|---|---|---|
+| `markdown` | `selector?`, `backendNodeId?`, `maxBytes?`, `url?`, `timeout?` | Render the page, or a subtree, as markdown. |
+| `html` | `selector?`, `backendNodeId?`, `url?`, `timeout?` | Raw HTML for the document, or a single node's outerHTML when scoped. |
+| `tree` | `backendNodeId?`, `maxDepth?`, `url?`, `timeout?` | Simplified semantic DOM tree: role, name, value, and backendNodeId per node. |
+| `links` | `url?`, `timeout?` | Extract all links as `text` (visible anchor text), `href` (resolved URL), and `backendNodeId`. |
+| `nodeDetails` | `backendNodeId` | Tag, role, name, attributes, and state for a node, plus a ready-to-use CSS selector. |
+| `findElement` | `role?`, `name?` | Find interactive elements by role and/or accessible name. |
+| `interactiveElements` | `url?`, `timeout?` | Extract interactive elements from the page. |
+| `structuredData` | `url?`, `timeout?` | Extract structured data (like JSON-LD, OpenGraph, etc) from the page. |
+| `detectForms` | `url?`, `timeout?` | Detect forms on the page: fields, types, and required status. |
+
+> Calling a read tool with `url` set is more efficient than a separate `goto`: it navigates and reads in one request.
+
+## Data extraction and scripting
+
+These tools return structured results from the loaded page:
+
+| Name | Arguments | Description |
+|---|---|---|
+| `extract` | `schema`, `save?` | Extract structured data from the current page using a schema mapping output field names to CSS-selector specs. |
+| `evaluate` | `script`, `url?`, `timeout?`, `save?` | Evaluate JavaScript in the page context. A bare trailing expression yields its value; top-level `await` and `return` are supported. |
+
+> `save` stores the result under a bridge key, available in later `evaluate` calls as `lp.<name>`.
+
+### `extract` schema
+
+`schema` is a JSON object (passed as a string) mapping output field names to CSS-selector specs. It is NOT a JSON Schema: no `"type"`/`"properties"` wrappers; the keys ARE your output fields. Value shapes:
+
+| Value shape | Result |
+|---|---|
+| `"<sel>"` | First match's text (trimmed; `null` if no match) |
+| `["<sel>"]` | Every match's text (`string[]`) |
+| `{"selector":"<sel>","attr":"<name>"}` | First match's attribute value (`href`/`src` resolved to absolute URLs) |
+| `[{"selector":"<sel>","attr":"<name>"}]` | Every match's attribute (`string[]`) |
+| `[{"selector":"<sel>","fields":{…}}]` | One object per match; field selectors resolve relative to that match and accept any shape above (`""` = the match's own text; nest arrays for per-item sub-lists) |
+
+Add `"limit": N` inside any array's object spec to cap matches. Every extracted value is a string or null; parse numbers downstream. An empty array is a valid result, but if ALL top-level keys miss, the call errors: inspect the page (tree/markdown) and retry with corrected selectors. Finish data tasks with extract: it is the only read recorded as a replayable `extract(...)` script call; answers lifted from `markdown` text in chat are not.
+
+Examples (schema → result):
+
+| Schema | Result |
+|---|---|
+| `{"karma": "#karma"}` | `{"karma":"42"}` |
+| `{"items": [".story .title"]}` | `{"items":["Title 1","Title 2"]}` |
+| `{"top3": [{"selector":".story .title","limit":3}]}` | `{"top3":["A","B","C"]}` |
+| `{"links": [{"selector":"a.title","attr":"href"}]}` | `{"links":["https://site/a","https://site/b"]}` |
+| `{"stories": [{"selector":".athing","fields":{"title":".titleline","rank":".rank"}}]}` | `{"stories":[{"title":"Foo","rank":"1"}]}` |
+
+## Interacting with the page
+
+These tools dispatch real DOM events on the page:
+
+| Name | Arguments | Description |
+|---|---|---|
+| `click` | `selector` / `backendNodeId` | Click on an interactive element. Returns the current page URL and title after the click. |
+| `fill` | `selector` / `backendNodeId`, `value` | Fill text into an input element. Returns the filled value and current page URL and title. |
+| `scroll` | `backendNodeId?`, `x?`, `y?` | Scroll the page, or a specific element if `backendNodeId` is given. Returns the scroll position only. |
+| `hover` | `selector` / `backendNodeId` | Hover over an element, triggering mouseover and mouseenter events. |
+| `press` | `key`, `selector?`, `backendNodeId?` | Press a keyboard key, dispatching keydown and keyup events. Targets the document if no element is given. |
+| `selectOption` | `selector` / `backendNodeId`, `value` | Select an option in a `<select>` dropdown element by its value. Dispatches input and change events. |
+| `setChecked` | `selector` / `backendNodeId`, `checked?` | Check or uncheck a checkbox or radio button (defaults to checking it). Dispatches input, change, and click events. |
+
+## Waiting
+
+These tools block until the page reaches a condition:
+
+| Name | Arguments | Description |
+|---|---|---|
+| `waitForSelector` | `selector`, `timeout?` | Wait for an element matching a CSS selector to appear in the page. Returns the backend node ID of the matched element. |
+| `waitForScript` | `script`, `timeout?` | Wait until a JavaScript expression returns truthy, re-evaluating on each tick of the event loop. |
+| `waitForState` | `state`, `timeout?` | Wait for the page to reach a load state (`load`, `domcontentloaded`, `networkalmostidle`, `networkidle`, or `done`), with no navigation. |
+
+## State and debugging
+
+These tools inspect browser state outside the DOM:
+
+| Name | Arguments | Description |
+|---|---|---|
+| `getUrl` | — | Get the URL of the page currently loaded in the browser. |
+| `getCookies` | `url?`, `all?` | Get cookies stored in the browser. Defaults to the current page's host; pass `url` to filter another host or `all` to dump every cookie. |
+| `getEnv` | `name?` | Read an `LP_*` environment variable by name, or list the `LP_*` names that are set when called without a name. |
+| `consoleLogs` | — | Get buffered console.log/warn/error messages from the current page, then clear the buffer. |
+
+## Session
+
+`session_new`, `session_list` and `session_close` require the HTTP transport (`lightpanda mcp --port <PORT>`); over stdio only the `default` session exists and these calls return an error. Over [HTTP transport](/usage/mcp#http-transport), every other tool operates on whichever session the `Mcp-Session-Id` header names, falling back to the always-present `default` session.
+
+| Name | Arguments | Description |
+|---|---|---|
+| `save` | `path`, `script` | Save the session as a reusable [PandaScript](/usage/pandascript) (.js). |
+| `session_new` | `name?` | Create a new isolated browser session (its own page, cookies and memory) and return its id. Use it to give a separate agent its own browsing context, or to obtain an id to share. Pass that id back as the `Mcp-Session-Id` header to route calls to it. |
+| `session_list` | — | List the active browser sessions with their id and current URL. The `default` session always exists. |
+| `session_close` | `id` | Close a browser session, freeing its page and memory. The `default` session cannot be closed. |
+
+## Resources
+
+Three read-only resources are available, read via `resources/read`. The two page resources need a loaded page; `mcp://skill/pandascript` doesn't.
+
+| URI | MIME type | Description |
+|-|-|-|
+| `mcp://page/html` | `text/html` | The serialized HTML DOM of the current page |
+| `mcp://page/markdown` | `text/markdown` | The token-efficient markdown representation of the current page (identical output to the `markdown` tool) |
+| `mcp://skill/pandascript` | `text/markdown` | The PandaScript skill documentation |
+
+```json copy
+{"jsonrpc":"2.0","id":2,"method":"resources/read",
+ "params":{"uri":"mcp://page/markdown"}}
+```
+
+> The `markdown` tool and the `mcp://page/markdown` resource return the same content. The difference is who initiates: **tools** are called by the agent during its workflow; **resources** are read by the host application (e.g. an IDE displaying page state in the background).

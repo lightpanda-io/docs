@@ -1,0 +1,80 @@
+---
+title: Fetch
+description: Fetch a webpage and dump its content using the Lightpanda CLI.
+---
+
+# Fetch
+
+Fetch one or more URLs. Each URL is loaded in its own page. Passing more than one URL requires `--json`. See [how to fetch a webpage](/run-locally/commands#fetch) for practical documentation.
+
+## Options
+
+```console
+usage: lightpanda fetch <url>... [OPTIONS] [COMMON_OPTIONS]
+
+options:
+  --dump <DUMP>
+          Dumps the document to stdout.
+          Defaults to no dump.
+          Allowed values:
+              html               Serialized HTML of the DOM.
+              markdown           Converts content to Markdown.
+              semantic_tree      JSON-serialized semantic tree.
+              semantic_tree_text Pruned plain-text semantic tree.
+  --inject-script <EXPR>
+          JavaScript to execute as the document's <head> is parsed, before any
+          other scripts in the page run. Can be passed multiple times; scripts
+          run in order.
+  --inject-script-file <PATH>
+          Like --inject-script, but reads the script from a file. Can be passed
+          multiple times; can be mixed with --inject-script and runs in CLI order.
+  --json
+          Capture and print the status of the fetch as JSON. A single URL
+          prints one object; multiple URLs print {"results": [ ... ]} with
+          one object per URL. When used with --dump <MODE> the dumped
+          content is wrapped within each object.
+  --metrics
+          Write metrics (Prometheus text format) to stdout on exit, after
+          any --dump output.
+          Defaults to false.
+  --strip-mode <STRIP>
+          Tag group to remove from dump. Can be passed multiple times.
+          Defaults to no-strip.
+          Allowed values:
+              js        Script and link[as=script, rel=preload].
+              ui        Includes img, picture, video, CSS and SVG.
+              css       Includes style and link[rel=stylesheet].
+              invisible Best-effort (e.g. display:none) hidden elements
+              full      Strip everything.
+  --terminate-ms <INT>
+          Hard deadline in milliseconds. After this time elapses, JavaScript
+          execution is forcibly terminated (e.g. for pages with endless scripts).
+          Unlike --wait-ms, which only stops waiting, --terminate-ms aborts the
+          page.
+          Defaults to no terminate.
+  --wait-ms <INT>
+          Wait time in milliseconds. Supersedes all other --wait parameters.
+          Defaults to 5000.
+  --wait-script <EXPR>
+          Wait for a JavaScript expression to return truthy. Checked after
+          --wait-until condition is met.
+  --wait-script-file <PATH>
+          Like --wait-script, but reads the script from a file.
+  --wait-selector <QUERY>
+          Wait for an element matching the CSS selector to appear. Checked after
+          --wait-until condition is met.
+  --wait-until <UNTIL>
+          Wait until the specified event. Checked before other --wait-* options.
+          Defaults to 'load'. If --wait-selector, --wait-script or
+          --wait-script-file specified, defaults to none.
+          Allowed values: "load", "domcontentloaded", "networkalmostidle",
+          "networkidle", "done".
+  --with-base
+          Add a <base> tag in dump.
+          Defaults to false.
+  --with-frames
+          Includes the contents of iframes.
+          Defaults to false.
+```
+
+The command also accepts the [common options](/reference/cli/common-options).

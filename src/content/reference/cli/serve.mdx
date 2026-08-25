@@ -1,0 +1,43 @@
+---
+title: Serve
+description: Start Lightpanda as a local CDP server.
+---
+
+# Serve
+
+Start Lightpanda as a [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/) (CDP) server. See [how to run the CDP server](/run-locally/commands#serve) for practical documentation.
+
+## Options
+
+```console
+usage: lightpanda serve [OPTIONS] [COMMON_OPTIONS]
+
+options:
+  --advertise-host <HOST>
+          The host to advertise, e.g. in the /json/version response. Useful,
+          for example, when --host is 0.0.0.0.
+          Defaults to --host value.
+  --cdp-max-connections <INT>
+          Maximum number of simultaneous CDP connections.
+          Defaults to 16.
+  --cdp-max-http-message-size <INT>
+          Maximum allowed HTTP request size
+          Defaults to 4096 (maximum allowed: 16383)
+  --cdp-max-message-size <INT>
+          Maximum allowed incoming websocket message size.
+          Defaults to 1048576 (1MB)
+  --cdp-max-pending-connections <INT>
+          Maximum pending connections in the accept queue.
+          Defaults to 128.
+  --disable-metrics
+          Disables the /metrics endpoint (Prometheus text format).
+          Defaults to false (the endpoint is exposed).
+  --host <HOST>
+          Host of the CDP server.
+          Defaults to "127.0.0.1".
+  --port <INT>
+          Port of the CDP server.
+          Defaults to 9222.
+```
+
+The command also accepts the [common options](/reference/cli/common-options).
