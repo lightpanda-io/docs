@@ -30,7 +30,7 @@ These tools bring a page into the browser:
 | Name | Arguments | Description |
 |---|---|---|
 | `goto` | `url`, `timeout?`, `waitUntil?` | Navigate to a specified URL and load the page in memory so it can be reused later for info extraction. `waitUntil` accepts the same states as `waitForState` and defaults to `load`; prefer `domcontentloaded` plus a follow-up `waitForSelector` on pages whose late scripts (ads) hold `load` back, and avoid `done` on pages with constant background activity, since it can run to the timeout. |
-| `search` | `query`, `timeout?` | Run a web search and return results as markdown. When `BRAVE_API_KEY`, `TAVILY_API_KEY` or `EXA_API_KEY` is set, queries that search API (in that preference order) and returns a numbered list of `{title, url, snippet}`. Otherwise (or on API failure) falls back to scraping the DuckDuckGo HTML endpoint; degraded results, may rate-limit on bursty traffic. Prefer this over goto-ing google.com/search directly (Google blocks the browser on User-Agent/TLS). Browser state after this call is unspecified; to interact with a result, use `goto` with its URL; do not assume the browser DOM matches the results page. |
+| `search` | `query`, `timeout?` | Run a web search and return results as markdown: a numbered list of `{title, url, snippet}`. Search tries brave, tavily, exa, then keenable in order, each when its API key (`BRAVE_API_KEY`, `TAVILY_API_KEY`, `EXA_API_KEY` or `KEENABLE_API_KEY`) is set; keenable also works without a key through its public endpoint (rate-limited per client IP). Prefer this over goto-ing google.com/search directly (Google blocks the browser on User-Agent/TLS). The browser does not navigate; to open a result, use `goto` with its URL. |
 
 ## Reading the page
 
