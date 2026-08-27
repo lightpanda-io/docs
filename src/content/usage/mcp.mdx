@@ -176,6 +176,17 @@ Execute arbitrary JavaScript in the page context and return the result as a stri
 {"result":{"content":[{"type":"text","text":"Example Domain"}],"isError":false}}
 ```
 
+### `search`
+
+`search` queries a search API and returns the results as a numbered markdown list of `{title, url, snippet}`. It doesn't load a page, so open a result with `goto`.
+
+```json copy
+{"jsonrpc":"2.0","id":6,"method":"tools/call",
+ "params":{"name":"search","arguments":{"query":"lightpanda browser"}}}
+```
+
+> An API key is optional. Without one, search uses Keenable's keyless public endpoint (rate-limited per client IP). Set `BRAVE_API_KEY`, `TAVILY_API_KEY`, `EXA_API_KEY`, or `KEENABLE_API_KEY` in the server's environment to route through that provider.
+
 ### Resources
 
 Three read-only resources are available via `resources/read`. The two page resources need a loaded page; `mcp://skill/pandascript` doesn't, so an MCP host can fetch it up front to teach its own LLM how to write PandaScript before ever touching the browser.

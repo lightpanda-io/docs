@@ -135,7 +135,7 @@ Inside the REPL, slash commands work alongside natural-language input:
 | `/model [name]` | Change the model |
 | `/provider [name]` | Change the provider, or `null` to disable the LLM |
 
-**Search engine keys.** In `auto` mode (the default), search tries Brave, Tavily, Exa, then Keenable, using each only if its key (`BRAVE_API_KEY`, `TAVILY_API_KEY`, `EXA_API_KEY`, `KEENABLE_API_KEY`) is set. Keenable also works without a key through its public endpoint (rate-limited per client IP), so no key is required.
+**Search engine.** An API key is optional. By default (`auto` mode) search uses Keenable's keyless public endpoint, rate-limited per client IP. To route through a specific provider, set `BRAVE_API_KEY`, `TAVILY_API_KEY`, `EXA_API_KEY`, or `KEENABLE_API_KEY`; `auto` tries Brave, Tavily, Exa, then Keenable in that order, using whichever keys are set.
 
 Three commands send a prebuilt prompt to the model instead of configuring the REPL:
 
