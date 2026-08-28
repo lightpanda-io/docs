@@ -126,7 +126,7 @@ Inside the REPL, slash commands work alongside natural-language input:
 | `/verbosity <level>` | Set agent verbosity (`low`, `medium`, `high`) |
 | `/effort <level>` | Set per-turn reasoning effort (`none`, `minimal`, `low`, `medium`, `high`, `xhigh`) |
 | `/stream [on\|off]` | Toggle streaming of assistant text |
-| `/searchEngine <engine>` | Change the web search engine (`auto`, `tavily`, `brave`, `exa`, `duckduckgo`) |
+| `/searchEngine <engine>` | Change the web search engine (`auto`, `brave`, `tavily`, `exa`, `keenable`) |
 | `/usage` | Show token usage and cache stats for this session |
 | `/clear` | Clear conversation history and usage (keeps page and cookies) |
 | `/reset` | Reset conversation and browser session (drops page and cookies) |
@@ -134,6 +134,8 @@ Inside the REPL, slash commands work alongside natural-language input:
 | `/load <path>` | Load and run a script from disk |
 | `/model [name]` | Change the model |
 | `/provider [name]` | Change the provider, or `null` to disable the LLM |
+
+**Search engine.** An API key is optional. By default (`auto` mode) search uses Keenable's keyless public endpoint, rate-limited per client IP. To route through a specific provider, set `BRAVE_API_KEY`, `TAVILY_API_KEY`, `EXA_API_KEY`, or `KEENABLE_API_KEY`; `auto` tries Brave, Tavily, Exa, then Keenable in that order, using whichever keys are set.
 
 Three commands send a prebuilt prompt to the model instead of configuring the REPL:
 

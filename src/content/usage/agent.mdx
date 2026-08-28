@@ -164,6 +164,19 @@ The schema is parsed in Zig before the page-side walker runs, so malformed
 schemas are rejected up front with a plain `Error: InvalidParams` rather
 than a V8 stack trace.
 
+### Web search
+
+`/searchEngine <engine>` sets the backend the agent's web search runs
+against: `auto` (the default), `brave`, `tavily`, `exa`, or `keenable`.
+The choice is saved per-directory in `.lp-agent.zon`.
+
+An API key is optional. `auto` falls back to Keenable's keyless public
+endpoint (rate-limited per client IP), so search works with no setup.
+Setting `BRAVE_API_KEY`, `TAVILY_API_KEY`, `EXA_API_KEY`, or
+`KEENABLE_API_KEY` routes `auto` through that provider instead. See the
+[command reference](/reference/cli/agent#repl-commands) for the resolution
+order.
+
 ### Meta commands
 
 Meta commands don't drive the browser, they control the REPL itself:
