@@ -20,14 +20,15 @@ The script context installs two globals, `Page` and [`console`](#console), and n
 | `page.goto` | `goto(url[, { timeout = 10000, waitUntil = "load" }])` | The same page object it was called on | Resolves once `waitUntil` is reached. `waitUntil` takes the same states as [`waitForState`](#waiting): `load` (default, a fast snapshot that skips content rendered by post-load JavaScript), `domcontentloaded`, `networkalmostidle`, `networkidle`, or `done`. |
 | `page.close` | `close()` | Nothing | Stales the handle, so later calls on it fail. The page itself is reclaimed on the next `goto` or at script end. |
 
-## Extraction and page scripting
+## Reading the page
 
-`evaluate` runs a JavaScript string inside the page, where `window` and `document` exist, and `extract` resolves its schema selectors there too. That code runs in the page, so it cannot see the variables of your agent script.
+`evaluate` runs a JavaScript string inside the page, where `window` and `document` exist, and `extract` resolves its schema selectors there too. That code runs in the page, so it cannot see the variables of your agent script. `screenshot` doesn't run any page JavaScript; it renders the same computed layout `extract` and markdown read as a PNG instead of text.
 
 | Primitive | Arguments | Returns | Comment |
 |-----------|-----------|---------|---------|
 | `page.extract` | `extract(schema)` or `extract({ schema })` | An object or an array, shaped by the schema | Schema forms are listed [below](#extraction-schema). |
 | `page.evaluate` | `evaluate(script[, { url, timeout = 10000, save }])` | The page value as a string, JSON-encoded when it is an object or array | `url` navigates before running the script, and `timeout` bounds that navigation, not the script. |
+| `page.screenshot` | `screenshot({ path, selector?, backendNodeId?, fullPage?, url?, timeout? })`, never positional | `Saved <width>x<height> PNG to <path>` | `path` is required in scripts: a script cannot display an inline image, so omitting it throws `pass \`path\`: this client cannot display an inline image`. Renders the page, or one scoped node, as a PNG: the text layout Lightpanda computes, not a pixel-accurate rendering (no images, fonts, or CSS colours). |
 
 ### Extraction schema
 
