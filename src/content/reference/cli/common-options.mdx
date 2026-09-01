@@ -11,6 +11,10 @@ Every Lightpanda command ([fetch](/reference/cli/fetch), [serve](/reference/cli/
 
 ```console
 common options:
+  --adblock-lists <LIST>
+          EasyList-syntax filter files to load. Can be passed multiple times.
+          Requests to a hostname blocked by any list are failed before they leave.
+          e.g. --adblock-lists easylist.txt --adblock-lists easyprivacy.txt
   --block-cidrs <CIDR>
           Additional CIDR ranges to block. Can be passed multiple times.
           Prefix with '-' to allow (exempt from blocking).
