@@ -38,12 +38,13 @@ These tools read the loaded page without modifying it:
 
 | Name | Arguments | Description |
 |---|---|---|
-| `markdown` | `selector?`, `backendNodeId?`, `maxBytes?`, `url?`, `timeout?` | Render the page, or a subtree, as markdown. |
-| `html` | `selector?`, `backendNodeId?`, `url?`, `timeout?` | Raw HTML for the document, or a single node's outerHTML when scoped. |
-| `tree` | `backendNodeId?`, `maxDepth?`, `url?`, `timeout?` | Simplified semantic DOM tree: role, name, value, and backendNodeId per node. |
-| `links` | `url?`, `timeout?` | Extract all links as `text` (visible anchor text), `href` (resolved URL), and `backendNodeId`. |
-| `nodeDetails` | `backendNodeId` | Tag, role, name, attributes, and state for a node, plus a ready-to-use CSS selector. |
-| `findElement` | `role?`, `name?` | Find interactive elements by role and/or accessible name. |
+| `markdown` | `selector?`, `backendNodeId?`, `maxBytes?`, `url?`, `timeout?` | Render the page, or a subtree, as markdown. Scope with `selector` or `backendNodeId` to read just the relevant region: full-page markdown is the last resort. Use `maxBytes` to cap long pages. |
+| `html` | `selector?`, `backendNodeId?`, `url?`, `timeout?` | Raw HTML for the document, or a single node's outerHTML when scoped. Verbose; use only when you need attributes that markdown discards. |
+| `screenshot` | `path?`, `selector?`, `backendNodeId?`, `fullPage?`, `url?`, `timeout?` | Render the page, or one node, as a PNG: the text layout Lightpanda computes, not a pixel-accurate browser rendering (no images, fonts or CSS colours). With `path`, writes the file at full size and returns its location; without it, returns the image inline where the client can display one, at most 1280px wide and 4096px tall. Use it to see spatial layout; read content with `markdown`/`tree`. |
+| `tree` | `backendNodeId?`, `maxDepth?`, `url?`, `timeout?` | Simplified semantic DOM tree: role, name, value, and backendNodeId per node. Pass `backendNodeId` to scope, `maxDepth` to limit depth. |
+| `links` | `url?`, `timeout?` | Extract all links as `text` (visible anchor text, falling back to aria-label/title/image alt), `href` (resolved URL), and `backendNodeId` (pass to click/nodeDetails). One entry per href; hidden links are omitted. |
+| `nodeDetails` | `backendNodeId` | Tag, role, name, interactivity, disabled, value, input type, placeholder, href, id, class, checked, select options, and state for a node, plus a ready-to-use CSS `selector` that resolves to the node (the first match, as click/fill resolve it). The canonical way to turn a tree backendNodeId into a CSS selector. |
+| `findElement` | `role?`, `name?` | Find interactive elements by role and/or accessible name. Returns matching elements with their backend node IDs. Useful for locating specific elements without parsing the full semantic tree. |
 | `interactiveElements` | `url?`, `timeout?` | Extract interactive elements from the page. |
 | `structuredData` | `url?`, `timeout?` | Extract structured data (like JSON-LD, OpenGraph, etc) from the page. |
 | `detectForms` | `url?`, `timeout?` | Detect forms on the page: fields, types, and required status. |
@@ -56,8 +57,8 @@ These tools return structured results from the loaded page:
 
 | Name | Arguments | Description |
 |---|---|---|
-| `extract` | `schema`, `save?` | Extract structured data from the current page using a schema mapping output field names to CSS-selector specs. |
-| `evaluate` | `script`, `url?`, `timeout?`, `save?` | Evaluate JavaScript in the page context. A bare trailing expression yields its value; top-level `await` and `return` are supported. |
+| `extract` | `schema`, `save?` | Extract structured data from the current page (navigate first) using a schema mapping output field names to CSS-selector specs. |
+| `evaluate` | `script`, `url?`, `timeout?`, `save?` | Evaluate JavaScript in the page context. A bare trailing expression yields its value; top-level `await` and `return` are supported. This is an escape hatch for page-side logic the dedicated tools can't express: prefer `extract` for data and click/fill/etc. for actions. It runs in the page, so it cannot see the agent script's variables or builtins: interpolate any value into the `script` string. Objects and arrays return as JSON, so no `JSON.stringify` is needed. If a url is provided, it navigates there first. The `globalThis.lp` object exposes a Session-scoped bridge store: values written via `lp.foo = ...` auto-sync at end of evaluate, surviving navigation; values previously set via `/extract save=` or `/evaluate save=` appear as `lp.<name>`. |
 
 > `save` stores the result under a bridge key, available in later `evaluate` calls as `lp.<name>`.
 
@@ -94,8 +95,8 @@ These tools dispatch real DOM events on the page:
 | `click` | `selector` / `backendNodeId` | Click on an interactive element. Returns the current page URL and title after the click. |
 | `fill` | `selector` / `backendNodeId`, `value` | Fill text into an input element. Returns the filled value and current page URL and title. |
 | `scroll` | `backendNodeId?`, `x?`, `y?` | Scroll the page, or a specific element if `backendNodeId` is given. Returns the scroll position only. |
-| `hover` | `selector` / `backendNodeId` | Hover over an element, triggering mouseover and mouseenter events. |
-| `press` | `key`, `selector?`, `backendNodeId?` | Press a keyboard key, dispatching keydown and keyup events. Targets the document if no element is given. |
+| `hover` | `selector` / `backendNodeId` | Hover over an element, triggering mouseover and mouseenter events. Useful for menus, tooltips, and hover states. |
+| `press` | `key`, `selector?`, `backendNodeId?` | Press a keyboard key, dispatching keydown and keyup events. Use key names like 'Enter', 'Tab', 'Escape', 'ArrowDown', 'Backspace', or single characters like 'a', '1'. Common shorthand is normalized: 'enter'/'return' → 'Enter', 'esc' → 'Escape', 'up'/'down'/'left'/'right' → 'Arrow*', 'space' → ' '. Pressing 'Enter' on a form input or submit button triggers implicit form submission. Targets the document if no element is given. |
 | `selectOption` | `selector` / `backendNodeId`, `value` | Select an option in a `<select>` dropdown element by its value. Dispatches input and change events. |
 | `setChecked` | `selector` / `backendNodeId`, `checked?` | Check or uncheck a checkbox or radio button (defaults to checking it). Dispatches input, change, and click events. |
 
@@ -106,8 +107,8 @@ These tools block until the page reaches a condition:
 | Name | Arguments | Description |
 |---|---|---|
 | `waitForSelector` | `selector`, `timeout?` | Wait for an element matching a CSS selector to appear in the page. Returns the backend node ID of the matched element. |
-| `waitForScript` | `script`, `timeout?` | Wait until a JavaScript expression returns truthy, re-evaluating on each tick of the event loop. |
-| `waitForState` | `state`, `timeout?` | Wait for the page to reach a load state (`load`, `domcontentloaded`, `networkalmostidle`, `networkidle`, or `done`), with no navigation. |
+| `waitForScript` | `script`, `timeout?` | Wait until a JavaScript expression returns truthy, re-evaluating on each tick of the event loop. Use for synchronization beyond what CSS selectors can express: e.g. `window.dataLoaded === true`, `document.readyState === 'complete'`, `document.querySelectorAll('.row').length >= 5`. |
+| `waitForState` | `state`, `timeout?` | Wait for the page to reach a load state (`load`, `domcontentloaded`, `networkalmostidle`, `networkidle`, or `done`), with no navigation. After a `goto`, the page is returned at the fast `load` snapshot, so content rendered by post-load JS (XHR-loaded lists, feeds, search results) may still be missing. When a read looks incomplete: empty lists, spinners, skeletons; call this with 'networkidle' and re-read. Prefer 'networkidle'; 'done' can be slow on sites with constant background activity (ads, polling). |
 
 ## State and debugging
 
@@ -115,9 +116,9 @@ These tools inspect browser state outside the DOM:
 
 | Name | Arguments | Description |
 |---|---|---|
-| `getUrl` | — | Get the URL of the page currently loaded in the browser. |
-| `getCookies` | `url?`, `all?` | Get cookies stored in the browser. Defaults to the current page's host; pass `url` to filter another host or `all` to dump every cookie. |
-| `getEnv` | `name?` | Read an `LP_*` environment variable by name, or list the `LP_*` names that are set when called without a name. |
+| `getUrl` | — | Get the URL of the page currently loaded in the browser. Useful to verify a navigation or detect a redirect. |
+| `getCookies` | `url?`, `all?` | Get cookies stored in the browser. Defaults to the current page's host; pass `url` to filter another host or `all` to dump every cookie. Useful for debugging authentication and session state. |
+| `getEnv` | `name?` | With `name`: read an `LP_*` environment variable, for non-secret config only (base URLs, flags). Without `name`: list the `LP_*` names that are set, for safe credential discovery. For secrets, pass `$LP_*` placeholders in tool args; never request a credential by name. |
 | `consoleLogs` | — | Get buffered console.log/warn/error messages from the current page, then clear the buffer. |
 
 ## Session

@@ -168,8 +168,19 @@ Execute arbitrary JavaScript in the page context and return the result as a stri
 ```json copy
 {"jsonrpc":"2.0","id":3,"method":"tools/call",
  "params":{"name":"evaluate","arguments":{
-   "script":"document.title",
+   "script":"lp.title = document.title",
    "url":"https://example.com"}}}
+```
+
+```json
+{"result":{"content":[{"type":"text","text":"Example Domain"}],"isError":false}}
+```
+
+Assigning to `globalThis.lp` here, instead of a local variable, carries the value forward: `lp` lives in the Lightpanda session, not the page, so it's still there in a later `evaluate` call, even after navigating away (a plain JS variable would be gone):
+
+```json copy
+{"jsonrpc":"2.0","id":4,"method":"tools/call",
+ "params":{"name":"evaluate","arguments":{"script":"lp.title"}}}
 ```
 
 ```json
