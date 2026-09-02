@@ -39,10 +39,10 @@ These tools read the loaded page without modifying it:
 | Name | Arguments | Description |
 |---|---|---|
 | `markdown` | `selector?`, `backendNodeId?`, `maxBytes?`, `url?`, `timeout?` | Render the page, or a subtree, as markdown. Scope with `selector` or `backendNodeId` to read just the relevant region: full-page markdown is the last resort. Use `maxBytes` to cap long pages. |
-| `html` | `selector?`, `backendNodeId?`, `url?`, `timeout?` | Raw HTML for the document, or a single node's outerHTML when scoped. Verbose; use only when you need attributes that markdown discards. |
+| `html` | `selector?`, `backendNodeId?`, `maxBytes?`, `strip?`, `url?`, `timeout?` | Raw HTML for the document, or a single node's outerHTML when scoped. Verbose; use only when you need attributes that markdown discards. Use `maxBytes` to cap long pages. `strip` is an object of element groups to omit: `js` (script, noscript, script preloads), `css` (style, stylesheet links), `ui` (css plus img, picture, video, audio, svg, canvas, iframe) and `invisible` (elements set to display:none). `{"js":true,"css":true}` keeps a page dump small. |
 | `screenshot` | `path?`, `selector?`, `backendNodeId?`, `fullPage?`, `url?`, `timeout?` | Render the page, or one node, as a PNG: the text layout Lightpanda computes, not a pixel-accurate browser rendering (no images, fonts or CSS colours). With `path`, writes the file at full size and returns its location; without it, returns the image inline where the client can display one, at most 1280px wide and 4096px tall. Use it to see spatial layout; read content with `markdown`/`tree`. |
 | `tree` | `backendNodeId?`, `maxDepth?`, `url?`, `timeout?` | Simplified semantic DOM tree: role, name, value, and backendNodeId per node. Pass `backendNodeId` to scope, `maxDepth` to limit depth. |
-| `links` | `url?`, `timeout?` | Extract all links as `text` (visible anchor text, falling back to aria-label/title/image alt), `href` (resolved URL), and `backendNodeId` (pass to click/nodeDetails). One entry per href; hidden links are omitted. |
+| `links` | `limit?`, `url?`, `timeout?` | Extract all links as `text` (visible anchor text, falling back to aria-label/title/image alt), `href` (resolved URL), and `backendNodeId` (pass to click/nodeDetails). One entry per href; hidden links are omitted. `limit` returns at most that many links, in document order. |
 | `nodeDetails` | `backendNodeId` | Tag, role, name, interactivity, disabled, value, input type, placeholder, href, id, class, checked, select options, and state for a node, plus a ready-to-use CSS `selector` that resolves to the node (the first match, as click/fill resolve it). The canonical way to turn a tree backendNodeId into a CSS selector. |
 | `findElement` | `role?`, `name?` | Find interactive elements by role and/or accessible name. Returns matching elements with their backend node IDs. Useful for locating specific elements without parsing the full semantic tree. |
 | `interactiveElements` | `url?`, `timeout?` | Extract interactive elements from the page. |
@@ -98,7 +98,7 @@ These tools dispatch real DOM events on the page:
 | `hover` | `selector` / `backendNodeId` | Hover over an element, triggering mouseover and mouseenter events. Useful for menus, tooltips, and hover states. |
 | `press` | `key`, `selector?`, `backendNodeId?` | Press a keyboard key, dispatching keydown and keyup events. Use key names like 'Enter', 'Tab', 'Escape', 'ArrowDown', 'Backspace', or single characters like 'a', '1'. Common shorthand is normalized: 'enter'/'return' → 'Enter', 'esc' → 'Escape', 'up'/'down'/'left'/'right' → 'Arrow*', 'space' → ' '. Pressing 'Enter' on a form input or submit button triggers implicit form submission. Targets the document if no element is given. |
 | `selectOption` | `selector` / `backendNodeId`, `value` | Select an option in a `<select>` dropdown element by its value. Dispatches input and change events. |
-| `setChecked` | `selector` / `backendNodeId`, `checked?` | Check or uncheck a checkbox or radio button (defaults to checking it). Dispatches input, change, and click events. |
+| `setChecked` | `selector` / `backendNodeId`, `checked` | Check (`true`) or uncheck (`false`) a checkbox or radio button. Dispatches input, change, and click events. |
 
 ## Waiting
 
