@@ -78,7 +78,7 @@ These methods bring a page into the browser:
 
 | Method | Arguments | Returns | Description |
 |---|---|---|---|
-| `goto` | `url`, `timeout?` | text | Navigate to a URL and load the page in memory so it can be reused later for info extraction. |
+| `goto` | `url`, `timeout?`, `waitUntil?` | text | Navigate to a URL and load the page in memory so it can be reused later for info extraction. `waitUntil` accepts the same states as `wait_for_state` and defaults to `load`. On the 0.4.0 wheel, `waitUntil` isn't yet a keyword; reach it with `page.call("goto", url=..., waitUntil=...)` until the next release. |
 | `search` | `query`, `timeout?` | text | Run a web search and return results as markdown: a numbered list of `{title, url, snippet}`. The browser does not navigate; to open a result, call `goto` with its URL. |
 
 ### Reading the page
@@ -88,10 +88,10 @@ These methods read the loaded page without modifying it:
 | Method | Arguments | Returns | Description |
 |---|---|---|---|
 | `markdown` | `selector?`, `backendNodeId?`, `maxBytes?`, `url?`, `timeout?` | text | Render the page, or a subtree, as markdown. Scope with `selector` or `backendNodeId` to read just the relevant region; use `maxBytes` to cap long pages. |
-| `html` | `selector?`, `backendNodeId?`, `url?`, `timeout?` | text | Raw HTML for the document, or a single node's outerHTML when scoped. Verbose; use only when you need attributes that markdown discards. |
+| `html` | `selector?`, `backendNodeId?`, `maxBytes?`, `strip?`, `url?`, `timeout?` | text | Raw HTML for the document, or a single node's outerHTML when scoped. Verbose; use only when you need attributes that markdown discards. Use `maxBytes` to cap long pages. `strip` is an object of element groups to omit: `js` (script, noscript, script preloads), `css` (style, stylesheet links), `ui` (css plus img, picture, video, audio, svg, canvas, iframe) and `invisible` (elements set to display:none). `{"js": True, "css": True}` keeps a page dump small. On the 0.4.0 wheel, `maxBytes` and `strip` aren't yet keywords; reach them with `page.call("html", maxBytes=..., strip=...)` until the next release. |
 | `screenshot` | `path?`, `selector?`, `backendNodeId?`, `fullPage?`, `url?`, `timeout?` | text or bytes | Render the page, or one node, as a PNG: the text layout Lightpanda computes, not a pixel-accurate rendering (no images, fonts, or CSS colors). `path` must be a relative path. In the 0.4.0 wheel, the Python SDK doesn't request an inline image, so without `path` you get a plain size summary, not the image itself; always pass `path` for now. A later release is expected to return the image as `bytes` when `path` is omitted. |
 | `tree` | `url?`, `timeout?`, `backendNodeId?`, `maxDepth?` | text | Simplified semantic DOM tree: role, name, value, and `backendNodeId` per node. |
-| `links` | `url?`, `timeout?` | JSON | Every visible link as `text`, `href` (resolved to an absolute URL), and `backendNodeId`. |
+| `links` | `limit?`, `url?`, `timeout?` | JSON | Extract all links as `text` (visible anchor text, falling back to aria-label/title/image alt), `href` (resolved URL), and `backendNodeId` (pass to `node_details`). One entry per href; hidden links are omitted. `limit` returns at most that many links, in document order. On the 0.4.0 wheel, `limit` isn't yet a keyword; reach it with `page.call("links", limit=...)` until the next release. |
 | `node_details` (`nodeDetails`) | `backendNodeId` | JSON | Tag, role, name, value, and other state for a node, plus a ready-to-use CSS `selector` that resolves to it. The way to turn a `backendNodeId` into a selector. |
 | `find_element` (`findElement`) | `role?`, `name?` | JSON | Find interactive elements by role and/or accessible name, with their `backendNodeId`. |
 | `interactive_elements` (`interactiveElements`) | `url?`, `timeout?` | JSON | Every interactive element on the page. |
@@ -131,7 +131,7 @@ These methods dispatch real DOM events on the page:
 | `hover` | `selector` / `backendNodeId` | text | Hover over an element, triggering `mouseover` and `mouseenter`. |
 | `press` | `key`, `selector?`, `backendNodeId?` | text | Press a keyboard key, dispatching `keydown` and `keyup`. Targets the document if no element is given. |
 | `select_option` (`selectOption`) | `selector` / `backendNodeId`, `value` | text | Select an option in a `<select>` element by its value. |
-| `set_checked` (`setChecked`) | `selector` / `backendNodeId`, `checked` | text | Check or uncheck a checkbox or radio button. |
+| `set_checked` (`setChecked`) | `selector` / `backendNodeId`, `checked` | text | Check (`True`) or uncheck (`False`) a checkbox or radio button. Dispatches input, change, and click events. |
 
 ### Waiting
 
