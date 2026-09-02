@@ -1,0 +1,180 @@
+---
+title: Use the Python SDK
+description: Learn how to scrape a JavaScript-rendered webpage and extract structured data with the Lightpanda Python package.
+---
+import { Callout, Tabs } from 'nextra/components'
+
+# Use the Lightpanda Python SDK
+
+In this guide, you'll scrape a JavaScript-rendered page with the [`lightpanda` Python package](https://pypi.org/project/lightpanda/) and extract structured data from it with `page.extract`.
+
+The package bundles the Lightpanda browser binary, so there's no CDP client to wire up and no separate browser download, unlike driving Lightpanda from [Puppeteer or Playwright](/guides/retrieve-an-html-webpage). It also uses [an order of magnitude less memory than a Selenium and Chrome stack](https://github.com/lightpanda-io/lightpanda-python/blob/main/examples/compare.py) for the same scrape.
+
+## Prerequisites
+
+You'll need Python 3.10 or newer.
+
+Install the [`lightpanda` package](https://pypi.org/project/lightpanda/) from PyPI.
+
+<Tabs items={['pip', 'uv']} className="-mb-4">
+  <Tabs.Tab id="pip" className="m-0">
+```sh copy
+pip install lightpanda
+```
+  </Tabs.Tab>
+  <Tabs.Tab id="uv" className="m-0">
+```sh copy
+uv add lightpanda
+```
+  </Tabs.Tab>
+</Tabs>
+
+## Create scrape.py
+
+Create a `scrape.py` file. Import `Browser` and open a session:
+
+```python copy
+from lightpanda import Browser
+
+with Browser() as browser, browser.new_session() as page:
+    pass
+```
+
+`Browser()` starts the bundled Lightpanda binary and stops it when the `with` block exits.
+
+## Navigate and extract
+
+Use `page.goto` to load [quotes.toscrape.com/js](https://quotes.toscrape.com/js/), a page whose quotes are rendered by client-side JavaScript. Then call `page.extract` with a schema describing the fields to pull from each `.quote` element:
+
+```python copy
+SCHEMA = {
+    "quotes": [
+        {
+            "selector": ".quote",
+            "fields": {"text": ".text", "author": ".author", "tags": [".tag"]},
+        }
+    ],
+}
+
+page.goto(url="https://quotes.toscrape.com/js/")
+data = page.extract(schema=SCHEMA)
+print(data["quotes"])
+```
+
+`extract` returns each `.quote` element as a record, with `tags` resolved to a list of every `.tag` inside it. A plain `requests.get` on this page returns zero quotes because the DOM is only built after the page's JavaScript runs.
+
+## Full script
+
+Follow the site's own "Next" link to collect every page instead of just the first:
+
+```python copy
+from collections import Counter
+
+from lightpanda import Browser
+
+SCHEMA = {
+    "quotes": [
+        {
+            "selector": ".quote",
+            "fields": {"text": ".text", "author": ".author", "tags": [".tag"]},
+        }
+    ],
+    "next": {"selector": "li.next a", "attr": "href"},
+}
+
+with Browser() as browser, browser.new_session() as page:
+    quotes = []
+    url = "https://quotes.toscrape.com/js/"
+    while url:
+        page.goto(url=url)
+        data = page.extract(schema=SCHEMA)
+        quotes.extend(data["quotes"])
+        url = data["next"]
+
+    print(f"{len(quotes)} quotes")
+    tags = Counter(tag for q in quotes for tag in q["tags"])
+    print("Top tags:", tags.most_common(5))
+```
+
+## Run it
+
+<Tabs items={['pip', 'uv']} className="-mb-4">
+  <Tabs.Tab id="pip" className="m-0">
+```sh copy
+python scrape.py
+```
+  </Tabs.Tab>
+  <Tabs.Tab id="uv" className="m-0">
+```sh copy
+uv run scrape.py
+```
+  </Tabs.Tab>
+</Tabs>
+
+```sh
+$ python scrape.py
+100 quotes
+Top tags: [('love', 14), ('inspirational', 13), ('life', 13), ('humor', 12), ('books', 11)]
+```
+
+## Scrape concurrently with asyncio
+
+Use `AsyncBrowser` instead of `Browser` when you want to scrape many pages at once instead of one after another, or when your code already runs inside an async application (a web server built with FastAPI, for example) where a blocking call would freeze everything else it's doing. Every method becomes awaitable; `AsyncBrowser` itself runs each call on the browser's own thread pool, so it never blocks your event loop.
+
+Since the site's ten pages are numbered, fetch all of them at once with `asyncio.gather` instead of following the pagination link one page at a time. `browser.session()` opens a session scoped to one task and closes it when that task ends:
+
+```python copy
+import asyncio
+from collections import Counter
+
+from lightpanda import AsyncBrowser
+
+SCHEMA = {
+    "quotes": [
+        {
+            "selector": ".quote",
+            "fields": {"text": ".text", "author": ".author", "tags": [".tag"]},
+        }
+    ],
+}
+
+URLS = [f"https://quotes.toscrape.com/js/page/{n}/" for n in range(1, 11)]
+
+
+async def scrape_one(browser, url):
+    async with browser.session() as page:
+        await page.goto(url=url)
+        data = await page.extract(schema=SCHEMA)
+        return data["quotes"]
+
+
+async def main():
+    async with AsyncBrowser() as browser:
+        results = await asyncio.gather(*(scrape_one(browser, url) for url in URLS))
+    quotes = [quote for page_quotes in results for quote in page_quotes]
+
+    print(f"{len(quotes)} quotes")
+    tags = Counter(tag for q in quotes for tag in q["tags"])
+    print("Top tags:", tags.most_common(5))
+
+asyncio.run(main())
+```
+
+<Callout type="info" emoji="ℹ️">
+  Every browser method is available as a `Session` method, in both camelCase and snake_case (`waitForSelector` and `wait_for_selector` both work), typed and documented in your IDE.
+</Callout>
+
+Find every method's arguments in the [Python SDK reference](/reference/python).
+
+## Replay a saved script
+
+If you already have a PandaScript, a `.js` file recorded by [Lightpanda Agent](/guides/lightpanda-agent-tutorial) or the MCP `save` tool, replay it from Python with `run_script`, no LLM call needed:
+
+```python copy
+from lightpanda import run_script
+
+output = run_script("scrape.js")
+print(output)
+```
+
+`run_script` shells out to `lightpanda run <script>` and returns its stdout; a non-zero exit raises `ScriptError`. `run_script_async` is the awaitable variant.
