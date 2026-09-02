@@ -1,5 +1,5 @@
-import { createElement, type ReactNode } from 'react'
 import { useMDXComponents as getThemeComponents } from 'nextra-theme-docs'
+import { createElement, type ReactNode } from 'react'
 
 type MDXComponentsProps = {
   components?: Readonly<unknown>
@@ -24,8 +24,8 @@ export function useMDXComponents(props: MDXComponentsProps) {
       [key: string]: unknown
     }) {
       return ThemeWrapper
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        ? createElement(ThemeWrapper, { metadata, ...rest } as any, children)
+        ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          createElement(ThemeWrapper, { metadata, ...rest } as any, children)
         : createElement('div', null, children)
     },
   }

@@ -1,15 +1,27 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.5.11/schema.json",
   "files": {
-    "ignore": ["package.json", "node_modules", ".next", ".pnp.cjs", ".pnp.loader.mjs", "out"]
+    "includes": [
+      "**",
+      "!**/package.json",
+      "!**/node_modules",
+      "!**/.next",
+      "!**/.pnp.cjs",
+      "!**/.pnp.loader.mjs",
+      "!**/out"
+    ]
   },
-  "organizeImports": {
-    "enabled": true
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
   },
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true,
+      "preset": "recommended",
       "suspicious": {
         "noExplicitAny": "off",
         "noArrayIndexKey": "warn"
@@ -42,6 +54,11 @@
       "semicolons": "asNeeded",
       "trailingCommas": "all",
       "arrowParentheses": "asNeeded"
+    }
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
     }
   }
 }

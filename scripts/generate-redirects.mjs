@@ -15,7 +15,7 @@ const outDir = join(root, 'out')
 // A target that already carries its own fragment (e.g. `#serve`) must not
 // also inherit the visitor's `location.hash`, or the two concatenate into an
 // invalid double-fragment URL.
-const stub = (href) => `<!doctype html>
+const stub = href => `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
