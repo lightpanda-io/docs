@@ -11,7 +11,13 @@ Lightpanda runs the same engine two ways. You can run the binary yourself, on yo
 
 ## Choose local or cloud
 
-**Run local when** you want full control and want nothing to leave your machine. The binary runs on your hardware, so pages you visit and data you extract stay in your infrastructure. Local gives you every interface: the [CDP server](/run-locally/commands#serve), the [MCP server](/usage/mcp) with all tools, and the built-in [AI agent](/usage/agent). You manage the process, the scaling, and the network egress yourself.
+**Run local when** you want full control and want nothing to leave your machine. The binary runs on your hardware, so pages you visit and data you extract stay in your infrastructure. Local gives you every interface:
+
+- The [CDP](/run-locally/commands#serve) or the [WebDriver BiDi](/usage/bidi/selenium) server
+- The [MCP server](/usage/mcp), with all tools
+- The built-in [AI agent](/usage/agent)
+
+You manage the process, the scaling, and the network egress yourself.
 
 **Use the cloud when** you do not want to run or scale browsers. You sign up, get a token, and connect a remote browser with no process to manage and no host to keep alive. Lightpanda Cloud runs the browser on its servers and adds the parts a hosted service needs: a [console](https://console.lightpanda.io) to manage your account and tokens and review recent sessions, usage-based plans with concurrency and monthly limits, a managed proxy pool that helps when a target blocks datacenter IPs, and an [HTTP API](/usage/api) that returns a page's HTML or Markdown from a single request with no CDP script. Because requests run on Lightpanda's servers, your target URLs and the fetched content pass through Lightpanda's infrastructure.
 

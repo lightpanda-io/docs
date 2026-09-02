@@ -25,7 +25,7 @@ Choose the output format with `--dump` and control how long the page runs with t
 
 ## Serve
 
-Start Lightpanda as a [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/) (CDP) server to control it with clients like [Puppeteer](https://pptr.dev/), [Playwright](https://playwright.dev/) or [Chromedp](https://github.com/chromedp/chromedp).
+Start Lightpanda as a server for automation clients. By default it speaks [CDP](https://chromedevtools.github.io/devtools-protocol/) (Chrome DevTools Protocol). Pass `--protocol webdriver` to speak [WebDriver BiDi](https://w3c.github.io/webdriver-bidi/) instead, or both flags to serve them on the same port.
 
 ```sh copy
 lightpanda serve --obey-robots
@@ -41,6 +41,11 @@ Find all options in the [serve command reference](/reference/cli/serve#options).
 - [Puppeteer](/usage/cdp/puppeteer)
 - [Playwright](/usage/cdp/playwright)
 - [Chromedp](/usage/cdp/chromedp)
+
+**Connect a BiDi client**, after adding `--protocol webdriver`:
+
+- [Puppeteer](/usage/bidi/puppeteer)
+- [Selenium](/usage/bidi/selenium)
 
 ## MCP
 
