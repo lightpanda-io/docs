@@ -24,12 +24,12 @@ Pick the section below that matches your driver. The setting is the same (`brows
 If you don't have Lightpanda yet, follow the [installation guide](/run-locally/installation/one-liner). Hermes and agent-browser also look in `~/.lightpanda/lightpanda` and `~/.local/bin/lightpanda`.
 
 <Callout type="warning">
-  For the **built-in tools** path, use Lightpanda **0.3.7** until agent-browser ships [vercel-labs/agent-browser#1748](https://github.com/vercel-labs/agent-browser/pull/1748): nightly builds from 2026-08-27 onward reject the `--timeout` flag agent-browser still passes at launch, so Lightpanda never starts and every action silently falls back to Chrome. Browser Use mode is not affected.
+  For the **built-in tools** path, use Lightpanda **0.3.7** until agent-browser ships its launcher fix: nightly builds from 2026-08-27 onward reject the `--timeout` flag agent-browser still passes at launch, so Lightpanda never starts and every action silently falls back to Chrome. Browser Use mode is not affected.
 </Callout>
 
 ## Option A — Browser Use mode (the Hermes default)
 
-Since Hermes `v0.21.0` ([NousResearch/hermes-agent#99312](https://github.com/NousResearch/hermes-agent/pull/99312)), Browser Use mode honours `browser.engine: lightpanda` natively: Hermes starts `lightpanda serve` itself, one process per session, and hands its endpoint to the Browser Use CLI for every `browser_exec` call. No Chromium, Playwright or Node.js is involved.
+Since Hermes `v0.21.0`, Browser Use mode honours `browser.engine: lightpanda` natively: Hermes starts `lightpanda serve` itself, one process per session, and hands its endpoint to the Browser Use CLI for every `browser_exec` call.
 
 Either pick **Lightpanda** in `hermes tools` → Browser Automation, or set it in `~/.hermes/config.yaml`:
 
@@ -42,29 +42,8 @@ browser:
 `cloud_provider: local` matters: `browser.engine` is the lowest-precedence browser setting in Hermes. It is ignored whenever a cloud provider is active — and on a setup that never picked a browser, any `BROWSERBASE_API_KEY`, `BROWSER_USE_API_KEY` or Nous subscription browser in `~/.hermes/.env` selects one automatically. A `browser.cdp_url` / `/browser connect` override takes precedence too. Since `v0.21.0`, `/browser status` and `hermes doctor` tell you when the engine is set but shadowed, and by what.
 
 <Callout type="info">
-  Lightpanda holds one page per CDP connection: the first `new_tab(url)` works, a second one fails with `TargetAlreadyLoaded` ([lightpanda-io/browser#1962](https://github.com/lightpanda-io/browser/issues/1962)). Hermes tells the agent to navigate with `goto_url(url)` after the first `new_tab`, and `capture_screenshot()` is unavailable — Lightpanda has no graphical renderer.
+  Lightpanda holds one page per CDP connection: the first `new_tab(url)` works, a second one fails with `TargetAlreadyLoaded`. Hermes tells the agent to navigate with `goto_url(url)` after the first `new_tab`, and `capture_screenshot()` is unavailable — Lightpanda has no graphical renderer.
 </Callout>
-
-### Older Hermes: connect to a server you start yourself
-
-Before `v0.21.0`, Browser Use mode never reads `browser.engine`. On those versions, start Lightpanda's CDP server yourself:
-
-```bash
-lightpanda serve --host 127.0.0.1 --port 9222
-```
-
-Then point Hermes at it, either for the current session:
-
-```
-/browser connect ws://127.0.0.1:9222/
-```
-
-or permanently in `~/.hermes/config.yaml`:
-
-```yaml
-browser:
-  cdp_url: ws://127.0.0.1:9222/
-```
 
 ## Option B — Built-in browser tools
 
@@ -85,7 +64,7 @@ The same precedence rules as Option A apply (`cloud_provider: local`, no CDP ove
 Hermes drives Lightpanda through `agent-browser --engine lightpanda` over CDP, the same way it drives local Chrome, with automatic Chrome fallback: Lightpanda handles navigate, snapshot, click, type, scroll, back, press and eval; screenshots, `browser_vision`, PDF generation, file uploads and anything that errors on Lightpanda are retried on Chrome.
 
 <Callout type="warning">
-  Before `v0.21.0`, on Ubuntu 23.10+, in Docker, or as root, Hermes injected Chromium sandbox flags (`--no-sandbox`) for every engine, and agent-browser rejects them under Lightpanda (`Custom Chrome arguments (--args) are not supported with Lightpanda`), so every action failed over to Chrome. Setting `AGENT_BROWSER_ARGS` yourself does not help. Fixed by [NousResearch/hermes-agent#81673](https://github.com/NousResearch/hermes-agent/pull/81673) (merged as #99460): run `hermes update`.
+  Before `v0.21.0`, on Ubuntu 23.10+, in Docker, or as root, Hermes injected Chromium sandbox flags (`--no-sandbox`) for every engine, and agent-browser rejects them under Lightpanda (`Custom Chrome arguments (--args) are not supported with Lightpanda`), so every action failed over to Chrome. Setting `AGENT_BROWSER_ARGS` yourself does not help; run `hermes update`.
 </Callout>
 
 ## Verify the configuration
@@ -98,12 +77,7 @@ Option A shows the engine and the binary Hermes will spawn:
 Engine: Lightpanda — Browser Use mode: Hermes spawns `lightpanda serve` per session
 ```
 
-If it instead reports `browser.engine is 'lightpanda' but it is NOT in use: …`, the message names what is shadowing it (a cloud provider, a CDP override, …); see the troubleshooting list below. On Hermes older than `v0.21.0`, after `/browser connect` you should see:
-
-```
-🌐 Browser connected to live Chromium-family browser via CDP
-   Endpoint: ws://127.0.0.1:9222
-```
+If it instead reports `browser.engine is 'lightpanda' but it is NOT in use: …`, the message names what is shadowing it (a cloud provider, a CDP override, …); see the troubleshooting list below.
 
 Option B shows the engine:
 
@@ -125,7 +99,7 @@ To prove the engine rather than trust the status line, ask the agent for `naviga
 
 Check, in this order:
 
-1. **Which Hermes version?** Browser Use mode only reads `browser.engine` from `v0.21.0`; on older versions use `cdp_url` (see Option A). From `v0.21.0`, `/browser status` and `hermes doctor` say outright when the engine is shadowed.
+1. **Is Hermes up to date?** Browser Use mode only reads `browser.engine` from `v0.21.0`; run `hermes update`. From there, `/browser status` and `hermes doctor` say outright when the engine is shadowed.
 2. **Is a cloud provider selected?** `browser.cloud_provider` in `config.yaml`, or a cloud API key / Nous subscription browser on a never-configured setup. Set `cloud_provider: local`.
 3. **Is a CDP override active?** `browser.cdp_url` or a previous `/browser connect` (undo with `/browser disconnect`).
 4. **Is Camoufox selected?** Unset `CAMOFOX_URL`.
@@ -135,8 +109,4 @@ Check, in this order:
 ## Further reading
 
 - [Hermes browser documentation](https://hermes-agent.nousresearch.com/docs/user-guide/features/browser#lightpanda-local-engine)
-- [Hermes PR that added Lightpanda support](https://github.com/NousResearch/hermes-agent/pull/7144)
-- [Hermes PR adding Lightpanda to Browser Use mode](https://github.com/NousResearch/hermes-agent/pull/99312)
-- [Hermes PR isolating Lightpanda from Chromium flags](https://github.com/NousResearch/hermes-agent/pull/81673)
-- [Multi-target support in Lightpanda](https://github.com/lightpanda-io/browser/issues/1962)
 - [Lightpanda installation guide](/run-locally/installation/one-liner)
