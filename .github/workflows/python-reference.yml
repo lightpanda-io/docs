@@ -1,0 +1,62 @@
+name: python-reference
+
+# Regenerate the Python SDK API reference with pdoc from the `lightpanda`
+# package on PyPI and open a pull request when the output changed. The
+# reference lives in public/python, which the static export copies verbatim,
+# so the website serves it at lightpanda.io/docs/python/ once the submodule is
+# bumped like any other docs change. The wheel bundles the generated tool
+# methods, so no browser binary is needed here. Runs daily to pick up new
+# package releases, or by hand.
+
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: python-reference
+  cancel-in-progress: true
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+
+      - name: Generate the reference with pdoc
+        id: generate
+        run: |
+          rm -rf public/python
+          uvx --from pdoc --with lightpanda pdoc lightpanda -o public/python --no-show-source
+          version=$(uv run --no-project --with lightpanda python -c \
+            'from importlib.metadata import version; print(version("lightpanda"))')
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          git status --short public/python
+
+      - name: Open a pull request if the reference changed
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.generate.outputs.version }}
+        run: |
+          if [ -z "$(git status --porcelain public/python)" ]; then
+            echo "reference already matches lightpanda $VERSION"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B python-reference
+          git add public/python
+          git commit -m "Update the Python SDK reference to lightpanda $VERSION"
+          git push --force origin python-reference
+          if [ -z "$(gh pr list --head python-reference --state open --json number -q '.[].number')" ]; then
+            gh pr create --base main --head python-reference \
+              --title "Update the Python SDK reference to lightpanda $VERSION" \
+              --body "Regenerated \`public/python\` with pdoc from the \`lightpanda\` $VERSION package on PyPI. Served at https://lightpanda.io/docs/python/ after the website's submodule bump."
+          fi
