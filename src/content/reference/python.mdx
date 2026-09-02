@@ -10,7 +10,7 @@ The [`lightpanda` package](https://pypi.org/project/lightpanda/) exposes `Browse
 
 ## Browser
 
-`Browser()` spawns the bundled binary on first use. It is not fork-inheritable: create a fresh instance in a forked child.
+`Browser()` spawns the bundled binary when constructed. It is not fork-inheritable: create a fresh instance in a forked child.
 
 | Argument | Default | Description |
 |---|---|---|
@@ -58,7 +58,7 @@ The [`lightpanda` package](https://pypi.org/project/lightpanda/) exposes `Browse
 | `close()` | Close the session. Calls made after `close()` raise `ToolError`. |
 | `call(action, **kwargs)` | Invoke any action by name. The methods documented below route through this. |
 
-`with session:` (or `async with`) calls `close()` on exit, if you obtained the session outside a `with Browser()`/`with browser.session()` block that already closes it.
+Sessions are context managers too: `with browser.new_session() as page:` closes the session on exit. Closing the browser ends every session anyway.
 
 ## Calling an action
 
@@ -68,42 +68,44 @@ Every browser action is a method on `Session`/`AsyncSession`, keyword-only. The 
   Only the method name gets a snake_case alias; its keyword arguments keep their original names. `wait_for_selector(selector=..., timeout=...)` has no case change, but `click(selector=..., backendNodeId=...)`, `screenshot(fullPage=...)`, and `tree(maxDepth=...)` all keep a camelCase keyword even though the method itself is snake_case.
 </Callout>
 
-A method returns parsed JSON for JSON-carrying results (`extract`, `links`, `structured_data`, `detect_forms`, `interactive_elements`, `find_element`), and plain text for everything else, including `tree`'s indented outline and `get_cookies`' `name=value` lines. A failed action raises `ToolError`.
+A failed action raises `ToolError`.
 
-In the Arguments column below, `?` marks an optional keyword argument, and `selector` / `backendNodeId` marks a pair where one of the two is required. Prefer `selector` for reproducibility; it also wins when you pass both. `backendNodeId` values come from a prior `tree`, `links`, or `find_element` call.
+In the Arguments column below, `?` marks an optional keyword argument, and `selector` / `backendNodeId` marks a pair where one of the two is required. Prefer `selector` for reproducibility; it also wins when you pass both. `backendNodeId` values come from a prior `tree`, `links`, or `find_element` call. In the Returns column, `JSON` is a parsed Python `dict` or `list`, `text` is a plain string.
 
 ### Navigation and search
 
 These methods bring a page into the browser:
 
-| Method | Arguments | Description |
-|---|---|---|
-| `goto` | `url`, `timeout?` | Navigate to a URL and load the page in memory so it can be reused later for info extraction. |
-| `search` | `query`, `timeout?` | Run a web search and return results as markdown: a numbered list of `{title, url, snippet}`. The browser does not navigate; to open a result, call `goto` with its URL. |
+| Method | Arguments | Returns | Description |
+|---|---|---|---|
+| `goto` | `url`, `timeout?` | text | Navigate to a URL and load the page in memory so it can be reused later for info extraction. |
+| `search` | `query`, `timeout?` | text | Run a web search and return results as markdown: a numbered list of `{title, url, snippet}`. The browser does not navigate; to open a result, call `goto` with its URL. |
 
 ### Reading the page
 
 These methods read the loaded page without modifying it:
 
-| Method | Arguments | Description |
-|---|---|---|
-| `markdown` | `selector?`, `backendNodeId?`, `maxBytes?`, `url?`, `timeout?` | Render the page, or a subtree, as markdown. Scope with `selector` or `backendNodeId` to read just the relevant region; use `maxBytes` to cap long pages. |
-| `html` | `selector?`, `backendNodeId?`, `url?`, `timeout?` | Raw HTML for the document, or a single node's outerHTML when scoped. Verbose; use only when you need attributes that markdown discards. |
-| `screenshot` | `path?`, `selector?`, `backendNodeId?`, `fullPage?`, `url?`, `timeout?` | Render the page, or one node, as a PNG: the text layout Lightpanda computes, not a pixel-accurate rendering (no images, fonts, or CSS colors). `path` must be a relative path. The Python SDK doesn't request an inline image, so always pass `path`; without it you get a plain size summary, not the image itself. |
-| `tree` | `url?`, `timeout?`, `backendNodeId?`, `maxDepth?` | Simplified semantic DOM tree: role, name, value, and `backendNodeId` per node. |
-| `links` | `url?`, `timeout?` | Every visible link as `text`, `href` (resolved to an absolute URL), and `backendNodeId`. |
-| `node_details` (`nodeDetails`) | `backendNodeId` | Tag, role, name, value, and other state for a node, plus a ready-to-use CSS `selector` that resolves to it. The way to turn a `backendNodeId` into a selector. |
-| `find_element` (`findElement`) | `role?`, `name?` | Find interactive elements by role and/or accessible name, with their `backendNodeId`. |
-| `interactive_elements` (`interactiveElements`) | `url?`, `timeout?` | Every interactive element on the page. |
-| `structured_data` (`structuredData`) | `url?`, `timeout?` | Structured data on the page, such as JSON-LD or OpenGraph tags. |
-| `detect_forms` (`detectForms`) | `url?`, `timeout?` | Forms on the page: fields, types, and required status. |
+| Method | Arguments | Returns | Description |
+|---|---|---|---|
+| `markdown` | `selector?`, `backendNodeId?`, `maxBytes?`, `url?`, `timeout?` | text | Render the page, or a subtree, as markdown. Scope with `selector` or `backendNodeId` to read just the relevant region; use `maxBytes` to cap long pages. |
+| `html` | `selector?`, `backendNodeId?`, `url?`, `timeout?` | text | Raw HTML for the document, or a single node's outerHTML when scoped. Verbose; use only when you need attributes that markdown discards. |
+| `screenshot` | `path?`, `selector?`, `backendNodeId?`, `fullPage?`, `url?`, `timeout?` | text or bytes | Render the page, or one node, as a PNG: the text layout Lightpanda computes, not a pixel-accurate rendering (no images, fonts, or CSS colors). `path` must be a relative path. In the 0.4.0 wheel, the Python SDK doesn't request an inline image, so without `path` you get a plain size summary, not the image itself; always pass `path` for now. A later release is expected to return the image as `bytes` when `path` is omitted. |
+| `tree` | `url?`, `timeout?`, `backendNodeId?`, `maxDepth?` | text | Simplified semantic DOM tree: role, name, value, and `backendNodeId` per node. |
+| `links` | `url?`, `timeout?` | JSON | Every visible link as `text`, `href` (resolved to an absolute URL), and `backendNodeId`. |
+| `node_details` (`nodeDetails`) | `backendNodeId` | JSON | Tag, role, name, value, and other state for a node, plus a ready-to-use CSS `selector` that resolves to it. The way to turn a `backendNodeId` into a selector. |
+| `find_element` (`findElement`) | `role?`, `name?` | JSON | Find interactive elements by role and/or accessible name, with their `backendNodeId`. |
+| `interactive_elements` (`interactiveElements`) | `url?`, `timeout?` | JSON | Every interactive element on the page. |
+| `structured_data` (`structuredData`) | `url?`, `timeout?` | JSON | Structured data on the page, such as JSON-LD or OpenGraph tags. |
+| `detect_forms` (`detectForms`) | `url?`, `timeout?` | JSON | Forms on the page: fields, types, and required status. |
 
 ### Data extraction and scripting
 
-| Method | Arguments | Description |
-|---|---|---|
-| `extract` | `schema`, `save?` | Extract structured data from the current page using a schema mapping output field names to CSS-selector specs. |
-| `evaluate` | `script`, `url?`, `timeout?`, `save?` | Evaluate a JavaScript string in the page context and return its value. Runs in the page, so it cannot see your Python variables. |
+| Method | Arguments | Returns | Description |
+|---|---|---|---|
+| `extract` | `schema`, `save?` | JSON | Extract structured data from the current page using a schema mapping output field names to CSS-selector specs. |
+| `evaluate` | `script`, `url?`, `timeout?`, `save?` | typed | Evaluate a JavaScript string in the page context and return its value. Runs in the page, so it cannot see your Python variables. |
+
+**`evaluate`'s return** is typed like the JavaScript result: for example `1+1` comes back as the `int` `2`, and `({a:1})` comes back as the `dict` `{"a": 1}`.
 
 **`extract`'s `schema`** maps output field names to CSS-selector specs. Pass it as a Python `dict` or `list`, it's encoded for you; a JSON string also works:
 
@@ -121,43 +123,43 @@ Add `"limit": N` inside any array spec to cap matches. Every extracted value is 
 
 These methods dispatch real DOM events on the page:
 
-| Method | Arguments | Description |
-|---|---|---|
-| `click` | `selector` / `backendNodeId` | Click an interactive element. |
-| `fill` | `selector` / `backendNodeId`, `value` | Fill text into an input element. |
-| `scroll` | `backendNodeId?`, `x?`, `y?` | Scroll the page, or a specific element if `backendNodeId` is given. |
-| `hover` | `selector` / `backendNodeId` | Hover over an element, triggering `mouseover` and `mouseenter`. |
-| `press` | `key`, `selector?`, `backendNodeId?` | Press a keyboard key, dispatching `keydown` and `keyup`. Targets the document if no element is given. |
-| `select_option` (`selectOption`) | `selector` / `backendNodeId`, `value` | Select an option in a `<select>` element by its value. |
-| `set_checked` (`setChecked`) | `selector` / `backendNodeId`, `checked?` | Check or uncheck a checkbox or radio button. |
+| Method | Arguments | Returns | Description |
+|---|---|---|---|
+| `click` | `selector` / `backendNodeId` | text | Click an interactive element. |
+| `fill` | `selector` / `backendNodeId`, `value` | text | Fill text into an input element. |
+| `scroll` | `backendNodeId?`, `x?`, `y?` | text | Scroll the page, or a specific element if `backendNodeId` is given. |
+| `hover` | `selector` / `backendNodeId` | text | Hover over an element, triggering `mouseover` and `mouseenter`. |
+| `press` | `key`, `selector?`, `backendNodeId?` | text | Press a keyboard key, dispatching `keydown` and `keyup`. Targets the document if no element is given. |
+| `select_option` (`selectOption`) | `selector` / `backendNodeId`, `value` | text | Select an option in a `<select>` element by its value. |
+| `set_checked` (`setChecked`) | `selector` / `backendNodeId`, `checked` | text | Check or uncheck a checkbox or radio button. |
 
 ### Waiting
 
 These methods block until the page reaches a condition:
 
-| Method | Arguments | Description |
-|---|---|---|
-| `wait_for_selector` (`waitForSelector`) | `selector`, `timeout?` | Wait for an element matching a CSS selector to appear, and return its `backendNodeId`. |
-| `wait_for_script` (`waitForScript`) | `script`, `timeout?` | Wait until a JavaScript expression returns truthy, re-evaluated on every tick. |
-| `wait_for_state` (`waitForState`) | `state`, `timeout?` | Wait for the page to reach a load state (`load`, `domcontentloaded`, `networkalmostidle`, `networkidle`, or `done`), with no navigation. |
+| Method | Arguments | Returns | Description |
+|---|---|---|---|
+| `wait_for_selector` (`waitForSelector`) | `selector`, `timeout?` | text | Wait for an element matching a CSS selector to appear, and return its `backendNodeId`. |
+| `wait_for_script` (`waitForScript`) | `script`, `timeout?` | text | Wait until a JavaScript expression returns truthy, re-evaluated on every tick. |
+| `wait_for_state` (`waitForState`) | `state`, `timeout?` | text | Wait for the page to reach a load state (`load`, `domcontentloaded`, `networkalmostidle`, `networkidle`, or `done`), with no navigation. |
 
 ### State and debugging
 
-| Method | Arguments | Description |
-|---|---|---|
-| `get_url` (`getUrl`) | none | The URL currently loaded in the session. |
-| `get_cookies` (`getCookies`) | `url?`, `all?` | Cookies stored in the browser. Defaults to the current page's host; pass `url` for another host or `all=True` for every cookie. |
-| `get_env` (`getEnv`) | `name?` | With `name`, read one `LP_*` environment variable. Without it, list the `LP_*` names that are set. |
-| `console_logs` (`consoleLogs`) | none | Buffered `console.log`/`warn`/`error` messages since the last call, which then clears the buffer. |
+| Method | Arguments | Returns | Description |
+|---|---|---|---|
+| `get_url` (`getUrl`) | none | text | The URL currently loaded in the session. |
+| `get_cookies` (`getCookies`) | `url?`, `all?` | text | Cookies stored in the browser. Defaults to the current page's host; pass `url` for another host or `all=True` for every cookie. |
+| `get_env` (`getEnv`) | `name?` | text | With `name`, read one `LP_*` environment variable. Without it, list the `LP_*` names that are set. |
+| `console_logs` (`consoleLogs`) | none | text | Buffered `console.log`/`warn`/`error` messages since the last call, which then clears the buffer. |
 
 ## Script replay
 
-`run_script` and `run_script_async` replay a saved [PandaScript](/reference/pandascript) with no LLM call, by running `lightpanda run <script>` and returning its stdout. Installing the package also puts the `lightpanda` binary itself on `PATH`.
+`run_script` and `run_script_async` (its awaitable variant, run in a worker thread) replay a saved [PandaScript](/reference/pandascript) with no LLM call, by running `lightpanda run <script>` and returning its stdout. Installing the package also puts the `lightpanda` binary itself on `PATH`.
 
 ```python copy
 from lightpanda import run_script
 
-run_script("hn.lp.js", env={"LP_HN_USERNAME": "me"})
+run_script("hn.js", env={"LP_HN_USERNAME": "me"})
 ```
 
 | Argument | Default | Description |
@@ -167,7 +169,7 @@ run_script("hn.lp.js", env={"LP_HN_USERNAME": "me"})
 | `binary` | `None` | Same resolution as `Browser`'s `binary` argument. |
 | `timeout` | `None` | Seconds to wait for the process to exit. |
 
-A non-zero exit raises `ScriptError`. `run_script_async` is the awaitable variant, run in a worker thread.
+A non-zero exit raises `ScriptError`. Exceeding `timeout` raises `subprocess.TimeoutExpired` instead.
 
 ## Errors
 
@@ -176,4 +178,4 @@ A non-zero exit raises `ScriptError`. `run_script_async` is the awaitable varian
 | `LightpandaError` | Base class for every error the package raises. |
 | `ProtocolError` | The connection to the browser process failed: a malformed request, a timeout, or an internal error. Carries a `code` attribute. |
 | `ToolError` | A browser action reported failure, such as a bad selector, a JS exception inside `evaluate`, or a call on a closed session. |
-| `ScriptError` | `run_script` or `run_script_async` exited with a non-zero status. Carries `returncode`, `stdout`, and `stderr` attributes. |
+| `ScriptError` | `run_script` or `run_script_async` exited with a non-zero status, or the script file doesn't exist (`returncode=-1`). Carries `returncode`, `stdout`, and `stderr` attributes. |

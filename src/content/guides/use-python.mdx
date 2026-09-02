@@ -8,7 +8,7 @@ import { Callout, Tabs } from 'nextra/components'
 
 In this guide, you'll scrape a JavaScript-rendered page with the [`lightpanda` Python package](https://pypi.org/project/lightpanda/) and extract structured data from it with `page.extract`.
 
-The package bundles the Lightpanda browser binary, so there's no CDP client to wire up and no separate browser download, unlike driving Lightpanda from [Puppeteer or Playwright](/guides/retrieve-an-html-webpage). It also runs [an order of magnitude less memory than a Selenium and Chrome stack](https://github.com/lightpanda-io/lightpanda-python/blob/main/examples/compare.py) for the same scrape.
+The package bundles the Lightpanda browser binary, so there's no CDP client to wire up and no separate browser download, unlike driving Lightpanda from [Puppeteer or Playwright](/guides/retrieve-an-html-webpage). It also uses [an order of magnitude less memory than a Selenium and Chrome stack](https://github.com/lightpanda-io/lightpanda-python/blob/main/examples/compare.py) for the same scrape.
 
 ## Prerequisites
 
@@ -121,6 +121,8 @@ Top tags: [('love', 14), ('inspirational', 13), ('life', 13), ('humor', 12), ('b
 
 Use `AsyncBrowser` instead of `Browser` when you want to scrape many pages at once instead of one after another, or when your code already runs inside an async application (a web server built with FastAPI, for example) where a blocking call would freeze everything else it's doing. Every method becomes awaitable; `AsyncBrowser` itself runs each call on the browser's own thread pool, so it never blocks your event loop.
 
+Since the site's ten pages are numbered, fetch all of them at once with `asyncio.gather` instead of following the pagination link one page at a time. `browser.session()` opens a session scoped to one task and closes it when that task ends:
+
 ```python copy
 import asyncio
 from collections import Counter
@@ -134,24 +136,26 @@ SCHEMA = {
             "fields": {"text": ".text", "author": ".author", "tags": [".tag"]},
         }
     ],
-    "next": {"selector": "li.next a", "attr": "href"},
 }
+
+URLS = [f"https://quotes.toscrape.com/js/page/{n}/" for n in range(1, 11)]
+
+
+async def scrape_one(browser, url):
+    async with browser.session() as page:
+        await page.goto(url=url)
+        data = await page.extract(schema=SCHEMA)
+        return data["quotes"]
 
 
 async def main():
     async with AsyncBrowser() as browser:
-        page = await browser.new_session()
-        quotes = []
-        url = "https://quotes.toscrape.com/js/"
-        while url:
-            await page.goto(url=url)
-            data = await page.extract(schema=SCHEMA)
-            quotes.extend(data["quotes"])
-            url = data["next"]
+        results = await asyncio.gather(*(scrape_one(browser, url) for url in URLS))
+    quotes = [quote for page_quotes in results for quote in page_quotes]
 
-        print(f"{len(quotes)} quotes")
-        tags = Counter(tag for q in quotes for tag in q["tags"])
-        print("Top tags:", tags.most_common(5))
+    print(f"{len(quotes)} quotes")
+    tags = Counter(tag for q in quotes for tag in q["tags"])
+    print("Top tags:", tags.most_common(5))
 
 asyncio.run(main())
 ```
@@ -164,12 +168,12 @@ Find every method's arguments in the [Python SDK reference](/reference/python).
 
 ## Replay a saved script
 
-If you already have a PandaScript, a `.lp.js` file recorded by [Lightpanda Agent](/guides/lightpanda-agent-tutorial) or the MCP `save` tool, replay it from Python with `run_script`, no LLM call needed:
+If you already have a PandaScript, a `.js` file recorded by [Lightpanda Agent](/guides/lightpanda-agent-tutorial) or the MCP `save` tool, replay it from Python with `run_script`, no LLM call needed:
 
 ```python copy
 from lightpanda import run_script
 
-output = run_script("scrape.lp.js")
+output = run_script("scrape.js")
 print(output)
 ```
 
