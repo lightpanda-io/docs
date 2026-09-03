@@ -61,7 +61,7 @@ Sessions are context managers too: `with browser.new_session() as page:` closes 
 
 ## Calling an action
 
-Every browser action is a method on `Session`/`AsyncSession`, keyword-only, with the action and its arguments in snake_case: the `waitForSelector` action is `wait_for_selector`, and its `backendNodeId` argument is `backend_node_id`. The methods are generated from the bundled browser's action schemas, so the signatures and docstrings your IDE shows come straight from the binary. The generated reference for the latest release is published at [lightpanda.io/lightpanda-python](https://lightpanda.io/lightpanda-python/).
+Every browser action is a method on `Session`/`AsyncSession`, keyword-only, with the action and its arguments in snake_case: the `waitForSelector` action is `wait_for_selector`, and its `backendNodeId` argument is `backend_node_id`. The methods are generated from the bundled browser's action schemas, so the signatures and docstrings your IDE shows come straight from the binary.
 
 A failed action raises `ToolError`.
 
