@@ -1,0 +1,69 @@
+name: python-reference
+
+# Regenerate the Python SDK API reference page from the lightpanda-python main
+# branch and open a pull request when the output changed. The page is
+# src/content/reference/python-api.mdx, written by
+# scripts/generate-python-reference.py with pdoc's Python API, so it renders
+# like any other docs page and goes live at
+# https://lightpanda.io/docs/reference/python-api once the website bumps its
+# docs submodule like any other docs change. The package imports without a
+# browser binary, so none is needed here. Runs daily to pick up new package
+# changes, by hand, or as a smoke run when the generator itself changes.
+
+on:
+  schedule:
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - scripts/generate-python-reference.py
+      - .github/workflows/python-reference.yml
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: python-reference
+  cancel-in-progress: true
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+
+      - name: Generate the reference page
+        id: generate
+        run: |
+          sha=$(git ls-remote https://github.com/lightpanda-io/lightpanda-python.git refs/heads/main | cut -f1)
+          uv run --no-project --python 3.13 --with 'pdoc==16.0.0' \
+            --with "git+https://github.com/lightpanda-io/lightpanda-python@$sha" \
+            python scripts/generate-python-reference.py
+          echo "sha=${sha::7}" >> "$GITHUB_OUTPUT"
+          git status --short src/content/reference/python-api.mdx
+
+      - name: Open a pull request if the reference changed
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ steps.generate.outputs.sha }}
+        run: |
+          if [ -z "$(git status --porcelain src/content/reference/python-api.mdx)" ]; then
+            echo "reference already matches lightpanda-python $SHA"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B python-reference
+          git add src/content/reference/python-api.mdx
+          git commit -m "Update the Python SDK API reference to lightpanda-python $SHA"
+          git push --force origin python-reference
+          if [ -z "$(gh pr list --head python-reference --state open --json number -q '.[].number')" ]; then
+            gh pr create --base main --head python-reference \
+              --title "Update the Python SDK API reference to lightpanda-python $SHA" \
+              --body "Regenerated \`src/content/reference/python-api.mdx\` from lightpanda-python $SHA. Served at https://lightpanda.io/docs/reference/python-api after the website's submodule bump."
+          fi
