@@ -1,0 +1,100 @@
+---
+title: Selenium (BiDi)
+description: Use Lightpanda with Selenium over the WebDriver BiDi protocol, in JavaScript or Python.
+---
+import { Tabs, Callout } from 'nextra/components'
+
+# Selenium (BiDi)
+
+Use Lightpanda with [Selenium](https://www.selenium.dev/) over [WebDriver BiDi](https://w3c.github.io/webdriver-bidi/). Lightpanda only implements the BiDi handshake of the classic WebDriver protocol, not full classic automation, so a session is created the normal Selenium way but driven with BiDi commands (`browsingContext`, `script`) instead of `driver.get()` or `driver.findElement()`.
+
+<Callout type="warning">
+  BiDi support is new and covers less than CDP: only `browsingContext` and a subset of `script` are implemented.
+</Callout>
+
+Start Lightpanda with the `webdriver` protocol enabled (find all options in the [serve command reference](/reference/cli/serve#options)):
+
+```sh copy
+lightpanda serve --host 127.0.0.1 --port 9222 --protocol webdriver
+```
+
+Request a BiDi session by setting the `webSocketUrl` capability to `true` (`browserName` can be any value; Lightpanda reports itself back regardless), then drive it with BiDi commands:
+
+<Tabs items={['JavaScript', 'Python']} className="-mb-4">
+  <Tabs.Tab id="javascript" className="m-0">
+```sh copy
+npm install selenium-webdriver
+```
+
+```js copy
+'use strict'
+
+import { Builder, Capabilities } from 'selenium-webdriver'
+import { BrowsingContext } from 'selenium-webdriver/bidi/generated/browsing_context.js'
+import { Script } from 'selenium-webdriver/bidi/generated/script.js'
+
+const caps = new Capabilities()
+caps.set('browserName', 'lightpanda')
+caps.set('webSocketUrl', true)
+
+const driver = await new Builder()
+  .usingServer('http://127.0.0.1:9222')
+  .withCapabilities(caps)
+  .build()
+
+const bidi = await driver.getBidi()
+await bidi.waitForConnection()
+
+const browsingContext = new BrowsingContext(bidi)
+const script = new Script(bidi)
+
+const { context } = await browsingContext.create({ type: 'tab' })
+await browsingContext.navigate({ context, url: 'https://wikipedia.com/', wait: 'complete' })
+
+const title = await script.evaluate({
+  expression: 'document.title',
+  target: { context },
+  awaitPromise: false,
+})
+console.log(title.result.value)
+
+await browsingContext.close({ context })
+await driver.quit()
+```
+  </Tabs.Tab>
+  <Tabs.Tab id="python" className="m-0">
+```sh copy
+pip install selenium
+```
+
+```python copy
+import os
+
+from selenium.webdriver.common.options import ArgOptions
+from selenium.webdriver.common.bidi.common import command_builder
+from selenium.webdriver.remote.webdriver import WebDriver
+
+options = ArgOptions()
+options.set_capability("browserName", "lightpanda")
+options.set_capability("webSocketUrl", True)
+
+driver = WebDriver(command_executor="http://127.0.0.1:9222", options=options)
+
+context = driver.browsing_context.create(type="tab")
+driver.browsing_context.navigate(context=context, url="https://wikipedia.com/", wait="complete")
+
+# driver.script doesn't expose evaluate yet, so build the BiDi command directly.
+result = driver.browsing_context.conn.execute(command_builder(
+    "script.evaluate",
+    {"expression": "document.title", "target": {"context": context}, "awaitPromise": False},
+))
+print(result["result"]["value"])
+
+driver.browsing_context.close(context)
+driver.quit()
+
+# Selenium's BiDi thread outlives quit(); force the process to exit instead.
+os._exit(0)
+```
+  </Tabs.Tab>
+</Tabs>

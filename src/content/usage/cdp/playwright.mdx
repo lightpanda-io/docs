@@ -6,9 +6,9 @@ import { Tabs } from 'nextra/components'
 
 # Playwright
 
-Use Lightpanda with [Playwright](https://playwright.dev/) via the [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/) (CDP).
+Use Lightpanda with [Playwright](https://playwright.dev/) via the [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/) (CDP), in JavaScript or Python.
 
-More examples in [demo/playwright](https://github.com/lightpanda-io/demo/tree/main/playwright).
+More examples in [demo/playwright](https://github.com/lightpanda-io/demo/tree/main/playwright) (JavaScript).
 
 <Tabs items={['Local', 'Cloud']}>
   <Tabs.Tab>
@@ -18,8 +18,10 @@ Start Lightpanda as a local CDP server (find all options in the [serve command r
 lightpanda serve --host 127.0.0.1 --port 9222
 ```
 
-Connect Playwright using `chromium.connectOverCDP`:
+Connect Playwright:
 
+<Tabs items={['JavaScript', 'Python']} className="-mb-4">
+  <Tabs.Tab id="javascript" className="m-0">
 ```js copy
 import { chromium } from 'playwright-core';
 
@@ -38,13 +40,42 @@ await context.close();
 await browser.close();
 ```
   </Tabs.Tab>
+  <Tabs.Tab id="python" className="m-0">
+Install the [`playwright` package](https://pypi.org/project/playwright/):
+
+```sh copy
+pip install playwright
+```
+
+```python copy
+from playwright.sync_api import sync_playwright
+
+with sync_playwright() as p:
+    browser = p.chromium.connect_over_cdp("ws://127.0.0.1:9222")
+    context = browser.new_context()
+    page = context.new_page()
+
+    page.goto("https://wikipedia.com/")
+
+    title = page.title()
+    print(title)
+
+    page.close()
+    context.close()
+    browser.close()
+```
+  </Tabs.Tab>
+</Tabs>
+  </Tabs.Tab>
   <Tabs.Tab>
-Export your API token and connect to the cloud endpoint:
+Set your API token and connect to the cloud endpoint. The connection uses `wss://` (WebSocket over TLS) instead of the local `ws://`:
 
 ```sh copy
 export LPD_TOKEN="your token here"
 ```
 
+<Tabs items={['JavaScript', 'Python']} className="-mb-4">
+  <Tabs.Tab id="javascript" className="m-0">
 ```js copy
 import playwright from "playwright-core";
 
@@ -60,8 +91,29 @@ await page.close();
 await context.close();
 await browser.close();
 ```
+  </Tabs.Tab>
+  <Tabs.Tab id="python" className="m-0">
+```python copy
+import os
+from playwright.sync_api import sync_playwright
 
-In the [playground](/run-on-lightpanda-cloud/playground), the console builds this URL for you and exposes it as `CDP_WS_URL`. Pass `process.env.CDP_WS_URL` to `connectOverCDP` there, since `LPD_TOKEN` does not exist in that runtime.
+with sync_playwright() as p:
+    browser = p.chromium.connect_over_cdp(
+        "wss://euwest.cloud.lightpanda.io/ws?token=" + os.environ["LPD_TOKEN"]
+    )
+    context = browser.new_context()
+    page = context.new_page()
+
+    # ...
+
+    page.close()
+    context.close()
+    browser.close()
+```
+  </Tabs.Tab>
+</Tabs>
+
+In the [playground](/run-on-lightpanda-cloud/playground), the console builds this URL for you and exposes it as `CDP_WS_URL`. Use `process.env.CDP_WS_URL` (JavaScript) or `os.environ["CDP_WS_URL"]` (Python) there, since `LPD_TOKEN` does not exist in that runtime.
 
 ## Cloud options
 
