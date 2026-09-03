@@ -6,11 +6,11 @@ import { Callout } from 'nextra/components'
 
 # Python SDK
 
-The [`lightpanda` package](https://pypi.org/project/lightpanda/) exposes `Browser`/`AsyncBrowser`, which spawn and manage the bundled binary, and `Session`/`AsyncSession`, with one method per browser action. See [Use the Python SDK](/guides/use-python) for practical documentation.
+The [`lightpanda` package](https://pypi.org/project/lightpanda/) exposes `Browser`/`AsyncBrowser`, which spawn and manage the bundled binary, and `Session`/`AsyncSession`, with one method per browser action. See [Use the Python SDK](/guides/use-python) for practical documentation, and the [generated API reference](https://lightpanda.io/docs/python/) for every signature and docstring as shipped in the package.
 
 ## Browser
 
-`Browser()` spawns the bundled binary when constructed. It is not fork-inheritable: create a fresh instance in a forked child.
+[`Browser()`](https://lightpanda.io/docs/python/lightpanda.html#Browser) spawns the bundled binary when constructed. It is not fork-inheritable: create a fresh instance in a forked child.
 
 | Argument | Default | Description |
 |---|---|---|
@@ -30,7 +30,7 @@ The [`lightpanda` package](https://pypi.org/project/lightpanda/) exposes `Browse
 
 ## AsyncBrowser
 
-`AsyncBrowser` mirrors `Browser` for asyncio: every call runs on a browser-owned thread pool, so the event loop is never blocked.
+[`AsyncBrowser`](https://lightpanda.io/docs/python/lightpanda.html#AsyncBrowser) mirrors `Browser` for asyncio: every call runs on a browser-owned thread pool, so the event loop is never blocked.
 
 | Argument | Default | Description |
 |---|---|---|
@@ -50,7 +50,7 @@ The [`lightpanda` package](https://pypi.org/project/lightpanda/) exposes `Browse
 
 ## Session and AsyncSession
 
-`Browser.new_session()` and `AsyncBrowser.new_session()` are the only way to obtain a `Session` or `AsyncSession`; do not construct one directly.
+`Browser.new_session()` and `AsyncBrowser.new_session()` are the only way to obtain a [`Session`](https://lightpanda.io/docs/python/lightpanda.html#Session) or [`AsyncSession`](https://lightpanda.io/docs/python/lightpanda.html#AsyncSession); do not construct one directly.
 
 | Member | Description |
 |---|---|
@@ -69,6 +69,8 @@ Every browser action is a method on `Session`/`AsyncSession`, keyword-only. The 
 </Callout>
 
 A failed action raises `ToolError`.
+
+The tables below summarize each action. For the exact Python signatures, type hints, and docstrings of every method, see [`Session`](https://lightpanda.io/docs/python/lightpanda.html#Session) and [`AsyncSession`](https://lightpanda.io/docs/python/lightpanda.html#AsyncSession) in the [generated API reference](https://lightpanda.io/docs/python/).
 
 In the Arguments column below, `?` marks an optional keyword argument, and `selector` / `backendNodeId` marks a pair where one of the two is required. Prefer `selector` for reproducibility; it also wins when you pass both. `backendNodeId` values come from a prior `tree`, `links`, or `find_element` call. In the Returns column, `JSON` is a parsed Python `dict` or `list`, `text` is a plain string.
 
@@ -154,7 +156,7 @@ These methods block until the page reaches a condition:
 
 ## Script replay
 
-`run_script` and `run_script_async` (its awaitable variant, run in a worker thread) replay a saved [PandaScript](/reference/pandascript) with no LLM call, by running `lightpanda run <script>` and returning its stdout. Installing the package also puts the `lightpanda` binary itself on `PATH`.
+[`run_script`](https://lightpanda.io/docs/python/lightpanda.html#run_script) and [`run_script_async`](https://lightpanda.io/docs/python/lightpanda.html#run_script_async) (its awaitable variant, run in a worker thread) replay a saved [PandaScript](/reference/pandascript) with no LLM call, by running `lightpanda run <script>` and returning its stdout. Installing the package also puts the `lightpanda` binary itself on `PATH`.
 
 ```python copy
 from lightpanda import run_script
@@ -175,7 +177,7 @@ A non-zero exit raises `ScriptError`. Exceeding `timeout` raises `subprocess.Tim
 
 | Error | Raised when |
 |---|---|
-| `LightpandaError` | Base class for every error the package raises. |
-| `ProtocolError` | The connection to the browser process failed: a malformed request, a timeout, or an internal error. Carries a `code` attribute. |
-| `ToolError` | A browser action reported failure, such as a bad selector, a JS exception inside `evaluate`, or a call on a closed session. |
-| `ScriptError` | `run_script` or `run_script_async` exited with a non-zero status, or the script file doesn't exist (`returncode=-1`). Carries `returncode`, `stdout`, and `stderr` attributes. |
+| [`LightpandaError`](https://lightpanda.io/docs/python/lightpanda.html#LightpandaError) | Base class for every error the package raises. |
+| [`ProtocolError`](https://lightpanda.io/docs/python/lightpanda.html#ProtocolError) | The connection to the browser process failed: a malformed request, a timeout, or an internal error. Carries a `code` attribute. |
+| [`ToolError`](https://lightpanda.io/docs/python/lightpanda.html#ToolError) | A browser action reported failure, such as a bad selector, a JS exception inside `evaluate`, or a call on a closed session. |
+| [`ScriptError`](https://lightpanda.io/docs/python/lightpanda.html#ScriptError) | `run_script` or `run_script_async` exited with a non-zero status, or the script file doesn't exist (`returncode=-1`). Carries `returncode`, `stdout`, and `stderr` attributes. |
