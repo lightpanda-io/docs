@@ -77,6 +77,9 @@ FENCE_RE = re.compile(r"^\s*```")
 CODE_SPAN_RE = re.compile(r"(`+)(.+?)\1", re.DOTALL)
 MODULE_PREFIX_RE = re.compile(r"\blightpanda\.\w+\.")
 LINK_RE = re.compile(r"\]\(#([a-z0-9-]+)\)")
+SECTION_RE = re.compile(r"^#{2,6} (\w+):$", re.MULTILINE)
+LIST_ITEM_RE = re.compile(r"^\s*[-*] ")
+DOCFORMAT = getattr(lightpanda, "__docformat__", "restructuredtext")
 
 
 def slug(*parts: str) -> str:
@@ -132,6 +135,7 @@ def fence_indented_blocks(text: str) -> str:
     out: list[str] = []
     block: list[str] = []
     in_fence = False
+    in_list = False  # indented lines inside a list are item continuations
 
     def flush() -> None:
         if block:
@@ -149,11 +153,16 @@ def fence_indented_blocks(text: str) -> str:
             flush()
             in_fence = not in_fence
             out.append(line)
-        elif not in_fence and line.startswith("  ") and line.strip():
+        elif not in_fence and line.startswith("  ") and line.strip() and not in_list:
             block.append(line.rstrip())
         else:
             flush()
             out.append(line)
+            if not in_fence:
+                if LIST_ITEM_RE.match(line):
+                    in_list = True
+                elif not line.strip():
+                    in_list = False
     flush()
     return "\n".join(out)
 
@@ -180,7 +189,10 @@ def render_docstring(doc: pdoc.doc.Doc, links: dict[str, str]) -> str:
     raw = doc.docstring
     if not raw.strip():
         return ""
-    text = pdoc.docstrings.convert(raw, "restructuredtext", doc.source_file)
+    text = pdoc.docstrings.convert(raw, DOCFORMAT, doc.source_file)
+    # pdoc renders Google-style sections (Args, Returns, ...) as headings;
+    # keep them out of the page's outline.
+    text = SECTION_RE.sub(r"**\1:**", text)
     text = fence_indented_blocks(text)
     out: list[str] = []
     prose: list[str] = []
