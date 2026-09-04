@@ -8,34 +8,9 @@ description: Reference of every public class, method, property and exception in 
 
 Every public class, method, property and exception of the [`lightpanda` package](https://pypi.org/project/lightpanda/), with the signatures and docstrings shipped in the code. See [Use the Python SDK](/guides/use-python) for a practical walkthrough. Every sync class has an asyncio twin with the same methods, awaitable; the async sections below list only what the twin adds.
 
-Browser actions are keyword-only methods on [`Session`](#session) and [`AsyncSession`](#asyncsession), named in snake_case after the browser's own action names: the `waitForSelector` action is `wait_for_selector`, and its `backendNodeId` argument is `backend_node_id`. Where a method accepts both `selector` and `backend_node_id`, pass one of the two; `selector` is preferred for reproducibility and wins when both are given, and `backend_node_id` takes the values returned by [`tree`](#session-tree), [`links`](#session-links) or [`find_element`](#session-find-element). [`Session.call`](#session-call) is the escape hatch that takes the action and argument names exactly as the browser declares them. A failed action raises [`ToolError`](#toolerror).
+Browser actions are keyword-only methods on [`Session`](#session) and [`AsyncSession`](#asyncsession), named in snake_case after the browser's own action names: the `waitForSelector` action is `wait_for_selector`, and its `backendNodeId` argument is `backend_node_id`.
 
-Lightpanda for Python: a lightweight headless browser.
-
-```python
-from lightpanda import Browser
-
-with Browser() as b:
-    page = b.new_session()
-    page.goto(url="https://example.com")
-    data = page.extract(schema={"title": "h1"})
-```
-
-The same API is available for asyncio:
-
-```python
-from lightpanda import AsyncBrowser
-
-async with AsyncBrowser() as b:
-    page = await b.new_session()
-    await page.goto(url="https://example.com")
-    data = await page.extract(schema={"title": "h1"})
-```
-
-For Playwright or Puppeteer code, [``CDPServer``](#cdpserver) runs the browser's own
-Chrome DevTools Protocol server and hands you the endpoint to connect to
-(see its docs for an example). For Selenium, [``BiDiServer``](#bidiserver) serves WebDriver
-BiDi the same way and hands you the ``command_executor`` URL.
+Where a method accepts both `selector` and `backend_node_id`, pass one of the two. `selector` is preferred for reproducibility and wins when both are given; `backend_node_id` takes the values returned by [`tree`](#session-tree), [`links`](#session-links) or [`find_element`](#session-find-element).
 
 ## Browser [#browser]
 
@@ -84,6 +59,8 @@ def close(self) -> None
 One isolated browsing context (own page, cookies, memory).
 
 Do not construct directly — use [`Browser.new_session()`](#browser-new-session).
+
+[`call`](#session-call) is the escape hatch that takes the action and argument names exactly as the browser declares them. A failed action raises [`ToolError`](#toolerror).
 
 ```python
 class Session(browser: Browser, session_id: str)

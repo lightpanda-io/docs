@@ -10,7 +10,7 @@ const meta: MetaRecord = {
   'http-api': 'HTTP API',
   'mcp-tools': 'MCP tools',
   pandascript: 'PandaScript',
-  'python-api': 'Python SDK',
+  python: 'Python SDK',
 }
 
 export default meta

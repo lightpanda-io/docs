@@ -1,11 +1,9 @@
-"""Generate the Python SDK API reference page from the lightpanda package.
+"""Generate the Python SDK reference page from the lightpanda package.
 
-The hand-written src/content/reference/python.mdx explains how the package fits
-together; this script writes the exhaustive companion page,
-src/content/reference/python-api.mdx, by walking the installed `lightpanda`
-package with pdoc's Python API and emitting one MDX section per public class,
-method, property, function and exception, with the signatures and docstrings
-shipped in the code. Emitting MDX instead of pdoc's own HTML keeps the page
+This script writes src/content/reference/python.mdx by walking the installed
+`lightpanda` package with pdoc's Python API and emitting one MDX section per
+public class, method, property, function and exception, with the signatures
+and docstrings shipped in the code. Emitting MDX instead of pdoc's own HTML keeps the page
 inside the Nextra site: sidebar, search, dark mode and deep links all work as
 on any other page.
 
@@ -34,7 +32,7 @@ import pdoc.docstrings
 import lightpanda
 
 ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_OUT = ROOT / "src" / "content" / "reference" / "python-api.mdx"
+DEFAULT_OUT = ROOT / "src" / "content" / "reference" / "python.mdx"
 
 FRONTMATTER = """---
 title: Python SDK
@@ -55,18 +53,25 @@ INTRO = (
     "awaitable; the async sections below list only what the twin adds."
 )
 
-CONVENTIONS = (
+CONVENTIONS = [
     "Browser actions are keyword-only methods on [`Session`](#session) and "
     "[`AsyncSession`](#asyncsession), named in snake_case after the browser's own action "
     "names: the `waitForSelector` action is `wait_for_selector`, and its `backendNodeId` "
-    "argument is `backend_node_id`. Where a method accepts both `selector` and "
-    "`backend_node_id`, pass one of the two; `selector` is preferred for reproducibility and "
-    "wins when both are given, and `backend_node_id` takes the values returned by "
-    "[`tree`](#session-tree), [`links`](#session-links) or "
-    "[`find_element`](#session-find-element). [`Session.call`](#session-call) is the escape "
-    "hatch that takes the action and argument names exactly as the browser declares them. "
-    "A failed action raises [`ToolError`](#toolerror)."
-)
+    "argument is `backend_node_id`.",
+    "Where a method accepts both `selector` and `backend_node_id`, pass one of the two. "
+    "`selector` is preferred for reproducibility and wins when both are given; "
+    "`backend_node_id` takes the values returned by [`tree`](#session-tree), "
+    "[`links`](#session-links) or [`find_element`](#session-find-element).",
+]
+
+# Fixed paragraphs shown under a class heading, after its docstring.
+CLASS_NOTES = {
+    "Session": (
+        "[`call`](#session-call) is the escape hatch that takes the action and argument "
+        "names exactly as the browser declares them. A failed action raises "
+        "[`ToolError`](#toolerror)."
+    ),
+}
 
 FENCE_RE = re.compile(r"^\s*```")
 CODE_SPAN_RE = re.compile(r"(`+)(.+?)\1", re.DOTALL)
@@ -301,6 +306,7 @@ def class_code(cls: pdoc.doc.Class) -> str:
 def emit_class(page: Page, module: pdoc.doc.Module, cls: pdoc.doc.Class, links: dict[str, str]) -> None:
     page.heading(2, cls.name, slug(cls.name))
     page.para(render_docstring(cls, links))
+    page.para(CLASS_NOTES.get(cls.name, ""))
     page.fence(class_code(cls))
     init = cls.members.get("__init__")
     if isinstance(init, pdoc.doc.Function) and "__init__" in vars(cls.obj):
@@ -397,8 +403,8 @@ def generate() -> str:
     page.lines.append("# Python SDK")
     page.lines.append("")
     page.para(INTRO)
-    page.para(CONVENTIONS)
-    page.para(render_docstring(module, links))
+    for paragraph in CONVENTIONS:
+        page.para(paragraph)
 
     exceptions: list[pdoc.doc.Class] = []
     for name in names:
