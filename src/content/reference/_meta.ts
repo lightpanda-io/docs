@@ -11,7 +11,6 @@ const meta: MetaRecord = {
   'mcp-tools': 'MCP tools',
   pandascript: 'PandaScript',
   python: 'Python SDK',
-  'python-api': 'Python API',
 }
 
 export default meta
