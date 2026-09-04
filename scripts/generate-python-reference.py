@@ -37,8 +37,8 @@ ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_OUT = ROOT / "src" / "content" / "reference" / "python-api.mdx"
 
 FRONTMATTER = """---
-title: Python API
-description: Generated reference of every public class, method, property and exception in the lightpanda Python package, with the signatures and docstrings shipped in the code.
+title: Python SDK
+description: Reference of every public class, method, property and exception in the lightpanda Python package, generated from the signatures and docstrings shipped in the code.
 ---
 """
 
@@ -50,10 +50,22 @@ BANNER = (
 INTRO = (
     "Every public class, method, property and exception of the "
     "[`lightpanda` package](https://pypi.org/project/lightpanda/), with the signatures and "
-    "docstrings shipped in the code. See [Python SDK](/reference/python) for a curated "
-    "overview of the same API and [Use the Python SDK](/guides/use-python) for practical "
-    "documentation. Every sync class has an asyncio twin with the same methods, "
+    "docstrings shipped in the code. See [Use the Python SDK](/guides/use-python) for a "
+    "practical walkthrough. Every sync class has an asyncio twin with the same methods, "
     "awaitable; the async sections below list only what the twin adds."
+)
+
+CONVENTIONS = (
+    "Browser actions are keyword-only methods on [`Session`](#session) and "
+    "[`AsyncSession`](#asyncsession), named in snake_case after the browser's own action "
+    "names: the `waitForSelector` action is `wait_for_selector`, and its `backendNodeId` "
+    "argument is `backend_node_id`. Where a method accepts both `selector` and "
+    "`backend_node_id`, pass one of the two; `selector` is preferred for reproducibility and "
+    "wins when both are given, and `backend_node_id` takes the values returned by "
+    "[`tree`](#session-tree), [`links`](#session-links) or "
+    "[`find_element`](#session-find-element). [`Session.call`](#session-call) is the escape "
+    "hatch that takes the action and argument names exactly as the browser declares them. "
+    "A failed action raises [`ToolError`](#toolerror)."
 )
 
 FENCE_RE = re.compile(r"^\s*```")
@@ -382,9 +394,10 @@ def generate() -> str:
     page.lines.append(FRONTMATTER.rstrip())
     page.lines.append(BANNER)
     page.lines.append("")
-    page.lines.append("# Python API")
+    page.lines.append("# Python SDK")
     page.lines.append("")
     page.para(INTRO)
+    page.para(CONVENTIONS)
     page.para(render_docstring(module, links))
 
     exceptions: list[pdoc.doc.Class] = []

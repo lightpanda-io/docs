@@ -11,6 +11,7 @@ export const basePath = '/docs'
 
 export const redirects = {
   '/python': '/reference/python-api',
+  '/reference/python': '/reference/python-api',
   '/quickstart/installation-and-setup': '/quickstart',
   '/quickstart/your-first-test': '/quickstart',
   '/quickstart/build-your-first-extraction-script': '/quickstart',
