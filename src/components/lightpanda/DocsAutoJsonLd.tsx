@@ -12,15 +12,11 @@ interface DocsAutoJsonLdProps {
 }
 
 // Paths that indicate a guide/tutorial page (HowTo schema)
-const GUIDE_PATTERNS = [
-  'quickstart/',
-  'guides/',
-  'getting-started',
-]
+const GUIDE_PATTERNS = ['quickstart/', 'guides/', 'getting-started']
 
 function isGuidePage(filePath: string): boolean {
   const normalized = filePath.replace('src/content/', '')
-  return GUIDE_PATTERNS.some((pattern) => normalized.includes(pattern))
+  return GUIDE_PATTERNS.some(pattern => normalized.includes(pattern))
 }
 
 function filePathToDocsPath(filePath: string): string {

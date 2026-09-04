@@ -1,15 +1,14 @@
 'use client'
 
-import { type ReactNode } from 'react'
-import { Layout } from 'nextra-theme-docs'
-
-import { Canonical } from '@/components/lightpanda/Canonical'
-import { Footer } from '@/components/lightpanda/Footer'
-import { Navbar } from '@/components/lightpanda/Navbar'
 import { Providers } from '@lightpanda/common/components/Providers'
 import { SocialIcons } from '@lightpanda/common/components/SocialIcons'
 import { Version } from '@lightpanda/common/components/Version'
 import { siteDetails } from '@lightpanda/common/data/siteDetails'
+import { Layout } from 'nextra-theme-docs'
+import type { ReactNode } from 'react'
+import { Canonical } from '@/components/lightpanda/Canonical'
+import { Footer } from '@/components/lightpanda/Footer'
+import { Navbar } from '@/components/lightpanda/Navbar'
 
 type DocsClientLayoutProps = {
   children: ReactNode
