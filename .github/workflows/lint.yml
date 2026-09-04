@@ -27,5 +27,9 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: ${{ env.NODE_VERSION }}
+      - name: Setup Biome
+        uses: biomejs/setup-biome@v2
+        with:
+          version: 2.5.11
       - name: Lint
-        run: yarn biome-lint
+        run: biome ci . --diagnostic-level=error

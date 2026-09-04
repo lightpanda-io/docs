@@ -1,8 +1,8 @@
 import { siteDetails } from '@lightpanda/common/data/siteDetails'
 import type { Metadata } from 'next'
 import { generateStaticParamsFor, importPage } from 'nextra/pages'
-import { useMDXComponents as getMDXComponents } from '../../mdx-components'
 import { DocsAutoJsonLd } from '@/components/lightpanda/DocsAutoJsonLd'
+import { useMDXComponents as getMDXComponents } from '../../mdx-components'
 
 type PageProps = {
   params: Promise<{

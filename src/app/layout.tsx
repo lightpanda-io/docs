@@ -1,10 +1,9 @@
+import { DNSPrefetch } from '@lightpanda/common/components/DNSPrefetch'
+import { Favicon } from '@lightpanda/common/components/Favicon'
 import { Fira_Code, Fira_Sans } from 'next/font/google'
 import { Head as NextraHead } from 'nextra/components'
 import { getPageMap } from 'nextra/page-map'
-
 import { DocsClientLayout } from '@/components/lightpanda/DocsClientLayout'
-import { DNSPrefetch } from '@lightpanda/common/components/DNSPrefetch'
-import { Favicon } from '@lightpanda/common/components/Favicon'
 
 import 'nextra-theme-docs/style.css'
 import '@lightpanda/common/styles/variables.css'
@@ -40,12 +39,16 @@ export default async function RootLayout({
           lightness: 65,
         }}
       >
-        <style dangerouslySetInnerHTML={{ __html: `
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
           :root {
             --main-font: ${firaSans.style.fontFamily}, sans-serif;
             --code-font: ${firaCode.style.fontFamily}, sans-serif;
           }
-        ` }} />
+        `,
+          }}
+        />
         <Favicon />
         <DNSPrefetch />
         <link rel="alternate" type="text/markdown" href="/llms.txt" />
@@ -57,7 +60,8 @@ export default async function RootLayout({
               '@type': 'WebSite',
               name: 'Lightpanda Documentation',
               url: 'https://lightpanda.io/docs',
-              description: 'Official documentation for Lightpanda headless browser — installation, quickstart guides, API reference, and cloud deployment.',
+              description:
+                'Official documentation for Lightpanda headless browser — installation, quickstart guides, API reference, and cloud deployment.',
               about: { '@id': 'https://lightpanda.io/#software' },
               publisher: {
                 '@type': 'Organization',
@@ -73,9 +77,7 @@ export default async function RootLayout({
         />
       </NextraHead>
       <body data-pagefind-body>
-        <DocsClientLayout pageMap={pageMap}>
-          {children}
-        </DocsClientLayout>
+        <DocsClientLayout pageMap={pageMap}>{children}</DocsClientLayout>
       </body>
     </html>
   )
