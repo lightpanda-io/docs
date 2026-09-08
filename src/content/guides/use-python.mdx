@@ -8,7 +8,7 @@ import { Callout, Tabs } from 'nextra/components'
 
 In this guide, you'll scrape a JavaScript-rendered page with the [`lightpanda` Python package](https://pypi.org/project/lightpanda/) and extract structured data from it with `page.extract`.
 
-The package bundles the Lightpanda browser binary, so there's no CDP client to wire up and no separate browser download, unlike driving Lightpanda from [Puppeteer or Playwright](/guides/retrieve-an-html-webpage). It also uses [an order of magnitude less memory than a Selenium and Chrome stack](https://github.com/lightpanda-io/lightpanda-python/blob/main/examples/compare.py) for the same scrape.
+The package bundles the Lightpanda browser binary, so there's no client to wire up and no separate browser download, unlike driving Lightpanda from [Playwright](/usage/cdp/playwright) or [Selenium](/usage/bidi/selenium). It also uses [an order of magnitude less memory than a Selenium and Chrome stack](https://github.com/lightpanda-io/lightpanda-python/blob/main/examples/compare.py) for the same scrape.
 
 ## Prerequisites
 

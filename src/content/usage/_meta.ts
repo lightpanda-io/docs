@@ -7,6 +7,12 @@ const meta: MetaRecord = {
       collapsed: true,
     },
   },
+  bidi: {
+    title: 'BiDi',
+    theme: {
+      collapsed: true,
+    },
+  },
   agent: 'Agent',
   pandascript: 'PandaScript',
   mcp: 'MCP',

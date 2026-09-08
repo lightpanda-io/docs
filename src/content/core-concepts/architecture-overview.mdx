@@ -17,7 +17,7 @@ A normal browser runs a rendering pipeline to turn a page into pixels for a huma
 
 Lightpanda drops the rendering pipeline. What remains is the set of components automation uses, the same ones detailed further down this page:
 
-- **Control surface.** The entry points you drive it through: `fetch`, `serve` (CDP), `agent`, `mcp`, and, on the cloud, the HTTP API.
+- **Control surface.** The entry points you drive it through: `fetch`, `serve` (CDP or WebDriver BiDi), `agent`, `mcp`, and, on the cloud, the HTTP API.
 - **Network layer.** Fetches the main document and its subresources over HTTP.
 - **HTML parser.** Turns fetched HTML into that DOM.
 - **JavaScript engine.** Runs the page's scripts. Lightpanda uses V8, the same engine as Chrome.
@@ -55,7 +55,7 @@ Every box in the diagram maps to a directory in the [browser repository](https:/
 The same engine runs behind these entry points. Each is a different way to drive it, and each has different availability across [local and cloud](/core-concepts/local-vs-cloud#feature-coverage):
 
 - [`fetch`](/run-locally/commands#fetch) loads one or more URLs and dumps the result to stdout as HTML or Markdown. It is a one-shot command with no server.
-- [`serve`](/run-locally/commands#serve) starts a CDP server on port `9222` by default. Clients like [Puppeteer](/usage/cdp/puppeteer), [Playwright](/usage/cdp/playwright), and [chromedp](/usage/cdp/chromedp) connect over the Chrome DevTools Protocol. This is the mode most automation uses.
+- [`serve`](/run-locally/commands#serve) starts a CDP server on port `9222` by default. Clients like [Puppeteer](/usage/cdp/puppeteer), [Playwright](/usage/cdp/playwright), and [chromedp](/usage/cdp/chromedp) connect over the Chrome DevTools Protocol. This is the mode most automation uses. Pass `--protocol webdriver` to speak [WebDriver BiDi](/usage/bidi/selenium) instead.
 - [`agent`](/usage/agent) starts an interactive AI agent that browses the web from natural language and can record reproducible scripts.
 - [`mcp`](/usage/mcp) starts a Model Context Protocol server over stdio, so an LLM host can use the browser as a tool.
 - The [HTTP API](/usage/api) is a `POST /api/fetch` endpoint that returns a page's HTML or Markdown from a single request, no CDP script needed. It is the cloud's equivalent of the local `fetch` command.
