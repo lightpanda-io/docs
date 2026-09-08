@@ -84,7 +84,7 @@ context = driver.browsing_context.create(type="tab")
 driver.browsing_context.navigate(context=context, url="https://wikipedia.com/", wait="complete")
 
 # driver.script doesn't expose evaluate yet, so build the BiDi command directly.
-result = driver.browsing_context.conn.execute(command_builder(
+result = driver.browsing_context._conn.execute(command_builder(
     "script.evaluate",
     {"expression": "document.title", "target": {"context": context}, "awaitPromise": False},
 ))
