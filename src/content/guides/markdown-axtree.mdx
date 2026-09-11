@@ -92,16 +92,11 @@ Removes groups of tags from the output. Values can be combined with commas:
 # Remove JavaScript and CSS from output
 lightpanda fetch --dump html --strip-mode js,css https://example.com
 
-# Remove all UI, scripts and styles
-lightpanda fetch --dump html --strip-mode full https://example.com
+# Keep only the main content, reader-mode style
+lightpanda fetch --dump html --strip-mode clutter https://example.com
 ```
 
-| Value | Tags removed |
-|---|---|
-| `js` | `script`, `link[as=script]`, `link[rel=preload]` |
-| `css` | `style`, `link[rel=stylesheet]` |
-| `ui` | `img`, `picture`, `video`, `svg`, `style`, `link[rel=stylesheet]` |
-| `full` | Combines `js` + `ui` + `css` |
+Find all options in the [fetch command reference](/reference/cli/fetch#options).
 
 ### Semantic tree output
 
