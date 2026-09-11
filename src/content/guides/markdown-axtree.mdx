@@ -96,13 +96,7 @@ lightpanda fetch --dump html --strip-mode js,css https://example.com
 lightpanda fetch --dump html --strip-mode clutter https://example.com
 ```
 
-| Value | Tags removed |
-|---|---|
-| `js` | `script`, `link[as=script]`, `link[rel=preload]` |
-| `css` | `style`, `link[rel=stylesheet]` |
-| `ui` | `img`, `picture`, `video`, `svg`, `style`, `link[rel=stylesheet]` |
-| `shell` | Page chrome by markup: `nav`, `aside`, `dialog`, page-level header and footer |
-| `clutter` | Heuristic to keep only the main content, in the manner of reader modes |
+Find all options in the [fetch command reference](/reference/cli/fetch#options).
 
 ### Semantic tree output
 
