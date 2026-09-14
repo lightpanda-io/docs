@@ -77,7 +77,7 @@ common options:
   --http-connect-timeout <INT>
           Time in ms to establish an HTTP connection before timing out. 0 means
           never.
-          Defaults to 0.
+          Defaults to 8000.
   --http-header <HEADER>
           Extra custom header added to every outgoing HTTP request, including redirections,
           in "Name: Value" form. Can be passed multiple times. The last one is used.
@@ -111,7 +111,7 @@ common options:
           Defaults to none.
   --http-timeout <INT>
           Maximum time in ms the transfer is allowed to complete. 0 means never.
-          Defaults to 10000.
+          Defaults to 15000.
   --http-version <VERSION>
           HTTP version to negotiate. "1.1" never offers HTTP/2. "auto"
           picks the best available option.
