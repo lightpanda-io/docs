@@ -45,6 +45,14 @@ common options:
   --cookie-jar <PATH>
           Path to a JSON file to save cookies to on exit (write-only).
           Defaults to no cookie saving.
+  --experimental-features <FEATURE>
+          Enable an experimental, unstable feature. Can be passed multiple times.
+          Behavior may change or be removed without notice.
+          Defaults to none enabled.
+          Allowed values:
+              cors      Obey CORS (cross-origin resource sharing) checks
+                        on fetch/XHR requests instead of allowing them
+                        unconditionally.
   --load-resources <RESOURCE>
           Sub-resource to actually request. Can be passed multiple times.
           Defaults to requesting none of them.
@@ -77,7 +85,7 @@ common options:
   --http-connect-timeout <INT>
           Time in ms to establish an HTTP connection before timing out. 0 means
           never.
-          Defaults to 0.
+          Defaults to 8000.
   --http-header <HEADER>
           Extra custom header added to every outgoing HTTP request, including redirections,
           in "Name: Value" form. Can be passed multiple times. The last one is used.
@@ -111,7 +119,7 @@ common options:
           Defaults to none.
   --http-timeout <INT>
           Maximum time in ms the transfer is allowed to complete. 0 means never.
-          Defaults to 10000.
+          Defaults to 15000.
   --http-version <VERSION>
           HTTP version to negotiate. "1.1" never offers HTTP/2. "auto"
           picks the best available option.
@@ -146,13 +154,6 @@ common options:
   --proxy-bearer-token <TOKEN>
           Token sent for bearer authentication with the proxy:
           Proxy-Authorization: Bearer <token>.
-  --storage-engine <ENGINE>
-          The storage engine to use.
-          Defaults to none.
-          Allowed values: "none", "sqlite".
-  --storage-sqlite-path <PATH>
-          Path to the SQLite database file for persistent storage.
-          Use ":memory:" for in-memory storage.
   --timezone <IANA>
           Time zone used by Date and Intl, e.g. Europe/Paris or UTC.
           Defaults to the host time zone.
