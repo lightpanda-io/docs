@@ -29,8 +29,19 @@ class Browser(
 )
 ```
 
-``args`` are extra CLI flags for the spawned browser process
-(e.g. ``["--http-cache-dir", path]`` or cookie flags).
+Spawn the browser process and fetch its tool list.
+
+
+**Arguments:**
+ - **binary:**  Path to a lightpanda binary. When omitted, resolved from
+   the ``LIGHTPANDA_BIN`` environment variable, then the binary
+   bundled in the package, then ``PATH``.
+ - **env:**  Extra environment variables for the spawned process.
+ - **timeout:**  Seconds to wait for a response to any request before
+   raising [`ProtocolError`](#protocolerror).
+ - **verbose:**  Let the browser's own logging through to stderr.
+ - **args:**  Extra CLI flags for the spawned browser process, e.g.
+   ``["--http-cache-dir", path]`` or cookie flags.
 
 Usable as a context manager (`with`).
 
@@ -48,11 +59,16 @@ tools: dict[str, dict]
 def new_session(self) -> Session
 ```
 
+Open a new isolated browsing context: its own page, cookies and
+memory. Close it with [`Session.close()`](#session-close) or a ``with`` block.
+
 ### Browser.close [#browser-close]
 
 ```python
 def close(self) -> None
 ```
+
+Stop the browser process, closing every session with it.
 
 ## Session [#session]
 
@@ -74,7 +90,7 @@ Usable as a context manager (`with`).
 id: str
 ```
 
-*Property.*
+*Property.* The session id, as the browser knows it.
 
 ### Session.call [#session-call]
 
@@ -84,14 +100,25 @@ def call(self, tool: str, **kwargs)
 
 Invoke a browser tool by name. The generated methods route here.
 
-Returns parsed JSON for JSON-carrying tools, ``bytes`` for image
-results ([``screenshot``](#session-screenshot) without ``path``), otherwise the result text.
+Accepts the tool and argument names as the browser declares them
+(``waitForSelector``, ``backendNodeId``) as well as their snake_case
+forms. Returns parsed JSON for JSON-carrying tools, ``bytes`` for
+image results ([``screenshot``](#session-screenshot) without ``path``), otherwise the result
+text. Raises [`ToolError`](#toolerror) when the tool reports a failure.
+
+
+**Arguments:**
+ - **tool:**  The tool name.
+ - ****kwargs:**  The tool's arguments; ``None`` values are omitted.
 
 ### Session.close [#session-close]
 
 ```python
 def close(self) -> None
 ```
+
+Release the session's page. Idempotent; calls made after this
+raise [`ToolError`](#toolerror). Closing the browser closes every session.
 
 ### Session.click [#session-click]
 
@@ -105,6 +132,11 @@ def click(
 ```
 
 Click on an interactive element. Provide either a CSS selector (preferred for reproducibility) or a backendNodeId. Returns the current page URL and title after the click.
+
+
+**Arguments:**
+ - **selector:**  CSS selector of the element to click. Preferred over backendNodeId.
+ - **backend_node_id:**  The backend node ID of the element to click.
 
 ### Session.console_logs [#session-console-logs]
 
@@ -122,6 +154,11 @@ def detect_forms(self, *, url: str | None = None, timeout: int | None = None) ->
 
 Detect all forms on the page and return their structure including fields, types, and required status. If a url is provided, it navigates to that url first.
 
+
+**Arguments:**
+ - **url:**  Optional URL to navigate to before processing.
+ - **timeout:**  Optional timeout in milliseconds. Defaults to 10000.
+
 ### Session.evaluate [#session-evaluate]
 
 ```python
@@ -136,6 +173,12 @@ def evaluate(
 ```
 
 Evaluate JavaScript in the current page context — an escape hatch for page-side logic the dedicated tools can't express; prefer [`extract`](#session-extract) for data and click/fill/etc. for actions. It runs in the page, so it cannot see the agent script's variables or builtins — interpolate any value into the `script` string. A bare trailing expression yields its value; top-level `await` and `return` are supported (the body then runs as an async function, so use `return` to produce a value). Objects and arrays return as JSON, so no `JSON.stringify` is needed. If a url is provided, it navigates there first. The `globalThis.lp` object exposes a Session-scoped bridge store: values written via `lp.foo = ...` auto-sync at end of evaluate, surviving navigation; values previously set via `/extract save=` or `/evaluate save=` appear as `lp.<name>`.
+
+
+**Arguments:**
+ - **url:**  Optional URL to navigate to before evaluating.
+ - **timeout:**  Optional timeout in milliseconds. Defaults to 10000.
+ - **save:**  Optional bridge-store key. The evaluate's return value is stored under this name and re-exposed as `lp.<name>` to subsequent evaluates. Objects, arrays, and strings are serialized automatically — no JSON.stringify needed.
 
 ### Session.extract [#session-extract]
 
@@ -167,6 +210,12 @@ Examples (schema → result):
 {"stories": [{"selector":".athing","fields":{"title":".titleline","rank":".rank"}}]} → {"stories":[{"title":"Foo","rank":"1"}]}
 ```
 
+
+
+**Arguments:**
+ - **schema:**  Extraction schema as a string: a JSON object literal mapping output field names to CSS-selector specs (see tool description). Not a JSON Schema.
+ - **save:**  Optional bridge-store key. The extracted JSON is stored under this name and exposed as `lp.<name>` in subsequent /evaluate calls.
+
 ### Session.fill [#session-fill]
 
 ```python
@@ -181,6 +230,12 @@ def fill(
 
 Fill text into an input element. Provide either a CSS selector (preferred for reproducibility) or a backendNodeId.
 
+
+**Arguments:**
+ - **value:**  The text to fill into the input element.
+ - **selector:**  CSS selector of the input element to fill. Preferred over backendNodeId.
+ - **backend_node_id:**  The backend node ID of the input element to fill.
+
 ### Session.find_element [#session-find-element]
 
 ```python
@@ -188,6 +243,11 @@ def find_element(self, *, role: str | None = None, name: str | None = None) -> A
 ```
 
 Find interactive elements by role and/or accessible name. Returns matching elements with their backend node IDs. Useful for locating specific elements without parsing the full semantic tree.
+
+
+**Arguments:**
+ - **role:**  Optional ARIA role to match (e.g. 'button', 'link', 'textbox', 'checkbox').
+ - **name:**  Optional accessible name substring to match (case-insensitive).
 
 ### Session.get_cookies [#session-get-cookies]
 
@@ -197,6 +257,11 @@ def get_cookies(self, *, url: str | None = None, all: bool | None = None) -> Any
 
 Cookies stored in the browser. Defaults to cookies whose domain matches the current page's host. Pass `url=<URL>` to filter for another host, or `all=true` to dump every cookie regardless of host. Useful for debugging authentication and session state.
 
+
+**Arguments:**
+ - **url:**  Restrict output to cookies matching this URL's host. Defaults to the current page.
+ - **all:**  If true, dump every cookie regardless of host. Overrides `url`.
+
 ### Session.get_env [#session-get-env]
 
 ```python
@@ -204,6 +269,10 @@ def get_env(self, *, name: str | None = None) -> Any
 ```
 
 With `name`: read an LP_* env var (other namespaces report as not set) — for non-secret config only (base URLs, flags). Without `name`: list LP_* names that are set (no values) — safe credential discovery. For secrets, pass `$LP_*` placeholders in tool args; never request a credential by name (the value would land in your context).
+
+
+**Arguments:**
+ - **name:**  Optional. If provided, must start with LP_; returns the value. If omitted, returns the list of LP_* names that are set.
 
 ### Session.get_url [#session-get-url]
 
@@ -227,6 +296,12 @@ def goto(
 
 Navigate to a specified URL and load the page in memory so it can be reused later for info extraction.
 
+
+**Arguments:**
+ - **url:**  The URL to navigate to, must be a valid URL.
+ - **timeout:**  Optional timeout in milliseconds. Defaults to 10000.
+ - **wait_until:**  Event that completes the navigation. Defaults to 'load'. Prefer 'domcontentloaded' followed by waitForSelector on pages whose late scripts (ads) hold 'load' back. Avoid 'done' (full quiescence): on pages with constant background activity it is the slowest choice and can run to the timeout.
+
 ### Session.hover [#session-hover]
 
 ```python
@@ -239,6 +314,11 @@ def hover(
 ```
 
 Hover over an element, triggering mouseover and mouseenter events. Provide either a CSS selector (preferred for reproducibility) or a backendNodeId. Useful for menus, tooltips, and hover states.
+
+
+**Arguments:**
+ - **selector:**  CSS selector of the element to hover over. Preferred over backendNodeId.
+ - **backend_node_id:**  The backend node ID of the element to hover over.
 
 ### Session.html [#session-html]
 
@@ -257,6 +337,15 @@ def html(
 
 Raw HTML for the document or, with `selector`/`backendNodeId`, a single node's outerHTML. Verbose; use only when you need attributes that markdown discards.
 
+
+**Arguments:**
+ - **selector:**  Optional CSS selector. When set, dump only that element's outerHTML.
+ - **backend_node_id:**  Optional backend node ID. When set, dump only that node's outerHTML. 0 is treated as omitted.
+ - **max_bytes:**  Optional soft cap on output size in bytes. Content is truncated at a UTF-8 boundary and a short '[truncated]' marker is appended past the cap.
+ - **strip:**  Optional. Omit element groups from the output: `js` (script, noscript, script preloads), `css` (style, stylesheet links), `ui` (css plus img, picture, video, audio, svg, canvas, iframe), `invisible` (elements an author rule or inline style sets to display:none). \{"js":true,"css":true\} keeps a page dump small.
+ - **url:**  Optional URL to navigate to before dumping.
+ - **timeout:**  Optional timeout in milliseconds. Defaults to 10000.
+
 ### Session.interactive_elements [#session-interactive-elements]
 
 ```python
@@ -264,6 +353,11 @@ def interactive_elements(self, *, url: str | None = None, timeout: int | None = 
 ```
 
 Extract interactive elements from the opened page. If a url is provided, it navigates to that url first.
+
+
+**Arguments:**
+ - **url:**  Optional URL to navigate to before processing.
+ - **timeout:**  Optional timeout in milliseconds. Defaults to 10000.
 
 ### Session.links [#session-links]
 
@@ -278,6 +372,12 @@ def links(
 ```
 
 Extract the visible links in the opened page as JSON objects with `text` (anchor text, falling back to aria-label/title/image alt), `href` (resolved URL), and `backendNodeId` (pass to click/nodeDetails). One entry per href; hidden links are omitted. If a url is provided, it navigates to that url first.
+
+
+**Arguments:**
+ - **limit:**  Optional. Return at most this many links, in document order.
+ - **url:**  Optional URL to navigate to before processing.
+ - **timeout:**  Optional timeout in milliseconds. Defaults to 10000.
 
 ### Session.markdown [#session-markdown]
 
@@ -295,6 +395,14 @@ def markdown(
 
 Render the page (or a subtree) as markdown. Scope with `selector` or `backendNodeId` to read just the relevant region — full-page markdown is the last resort. Use `maxBytes` to cap long pages.
 
+
+**Arguments:**
+ - **selector:**  Optional CSS selector. Render markdown for just that element's subtree.
+ - **backend_node_id:**  Optional backend node ID. Render markdown for just that node's subtree. 0 is treated as omitted.
+ - **max_bytes:**  Optional soft cap on output size in bytes. Content is truncated at a UTF-8 boundary and a short '[truncated]' marker is appended past the cap.
+ - **url:**  Optional URL to navigate to before rendering.
+ - **timeout:**  Optional timeout in milliseconds. Defaults to 10000.
+
 ### Session.node_details [#session-node-details]
 
 ```python
@@ -302,6 +410,10 @@ def node_details(self, *, backend_node_id: int) -> Any
 ```
 
 Details for a node by backendNodeId: a ready-to-use CSS `selector` that resolves to the node (the first match, as click/fill resolve it), plus tag, role, name, interactivity, disabled, value, input type, placeholder, href, id, class, checked, select options. The canonical way to turn a tree backendNodeId into a CSS selector.
+
+
+**Arguments:**
+ - **backend_node_id:**  The backend node ID of the element to inspect.
 
 ### Session.press [#session-press]
 
@@ -316,6 +428,12 @@ def press(
 ```
 
 Press a keyboard key, dispatching keydown and keyup events. Use key names like 'Enter', 'Tab', 'Escape', 'ArrowDown', 'Backspace', or single characters like 'a', '1'. Common shorthand is normalized: 'enter'/'return' → 'Enter', 'esc' → 'Escape', 'up'/'down'/'left'/'right' → 'Arrow*', 'space' → ' '. Pressing 'Enter' on a form input or submit button triggers implicit form submission.
+
+
+**Arguments:**
+ - **key:**  The key to press (e.g. 'Enter', 'Tab', 'a').
+ - **selector:**  Optional CSS selector of the element to target. Preferred over backendNodeId.
+ - **backend_node_id:**  Optional backend node ID of the element to target. Defaults to the document when neither selector nor backendNodeId is provided; 0 is treated as omitted.
 
 ### Session.screenshot [#session-screenshot]
 
@@ -334,6 +452,15 @@ def screenshot(
 
 Render the page, or one node, as a PNG: the text layout Lightpanda computes, not a pixel-accurate browser rendering (no images, fonts or CSS colours). With `path`, writes the file at full size and returns its location; without it, returns the image inline where the client can display one, at most 1280px wide and 4096px tall. Use it to see spatial layout; read content with [`markdown`](#session-markdown)/[`tree`](#session-tree).
 
+
+**Arguments:**
+ - **path:**  Optional relative path (no '..' segments) to write the PNG to. Created or overwritten. Without it the image is returned inline, which needs a client that can display images.
+ - **selector:**  Optional CSS selector. When set, render only that element.
+ - **backend_node_id:**  Optional backend node ID. When set, render only that node. 0 is treated as omitted.
+ - **full_page:**  Render the whole content height instead of one viewport. Defaults to false.
+ - **url:**  Optional URL to navigate to before rendering.
+ - **timeout:**  Optional timeout in milliseconds. Defaults to 10000.
+
 ### Session.scroll [#session-scroll]
 
 ```python
@@ -348,6 +475,12 @@ def scroll(
 
 Scroll the page or a specific element. Returns the scroll position and current page URL and title.
 
+
+**Arguments:**
+ - **backend_node_id:**  Optional: The backend node ID of the element to scroll. If omitted (or 0), scrolls the window.
+ - **x:**  Optional: The horizontal scroll offset.
+ - **y:**  Optional: The vertical scroll offset.
+
 ### Session.search [#session-search]
 
 ```python
@@ -355,6 +488,11 @@ def search(self, *, query: str, timeout: int | None = None) -> Any
 ```
 
 Run a web search and return results as markdown: a numbered list of \{title, url, snippet\}. Search tries brave, tavily, exa, then keenable in order, each when its API key (BRAVE_API_KEY, TAVILY_API_KEY, EXA_API_KEY or KEENABLE_API_KEY) is set; keenable also works without a key through its public endpoint (rate-limited per client IP). Prefer this over goto-ing google.com/search directly (Google blocks the browser on User-Agent/TLS). The browser does not navigate — to open a result, use [`goto`](#session-goto) with its URL.
+
+
+**Arguments:**
+ - **query:**  The search query.
+ - **timeout:**  Optional timeout in milliseconds. Defaults to 10000.
 
 ### Session.select_option [#session-select-option]
 
@@ -370,6 +508,12 @@ def select_option(
 
 Select an option in a &lt;select> dropdown element by its value. Provide either a CSS selector (preferred for reproducibility) or a backendNodeId. Dispatches input and change events.
 
+
+**Arguments:**
+ - **value:**  The value of the option to select.
+ - **selector:**  CSS selector of the &lt;select> element. Preferred over backendNodeId.
+ - **backend_node_id:**  The backend node ID of the &lt;select> element.
+
 ### Session.set_checked [#session-set-checked]
 
 ```python
@@ -384,6 +528,12 @@ def set_checked(
 
 Check or uncheck a checkbox or radio button. Provide either a CSS selector (preferred for reproducibility) or a backendNodeId. Dispatches input, change, and click events.
 
+
+**Arguments:**
+ - **checked:**  Whether to check (true) or uncheck (false) the element.
+ - **selector:**  CSS selector of the checkbox or radio input element. Preferred over backendNodeId.
+ - **backend_node_id:**  The backend node ID of the checkbox or radio input element.
+
 ### Session.structured_data [#session-structured-data]
 
 ```python
@@ -391,6 +541,11 @@ def structured_data(self, *, url: str | None = None, timeout: int | None = None)
 ```
 
 Extract structured data (like JSON-LD, OpenGraph, etc) from the opened page. If a url is provided, it navigates to that url first.
+
+
+**Arguments:**
+ - **url:**  Optional URL to navigate to before processing.
+ - **timeout:**  Optional timeout in milliseconds. Defaults to 10000.
 
 ### Session.tree [#session-tree]
 
@@ -407,6 +562,13 @@ def tree(
 
 Simplified semantic DOM tree (role, name, value, backendNodeId per node). Pass `backendNodeId` to scope, `maxDepth` to limit depth.
 
+
+**Arguments:**
+ - **url:**  Optional URL to navigate to before fetching the semantic tree.
+ - **timeout:**  Optional timeout in milliseconds. Defaults to 10000.
+ - **backend_node_id:**  Optional backend node ID to get the tree for a specific element instead of the document root. 0 is treated as omitted.
+ - **max_depth:**  Optional maximum depth of the tree to return. Useful for exploring high-level structure first.
+
 ### Session.wait_for_script [#session-wait-for-script]
 
 ```python
@@ -414,6 +576,11 @@ def wait_for_script(self, *, script: str, timeout: int | None = None) -> Any
 ```
 
 Wait until a JS expression returns truthy. Re-evaluates on each tick of the event loop. Use for synchronization beyond what CSS selectors can express — e.g. `window.dataLoaded === true`, `document.readyState === 'complete'`, `document.querySelectorAll('.row').length >= 5`.
+
+
+**Arguments:**
+ - **script:**  JS expression evaluated each tick until truthy. Must be an expression (not a statement).
+ - **timeout:**  Optional timeout in milliseconds. Defaults to 5000, or 15000 when the page has not reached 'load' yet.
 
 ### Session.wait_for_selector [#session-wait-for-selector]
 
@@ -423,6 +590,11 @@ def wait_for_selector(self, *, selector: str, timeout: int | None = None) -> Any
 
 Wait for an element matching a CSS selector to appear in the page. Returns the backend node ID of the matched element.
 
+
+**Arguments:**
+ - **selector:**  The CSS selector to wait for.
+ - **timeout:**  Optional timeout in milliseconds. Defaults to 5000, or 15000 when the page has not reached 'load' yet.
+
 ### Session.wait_for_state [#session-wait-for-state]
 
 ```python
@@ -430,6 +602,11 @@ def wait_for_state(self, *, state: str, timeout: int | None = None) -> Any
 ```
 
 Wait for the CURRENT page to reach a load state (no navigation). After a [`goto`](#session-goto), the page is returned at the fast `load` snapshot, so content rendered by post-load JS (XHR-loaded lists, feeds, search results) may still be missing. When a read looks incomplete — empty lists, spinners, skeletons — call this with 'networkidle' and re-read. Prefer 'networkidle'; 'done' can be slow on sites with constant background activity (ads, polling).
+
+
+**Arguments:**
+ - **state:**  Load state to wait for. 'networkidle' = network settled (the usual choice to finish a dynamic page).
+ - **timeout:**  Optional timeout in milliseconds. Defaults to 5000.
 
 ## run_script [#run-script]
 
@@ -466,10 +643,18 @@ class AsyncBrowser(
 )
 ```
 
-``binary``/``env``/``timeout``/``verbose``/``args`` are forwarded
-to [`Browser`](#browser). ``max_concurrency`` caps concurrently executing
-tool calls across this browser's sessions (worker threads are
-created lazily).
+Prepare the facade; the process is spawned by [`start()`](#asyncbrowser-start).
+
+
+**Arguments:**
+ - **binary:**  Forwarded to [`Browser`](#browser).
+ - **env:**  Forwarded to [`Browser`](#browser).
+ - **timeout:**  Forwarded to [`Browser`](#browser).
+ - **verbose:**  Forwarded to [`Browser`](#browser).
+ - **args:**  Forwarded to [`Browser`](#browser).
+ - **max_concurrency:**  Caps the tool calls executing concurrently
+   across this browser's sessions; worker threads are created
+   lazily.
 
 Usable as a context manager (`async with`).
 
@@ -568,9 +753,18 @@ class CDPServer(
 )
 ```
 
-[``port``](#cdpserver-port) pins the listening port (default: a free one). ``args``
-are extra ``lightpanda serve`` flags; pass ``port=`` rather than
-``--port``. ``verbose`` lets the browser log through to stderr.
+Spawn the server process.
+
+
+**Arguments:**
+ - **binary:**  Path to a lightpanda binary. When omitted, resolved from
+   the ``LIGHTPANDA_BIN`` environment variable, then the binary
+   bundled in the package, then ``PATH``.
+ - **env:**  Extra environment variables for the spawned process.
+ - **verbose:**  Let the browser's own logging through to stderr.
+ - **args:**  Extra ``lightpanda serve`` flags; pass ``port=`` rather
+   than ``--port``.
+ - **port:**  Pin the listening port. Defaults to a free one.
 
 Usable as a context manager (`with`).
 
@@ -600,7 +794,7 @@ The ``/json/version`` document (browser, protocol version,
 port: int
 ```
 
-*Property.*
+*Property.* The port the server listens on.
 
 ### CDPServer.http_endpoint [#cdpserver-http-endpoint]
 
@@ -617,6 +811,8 @@ discover the CDP WebSocket from, and Selenium's ``command_executor``.
 ```python
 def close(self) -> None
 ```
+
+Stop the server process. Idempotent.
 
 ## AsyncCDPServer [#asynccdpserver]
 
@@ -638,7 +834,15 @@ class AsyncCDPServer(
 )
 ```
 
-Arguments are forwarded to the sync class.
+Prepare the facade; the process is spawned by [`start()`](#asynccdpserver-start).
+
+
+**Arguments:**
+ - **binary:**  Forwarded to the sync class.
+ - **env:**  Forwarded to the sync class.
+ - **verbose:**  Forwarded to the sync class.
+ - **args:**  Forwarded to the sync class.
+ - **port:**  Forwarded to the sync class.
 
 Usable as a context manager (`async with`).
 
@@ -694,9 +898,18 @@ class BiDiServer(
 )
 ```
 
-[``port``](#bidiserver-port) pins the listening port (default: a free one). ``args``
-are extra ``lightpanda serve`` flags; pass ``port=`` rather than
-``--port``. ``verbose`` lets the browser log through to stderr.
+Spawn the server process.
+
+
+**Arguments:**
+ - **binary:**  Path to a lightpanda binary. When omitted, resolved from
+   the ``LIGHTPANDA_BIN`` environment variable, then the binary
+   bundled in the package, then ``PATH``.
+ - **env:**  Extra environment variables for the spawned process.
+ - **verbose:**  Let the browser's own logging through to stderr.
+ - **args:**  Extra ``lightpanda serve`` flags; pass ``port=`` rather
+   than ``--port``.
+ - **port:**  Pin the listening port. Defaults to a free one.
 
 Usable as a context manager (`with`).
 
@@ -729,7 +942,7 @@ The ``GET /status`` value, ``{"ready": True, "message": ""}``.
 port: int
 ```
 
-*Property.*
+*Property.* The port the server listens on.
 
 ### BiDiServer.http_endpoint [#bidiserver-http-endpoint]
 
@@ -747,6 +960,8 @@ discover the CDP WebSocket from, and Selenium's ``command_executor``.
 def close(self) -> None
 ```
 
+Stop the server process. Idempotent.
+
 ## AsyncBiDiServer [#asyncbidiserver]
 
 [`BiDiServer`](#bidiserver) for asyncio: the process is spawned by
@@ -762,7 +977,15 @@ class AsyncBiDiServer(
 )
 ```
 
-Arguments are forwarded to the sync class.
+Prepare the facade; the process is spawned by [`start()`](#asyncbidiserver-start).
+
+
+**Arguments:**
+ - **binary:**  Forwarded to the sync class.
+ - **env:**  Forwarded to the sync class.
+ - **verbose:**  Forwarded to the sync class.
+ - **args:**  Forwarded to the sync class.
+ - **port:**  Forwarded to the sync class.
 
 Usable as a context manager (`async with`).
 
@@ -803,7 +1026,7 @@ ProtocolError(message: str, code: int | None = None)
 
 JSON-RPC level failure (invalid request, timeout, internal error).
 
-- `code`
+- `code`. The JSON-RPC error code, when the server sent one.
 
 ### ScriptError [#scripterror]
 
@@ -814,9 +1037,9 @@ ScriptError(message: str, returncode: int, stdout: str = '', stderr: str = '')
 
 A script replay ([`run_script`](#run-script)) exited with a failure.
 
-- `returncode`
-- `stdout`
-- `stderr`
+- `returncode`. The process exit status, or ``-1`` when the script file does not exist.
+- `stdout`. What the script wrote to stdout before failing.
+- `stderr`. What the script wrote to stderr.
 
 ### ToolError [#toolerror]
 
