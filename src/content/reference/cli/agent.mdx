@@ -60,18 +60,21 @@ Options:
           The AI provider. When omitted, lightpanda auto-detects an API
           key from your environment (ANTHROPIC_API_KEY, OPENAI_API_KEY,
           GOOGLE_API_KEY/GEMINI_API_KEY, HF_TOKEN, AI_GATEWAY_API_KEY,
-          MISTRAL_API_KEY). With exactly one key set: that provider is
-          used. With multiple keys on a TTY: you'll be prompted to pick;
-          in non-interactive contexts, pass --provider explicitly. With
-          no keys set: falls back to the basic REPL (slash commands only,
-          no natural-language input, no LOGIN / ACCEPT_COOKIES keywords).
+          MISTRAL_API_KEY, VERTEX_API_KEY, or GOOGLE_CLOUD_PROJECT via
+          gcloud). With exactly one key set: that provider is used. With
+          multiple keys on a TTY: you'll be prompted to pick; in
+          non-interactive contexts, pass --provider explicitly. With no
+          keys set: falls back to the basic REPL (slash commands only, no
+          natural-language input, no LOGIN / ACCEPT_COOKIES keywords).
 
           Local servers (ollama, llama_cpp) are never auto-detected (they
           need no key); select them explicitly with --provider ollama /
-          --provider llama_cpp.
+          --provider llama_cpp. Same for codex, which uses a ChatGPT
+          subscription (OAuth) instead of an API key.
 
           Allowed values: "anthropic", "openai", "gemini", "huggingface",
-                          "vercel", "mistral", "ollama", "llama_cpp".
+                          "vercel", "mistral", "ollama", "llama_cpp",
+                          "vertex", "codex".
           In the REPL, use /provider to list and change providers.
   --save <PATH>
           Synthesize a replayable .js script from the --task run and write
