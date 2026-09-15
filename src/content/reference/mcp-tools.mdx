@@ -94,7 +94,7 @@ These tools dispatch real DOM events on the page:
 |---|---|---|
 | `click` | `selector` / `backendNodeId` | Click on an interactive element. Returns the current page URL and title after the click. |
 | `fill` | `selector` / `backendNodeId`, `value` | Fill text into an input element. Returns the filled value and current page URL and title. |
-| `scroll` | `backendNodeId?`, `x?`, `y?` | Scroll the page, or a specific element if `backendNodeId` is given. Returns the scroll position only. |
+| `scroll` | `backendNodeId?`, `x?`, `y?` | Scroll the page, or a specific element if `backendNodeId` is given. If that element isn't itself a scroll container, its nearest scrollable ancestor scrolls instead, and the result reports whichever node actually moved. Returns the resulting scroll position and the current page URL and title. |
 | `hover` | `selector` / `backendNodeId` | Hover over an element, triggering mouseover and mouseenter events. Useful for menus, tooltips, and hover states. |
 | `press` | `key`, `selector?`, `backendNodeId?` | Press a keyboard key, dispatching keydown and keyup events. Use key names like 'Enter', 'Tab', 'Escape', 'ArrowDown', 'Backspace', or single characters like 'a', '1'. Common shorthand is normalized: 'enter'/'return' → 'Enter', 'esc' → 'Escape', 'up'/'down'/'left'/'right' → 'Arrow*', 'space' → ' '. Pressing 'Enter' on a form input or submit button triggers implicit form submission. Targets the document if no element is given. |
 | `selectOption` | `selector` / `backendNodeId`, `value` | Select an option in a `<select>` dropdown element by its value. Dispatches input and change events. |

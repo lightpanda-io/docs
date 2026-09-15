@@ -71,8 +71,6 @@ Every interaction below reports the page URL and title reached after the action,
 Clicked element (selector: a.login). Page url: https://example.com/app, title: Dashboard
 ```
 
-`scroll` is the exception and reports only its position.
-
 | Primitive | Arguments | Returns |
 |-----------|-----------|---------|
 | `page.click` | `click(selector)` or `click({ selector })` | `Clicked element (<target>)` |
@@ -81,7 +79,7 @@ Clicked element (selector: a.login). Page url: https://example.com/app, title: D
 | `page.press` | `press(selector, key)` or `press({ key[, selector] })` | `Pressed key '<key>'` |
 | `page.selectOption` | `selectOption(selector, value)` or `selectOption({ selector, value })` | `Selected option '<value>' (<target>)` |
 | `page.setChecked` | `setChecked(selector[, checked = true])` or `setChecked({ selector, checked = true })` | `Set element (<target>) to checked` or `to unchecked` |
-| `page.scroll` | `scroll({ x = 0, y = 0 })`, never a selector | `Scrolled to x: <x>, y: <y>` |
+| `page.scroll` | `scroll({ x = 0, y = 0 })`, never a selector | `Scrolled window to x: <x>, y: <y>` |
 
 ## Waiting
 
