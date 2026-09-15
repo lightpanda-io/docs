@@ -319,18 +319,8 @@ def emit_class(page: Page, module: pdoc.doc.Module, cls: pdoc.doc.Class, links: 
     page.heading(2, cls.name, slug(cls.name))
     page.para(render_docstring(cls, links))
     page.para(CLASS_NOTES.get(cls.name, ""))
-    page.fence(class_code(cls))
-    init = cls.members.get("__init__")
-    if isinstance(init, pdoc.doc.Function) and "__init__" in vars(cls.obj):
-        page.para(render_docstring(init, links))
-    managers = []
-    if "__enter__" in cls.members:
-        managers.append("`with`")
-    if "__aenter__" in cls.members:
-        managers.append("`async with`")
-    if managers:
-        page.para(f"Usable as a context manager ({' and '.join(managers)}).")
-
+    # An async twin's defining fact is that it mirrors the sync class, so say so
+    # before the constructor details rather than after them.
     members = listed_members(module, cls)
     twin = twin_of(module, cls)
     if twin is not None:
@@ -343,6 +333,18 @@ def emit_class(page: Page, module: pdoc.doc.Module, cls: pdoc.doc.Class, links: 
                 else f"`{cls.name}` adds no members of its own."
             )
         )
+    page.fence(class_code(cls))
+    init = cls.members.get("__init__")
+    if isinstance(init, pdoc.doc.Function) and "__init__" in vars(cls.obj):
+        page.para(render_docstring(init, links))
+    managers = []
+    if "__enter__" in cls.members:
+        managers.append("`with`")
+    if "__aenter__" in cls.members:
+        managers.append("`async with`")
+    if managers:
+        page.para(f"Usable as a context manager ({' and '.join(managers)}).")
+
     for member in members:
         emit_member(page, cls, member, links)
 
