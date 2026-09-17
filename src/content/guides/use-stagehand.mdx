@@ -29,8 +29,13 @@ npm init
 ```
 
 ```sh copy
-npm install @browserbasehq/stagehand @lightpanda/browser
+npm install @browserbasehq/stagehand@3 @lightpanda/browser
 ```
+
+Stay on the Stagehand 3.x line. Stagehand 4 moved its DOM work into a Chrome
+extension that `localBrowser.connect()` loads through the CDP `Extensions`
+domain, which Lightpanda does not implement, so 4.x cannot connect. The API in
+this guide is the 3.x one.
 
 ## Write your Stagehand script with Lightpanda
 
