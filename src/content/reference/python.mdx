@@ -342,7 +342,7 @@ Raw HTML for the document or, with `selector`/`backendNodeId`, a single node's o
  - **selector:**  Optional CSS selector. When set, dump only that element's outerHTML.
  - **backend_node_id:**  Optional backend node ID. When set, dump only that node's outerHTML. 0 is treated as omitted.
  - **max_bytes:**  Optional soft cap on output size in bytes. Content is truncated at a UTF-8 boundary and a short '[truncated]' marker is appended past the cap.
- - **strip:**  Optional. Omit element groups from the output: `js` (script, noscript, script preloads), `css` (style, stylesheet links), `ui` (css plus img, picture, video, audio, svg, canvas, iframe), `invisible` (elements an author rule or inline style sets to display:none). \{"js":true,"css":true\} keeps a page dump small.
+ - **strip:**  Optional. Omit element groups from the output: `js` (script, noscript, script preloads), `css` (style, stylesheet links), `ui` (css plus img, picture, video, audio, svg, canvas, iframe), `invisible` (elements an author rule or inline style sets to display:none), `shell` (nav, aside, dialog, page-level header/footer and the matching landmark roles; skipped when that would drop most of the text), `clutter` (keep only the main content, in the manner of reader modes; includes `shell` and `invisible`, and falls back to `shell` when it finds too little). \{"js":true,"css":true\} keeps a page dump small.
  - **url:**  Optional URL to navigate to before dumping.
  - **timeout:**  Optional timeout in milliseconds. Defaults to 10000.
 
@@ -388,6 +388,7 @@ def markdown(
     selector: str | None = None,
     backend_node_id: int | None = None,
     max_bytes: int | None = None,
+    strip: dict | None = None,
     url: str | None = None,
     timeout: int | None = None
 ) -> Any
@@ -400,6 +401,7 @@ Render the page (or a subtree) as markdown. Scope with `selector` or `backendNod
  - **selector:**  Optional CSS selector. Render markdown for just that element's subtree.
  - **backend_node_id:**  Optional backend node ID. Render markdown for just that node's subtree. 0 is treated as omitted.
  - **max_bytes:**  Optional soft cap on output size in bytes. Content is truncated at a UTF-8 boundary and a short '[truncated]' marker is appended past the cap.
+ - **strip:**  Optional. Omit element groups from the output; same groups as the html tool's strip. `shell` (page chrome by markup) and `clutter` (keep only the main content, in the manner of reader modes) are the ones that matter for reading; `ui` also drops images.
  - **url:**  Optional URL to navigate to before rendering.
  - **timeout:**  Optional timeout in milliseconds. Defaults to 10000.
 
@@ -445,6 +447,7 @@ def screenshot(
     selector: str | None = None,
     backend_node_id: int | None = None,
     full_page: bool | None = None,
+    strip: dict | None = None,
     url: str | None = None,
     timeout: int | None = None
 ) -> Any
@@ -458,6 +461,7 @@ Render the page, or one node, as a PNG: the text layout Lightpanda computes, not
  - **selector:**  Optional CSS selector. When set, render only that element.
  - **backend_node_id:**  Optional backend node ID. When set, render only that node. 0 is treated as omitted.
  - **full_page:**  Render the whole content height instead of one viewport. Defaults to false.
+ - **strip:**  Optional. Omit element groups from the render; same groups as the html tool's strip (`js`, `css`, `ui`, `invisible`, `shell`, `clutter`).
  - **url:**  Optional URL to navigate to before rendering.
  - **timeout:**  Optional timeout in milliseconds. Defaults to 10000.
 
@@ -477,7 +481,7 @@ Scroll the page or a specific element. Returns the scroll position and current p
 
 
 **Arguments:**
- - **backend_node_id:**  Optional: The backend node ID of the element to scroll. If omitted (or 0), scrolls the window.
+ - **backend_node_id:**  Optional: The backend node ID of the element to scroll. If the element is not itself a scroll container, its nearest scrollable ancestor is scrolled instead. If omitted (or 0), scrolls the window.
  - **x:**  Optional: The horizontal scroll offset.
  - **y:**  Optional: The vertical scroll offset.
 
@@ -632,6 +636,8 @@ The subprocess is spawned by [`start()`](#asyncbrowser-start) — called automat
 ``async with`` entry and by [`new_session()`](#browser-new-session). Not fork-inheritable,
 same as [`Browser`](#browser).
 
+Every public method and property of [`Browser`](#browser) exists on `AsyncBrowser` with the same name and signature; methods are coroutines to `await`. Only the members `AsyncBrowser` adds are listed below.
+
 ```python
 class AsyncBrowser(
     binary: str | os.PathLike | None = None,
@@ -643,22 +649,18 @@ class AsyncBrowser(
 )
 ```
 
-Prepare the facade; the process is spawned by [`start()`](#asyncbrowser-start).
+Store the settings; the process is spawned by [`start()`](#asyncbrowser-start).
+
+``binary``, ``env``, ``timeout``, ``verbose`` and ``args`` are
+forwarded to [`Browser`](#browser).
 
 
 **Arguments:**
- - **binary:**  Forwarded to [`Browser`](#browser).
- - **env:**  Forwarded to [`Browser`](#browser).
- - **timeout:**  Forwarded to [`Browser`](#browser).
- - **verbose:**  Forwarded to [`Browser`](#browser).
- - **args:**  Forwarded to [`Browser`](#browser).
  - **max_concurrency:**  Caps the tool calls executing concurrently
    across this browser's sessions; worker threads are created
    lazily.
 
 Usable as a context manager (`async with`).
-
-Every public method and property of [`Browser`](#browser) exists on `AsyncBrowser` with the same name and signature; methods are coroutines to `await`. Only the members `AsyncBrowser` adds are listed below.
 
 ### AsyncBrowser.wrap [#asyncbrowser-wrap]
 
@@ -700,6 +702,8 @@ One isolated browsing context (own page, cookies, memory), async.
 
 Do not construct directly — use [`AsyncBrowser.new_session()`](#browser-new-session).
 
+Every public method and property of [`Session`](#session) exists on `AsyncSession` with the same name and signature; methods are coroutines to `await`. `AsyncSession` adds no members of its own.
+
 ```python
 class AsyncSession(
     session: Session,
@@ -708,8 +712,6 @@ class AsyncSession(
 ```
 
 Usable as a context manager (`async with`).
-
-Every public method and property of [`Session`](#session) exists on `AsyncSession` with the same name and signature; methods are coroutines to `await`. `AsyncSession` adds no members of its own.
 
 ## run_script_async [#run-script-async]
 
@@ -824,6 +826,8 @@ async with AsyncCDPServer() as server, async_playwright() as p:
     browser = await p.chromium.connect_over_cdp(server.ws_endpoint)
 ```
 
+Every public method and property of [`CDPServer`](#cdpserver) exists on `AsyncCDPServer` with the same name and signature; methods are coroutines to `await`. Only the members `AsyncCDPServer` adds are listed below.
+
 ```python
 class AsyncCDPServer(
     binary: str | os.PathLike | None = None,
@@ -834,19 +838,11 @@ class AsyncCDPServer(
 )
 ```
 
-Prepare the facade; the process is spawned by [`start()`](#asynccdpserver-start).
+Store the settings; the process is spawned by [`start()`](#asynccdpserver-start).
 
-
-**Arguments:**
- - **binary:**  Forwarded to the sync class.
- - **env:**  Forwarded to the sync class.
- - **verbose:**  Forwarded to the sync class.
- - **args:**  Forwarded to the sync class.
- - **port:**  Forwarded to the sync class.
+Arguments are forwarded to the sync class.
 
 Usable as a context manager (`async with`).
-
-Every public method and property of [`CDPServer`](#cdpserver) exists on `AsyncCDPServer` with the same name and signature; methods are coroutines to `await`. Only the members `AsyncCDPServer` adds are listed below.
 
 ### AsyncCDPServer.start [#asynccdpserver-start]
 
@@ -967,6 +963,8 @@ Stop the server process. Idempotent.
 [`BiDiServer`](#bidiserver) for asyncio: the process is spawned by
 [`start()`](#asyncbidiserver-start), called automatically on ``async with`` entry.
 
+Every public method and property of [`BiDiServer`](#bidiserver) exists on `AsyncBiDiServer` with the same name and signature; methods are coroutines to `await`. Only the members `AsyncBiDiServer` adds are listed below.
+
 ```python
 class AsyncBiDiServer(
     binary: str | os.PathLike | None = None,
@@ -977,19 +975,11 @@ class AsyncBiDiServer(
 )
 ```
 
-Prepare the facade; the process is spawned by [`start()`](#asyncbidiserver-start).
+Store the settings; the process is spawned by [`start()`](#asyncbidiserver-start).
 
-
-**Arguments:**
- - **binary:**  Forwarded to the sync class.
- - **env:**  Forwarded to the sync class.
- - **verbose:**  Forwarded to the sync class.
- - **args:**  Forwarded to the sync class.
- - **port:**  Forwarded to the sync class.
+Arguments are forwarded to the sync class.
 
 Usable as a context manager (`async with`).
-
-Every public method and property of [`BiDiServer`](#bidiserver) exists on `AsyncBiDiServer` with the same name and signature; methods are coroutines to `await`. Only the members `AsyncBiDiServer` adds are listed below.
 
 ### AsyncBiDiServer.start [#asyncbidiserver-start]
 
