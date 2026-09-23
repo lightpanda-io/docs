@@ -183,8 +183,15 @@ print(output)
 
 The browser can enforce `robots.txt` for you (off by default). To enable it, pass browser flags through `args=` on any entry point:
 
+With `Browser` (or `AsyncBrowser`):
+
 ```python copy
-Browser(args=["--obey-robots"])                    # and AsyncBrowser
+Browser(args=["--obey-robots"])
+```
+
+With `run_script`:
+
+```python copy
 run_script("scrape.js", args=["--obey-robots"])
 ```
 
@@ -204,6 +211,3 @@ exception.
   If a page comes back strangely empty under `--obey-robots`, read the site's
   `robots.txt` before assuming something is broken.
 </Callout>
-
-Whether a given scrape is acceptable is not a question `robots.txt` alone
-answers: a site's terms of service can forbid what its `robots.txt` permits.
