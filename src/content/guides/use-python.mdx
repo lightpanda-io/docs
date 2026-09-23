@@ -181,8 +181,7 @@ print(output)
 
 ## Respect robots.txt
 
-The browser can enforce `robots.txt` for you. It is off by default, and every
-entry point takes browser flags through `args=`:
+The browser can enforce `robots.txt` for you (off by default). To enable it, pass browser flags through `args=` on any entry point:
 
 ```python copy
 Browser(args=["--obey-robots"])                    # and AsyncBrowser
