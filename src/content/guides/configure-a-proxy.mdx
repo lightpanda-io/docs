@@ -6,14 +6,13 @@ import { Tabs } from 'nextra/components'
 
 # Use a proxy
 
-Running locally, you configure the proxy when starting the
-browser or from your script. On Lightpanda Cloud, you pick the proxy with a parameter on the connection URL.
+Lightpanda supports using your own proxy, both locally and on Lightpanda Cloud. On Lightpanda Cloud, you can also use a shared proxy we provide instead.
 
 <Tabs items={['Local', 'Cloud']}>
   <Tabs.Tab>
 ## Use a proxy locally
 
-On the command line, start Lightpanda with `--http-proxy` and an HTTP or HTTPS proxy address. All outgoing requests use the proxy, whichever protocol your client connects with.
+To use a proxy, start Lightpanda from the command line with `--http-proxy` followed by an HTTP or HTTPS proxy address. All outgoing requests go through the proxy, regardless of the protocol your client uses to connect to Lightpanda.
 
 The examples below use `serve`, but `fetch`, `mcp`, and `agent` accept these options too.
 
