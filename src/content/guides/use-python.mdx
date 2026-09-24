@@ -178,3 +178,36 @@ print(output)
 ```
 
 `run_script` shells out to `lightpanda run <script>` and returns its stdout; a non-zero exit raises `ScriptError`. `run_script_async` is the awaitable variant.
+
+## Respect robots.txt
+
+The browser can enforce `robots.txt` for you (off by default). To enable it, pass browser flags through `args=` on any entry point:
+
+With `Browser` (or `AsyncBrowser`):
+
+```python copy
+Browser(args=["--obey-robots"])
+```
+
+With `run_script`:
+
+```python copy
+run_script("scrape.js", args=["--obey-robots"])
+```
+
+A request the site disallows then fails rather than being sent: a `Session`
+call raises `ToolError`, and `run_script` raises `ScriptError`.
+
+The same flag works on [`CDPServer`](/reference/python#cdpserver) and
+[`BiDiServer`](/reference/python#bidiserver), where a blocked request surfaces
+as a navigation error in Playwright or Selenium rather than as a Python
+exception.
+
+<Callout type="warning" emoji="⚠️">
+  The rule applies to **every** request, not just the page you asked for.
+  Plenty of sites disallow the directory their own assets live in, so a page
+  you are allowed to fetch can load with its scripts and styles blocked, and
+  render blank or empty. That is `robots.txt` being honoured, not a failure.
+  If a page comes back strangely empty under `--obey-robots`, read the site's
+  `robots.txt` before assuming something is broken.
+</Callout>
