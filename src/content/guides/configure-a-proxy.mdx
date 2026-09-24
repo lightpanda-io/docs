@@ -1,63 +1,54 @@
 ---
-title: Configure a proxy
-description: You can configure a proxy for use with the Lightpanda browser.
+title: Use a proxy
+description: Configure a proxy for Lightpanda, with the --http-proxy option when running locally, or with a shared proxy or your own on Lightpanda Cloud.
 ---
+import { Tabs } from 'nextra/components'
 
-# Configure a proxy
+# Use a proxy
 
-Lightpanda supports HTTP and HTTPS proxies with basic or bearer
-authentication. You can configure the proxy when starting the browser.
+Lightpanda supports using your own proxy, both locally and on Lightpanda Cloud. On Lightpanda Cloud, you can also use a shared proxy we provide instead.
 
-## Configure HTTP proxy
+<Tabs items={['Local', 'Cloud']}>
+  <Tabs.Tab>
+## Use a proxy locally
 
-Use the CLI option `--http-proxy` when starting Lightpanda to configure the
-proxy. Ensure your proxy address starts with `http://` or `https://`.
+To use a proxy, start Lightpanda from the command line with `--http-proxy` followed by an HTTP or HTTPS proxy address. All outgoing requests go through the proxy, regardless of the protocol your client uses to connect to Lightpanda.
 
-Use a local proxy with the `fetch` command:
-```sh copy
-lightpanda fetch --http-proxy http://127.0.0.1:3000 https://lightpanda.io
-```
-Or configure the proxy with `serve` for the CDP server. All outgoing requests will use the proxy.
+The examples below use `serve`, but `fetch`, `mcp`, and `agent` accept these options too.
+
 ```sh copy
 lightpanda serve --http-proxy http://127.0.0.1:3000
 ```
 
-### HTTP proxy with basic auth
+### Authenticate with basic auth
 
-You can configure [basic
-auth](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Authentication#basic)
-for the proxy using the `username:password@` format in the proxy address. It
-works for both `fetch` and `serve` commands.
+Add [basic auth](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Authentication#basic) credentials to the proxy address with the `username:password@` format.
 
 ```sh copy
-lightpanda fetch --http-proxy 'http://me:my-password@127.0.0.1:3000' https://lightpanda.io
+lightpanda serve --http-proxy 'http://me:my-password@127.0.0.1:3000'
 ```
 
-### HTTP proxy with bearer auth
+### Authenticate with a bearer token
 
-Lightpanda supports [bearer
-auth](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Authentication#bearer)
-to authenticate with the `--proxy-bearer-token`. It works for both `fetch` and
-`serve` commands.
-
-This option will add a `Proxy-Authorization` header all the outgoing requests.
+`--proxy-bearer-token` authenticates with [bearer auth](https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Authentication#bearer). It adds a `Proxy-Authorization` header to all outgoing requests.
 
 ```sh copy
-lightpanda fetch --http-proxy 'http://127.0.0.1:3000' --proxy-bearer-token 'MY-TOKEN' https://lightpanda.io
+lightpanda serve --http-proxy 'http://127.0.0.1:3000' --proxy-bearer-token 'MY-TOKEN'
 ```
 
-## Configure a proxy from your Puppeteer/Playwright script
+### Authenticate from your script
 
-Instead of configuring your proxy auth on Lightpanda's start, you can pass your
-username and password in flight from your script using request interceptions.
+You can also pass the proxy credentials from your Puppeteer or Playwright script instead of the command line.
 
-### Puppeteer
+Selenium can't do this, because Lightpanda does not support proxy authentication over WebDriver BiDi. Put the credentials in the `--http-proxy` URL instead.
 
+<Tabs items={['Puppeteer', 'Playwright']}>
+  <Tabs.Tab>
 With Puppeteer, you have to configure the proxy address when starting
 Lightpanda.
 
 ```sh copy
-lightpanda fetch --http-proxy 'http://127.0.0.1:3000'
+lightpanda serve --http-proxy 'http://127.0.0.1:3000'
 ```
 
 Then you can call `page.authenticate` function to inject your authentication
@@ -75,9 +66,8 @@ await page.authenticate({
 
 You can find the full example in our
 [demo repository](https://github.com/lightpanda-io/demo/blob/main/puppeteer/proxy_auth.js).
-
-### Playwright
-
+  </Tabs.Tab>
+  <Tabs.Tab>
 With Playwright, configure the proxy when creating the browser's context.
 
 ```javascript copy
@@ -94,3 +84,35 @@ const page = await context.newPage();
 ```
 You can find the full example in our
 [demo repository](https://github.com/lightpanda-io/demo/blob/main/playwright/proxy_auth.js).
+  </Tabs.Tab>
+</Tabs>
+  </Tabs.Tab>
+  <Tabs.Tab>
+## Use a proxy on Lightpanda Cloud
+
+Add the `proxy` query parameter to the [connection URL](/run-on-lightpanda-cloud/getting-started#connect-your-cdp-client-to-lightpanda-cloud) to route the session through a proxy. You have two options: use a shared proxy, or add your own.
+
+### Use a shared proxy
+
+Every account can use two shared proxies.
+
+- `fast_dc`: the default. A single shared datacenter IP, optimized for speed. Each region has its own, so the IP depends on the endpoint you connect to.
+- `datacenter`: a pool of shared datacenter IPs with automatic rotation. Accepts an optional `country` parameter (two-letter country code) to target a specific country.
+
+```text copy
+wss://euwest.cloud.lightpanda.io/ws?proxy=datacenter&country=de&token=TOKEN
+```
+
+Omit `proxy` and the session uses `fast_dc`. [Contact us](mailto:hello@lightpanda.io) for additional proxy options.
+
+### Use your own proxy
+
+Add your proxy on the [proxies page](https://console.lightpanda.io/proxies) in the console, then pass its identifier as the `proxy` parameter. The console generates the identifier and shows it on the proxy's card. It is not the name you gave the proxy.
+
+```text copy
+wss://euwest.cloud.lightpanda.io/ws?proxy=xK4mP2qR&token=TOKEN
+```
+
+The kind you set on the proxy, datacenter or residential, is a label. It does not change how the session connects.
+  </Tabs.Tab>
+</Tabs>

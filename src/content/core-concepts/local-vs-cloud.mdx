@@ -34,7 +34,7 @@ Running on the cloud, the browser runs on Lightpanda's servers, so your target U
 This table shows which interfaces and features you can reach in each mode. Coverage is still expanding, so the cloud does not yet match local on every interface.
 
 <Callout type="info">
-Cloud coverage is a work in progress. The cloud exposes the MCP server over SSE with a subset of the tools available locally, and bring-your-own-proxy is on the roadmap.
+Cloud coverage is a work in progress. The cloud exposes the MCP server over SSE with a subset of the tools available locally.
 </Callout>
 
 | Interface / feature | Local | Cloud |
@@ -44,6 +44,6 @@ Cloud coverage is a work in progress. The cloud exposes the MCP server over SSE 
 | [AI agent](/usage/agent) | Yes | No |
 | [`fetch` command](/run-locally/commands#fetch) | Yes | No |
 | [HTTP API](/usage/api) | No | Yes |
-| [Proxies](/guides/configure-a-proxy) | Yes, your own proxy | Yes, managed rotating pool with country selection |
+| [Proxies](/guides/configure-a-proxy) | Yes, your own proxy | Yes, shared pool with country selection, or your own |
 
 For CDP, both modes speak the same protocol: the same [Puppeteer](/usage/cdp/puppeteer), [Playwright](/usage/cdp/playwright), and [chromedp](/usage/cdp/chromedp) scripts run against a local endpoint or a cloud endpoint with your token. The [HTTP API](/usage/api) is the cloud counterpart to the local [`fetch`](/run-locally/commands#fetch) command: both return one-shot HTML or Markdown with no CDP script. See [Getting started](/run-on-lightpanda-cloud/getting-started) to connect to the cloud.
