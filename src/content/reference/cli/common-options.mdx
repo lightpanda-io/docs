@@ -5,7 +5,7 @@ description: Options shared by every Lightpanda CLI command.
 
 # Common Options
 
-Every Lightpanda command ([fetch](/reference/cli/fetch), [serve](/reference/cli/serve), [mcp](/reference/cli/mcp), [agent](/reference/cli/agent)) accepts the following options in addition to its own.
+Every Lightpanda command ([fetch](/reference/cli/fetch), [serve](/reference/cli/serve), [mcp](/reference/cli/mcp), [agent](/reference/cli/agent), [run](/reference/cli#run)) accepts the following options in addition to its own.
 
 ## Options
 
@@ -40,19 +40,27 @@ common options:
           passed multiple times. When any --ca-cert or --ca-path is given,
           the system trust store is replaced by these certificates.
   --cookie <PATH>
-          Path to a JSON file to load cookies from (read-only).
+          Path to a file to load cookies from (read-only). Either a JSON
+          array in the CDP/Puppeteer format, or a Netscape cookie file (the
+          cookies.txt format written by curl and wget). The format is
+          detected from the file's contents.
           Defaults to no cookie loading.
   --cookie-jar <PATH>
           Path to a JSON file to save cookies to on exit (write-only).
           Defaults to no cookie saving.
+  --cors-store-entry-limit <INT>
+          Maximum number of entries kept in the CorsStore. 0 means no limit.
+          Defaults to 1000.
   --experimental-features <FEATURE>
           Enable an experimental, unstable feature. Can be passed multiple times.
           Behavior may change or be removed without notice.
           Defaults to none enabled.
           Allowed values:
-              cors      Obey CORS (cross-origin resource sharing) checks
-                        on fetch/XHR requests instead of allowing them
-                        unconditionally.
+              cors          Obey CORS (cross-origin resource sharing) checks
+                            on fetch/XHR requests instead of allowing them
+                            unconditionally.
+              serviceworker Enable the Service Worker API (navigator.serviceWorker
+                            and registration), hidden by default.
   --load-resources <RESOURCE>
           Sub-resource to actually request. Can be passed multiple times.
           Defaults to requesting none of them.
@@ -154,6 +162,9 @@ common options:
   --proxy-bearer-token <TOKEN>
           Token sent for bearer authentication with the proxy:
           Proxy-Authorization: Bearer <token>.
+  --robot-store-entry-limit <INT>
+          Maximum number of entries kept in the RobotStore. 0 means no limit.
+          Defaults to 1000.
   --timezone <IANA>
           Time zone used by Date and Intl, e.g. Europe/Paris or UTC.
           Defaults to the host time zone.
