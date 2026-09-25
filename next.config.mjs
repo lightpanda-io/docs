@@ -1,7 +1,7 @@
 import nextra from 'nextra'
 import { basePath, redirects } from './redirects.mjs'
 
-const withNextra = nextra({})
+const withNextra = nextra({ search: { codeblocks: true } })
 
 export default withNextra({
   basePath,
