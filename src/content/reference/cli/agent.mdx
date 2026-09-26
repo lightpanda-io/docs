@@ -60,8 +60,8 @@ Options:
           The AI provider. When omitted, lightpanda auto-detects an API
           key from your environment (ANTHROPIC_API_KEY, OPENAI_API_KEY,
           GOOGLE_API_KEY/GEMINI_API_KEY, HF_TOKEN, AI_GATEWAY_API_KEY,
-          MISTRAL_API_KEY, OPENROUTER_API_KEY, ORCAROUTER_API_KEY,
-          VERTEX_API_KEY). With exactly one key set:
+          MISTRAL_API_KEY, OPENROUTER_API_KEY, VERTEX_API_KEY). With
+          exactly one key set:
           that provider is used. With multiple keys on a TTY: you'll be
           prompted to pick; in non-interactive contexts, pass --provider
           explicitly. With no keys set: falls back to the basic REPL
@@ -82,8 +82,8 @@ Options:
           subscription (OAuth) instead of an API key.
 
           Allowed values: "anthropic", "openai", "gemini", "huggingface",
-                          "vercel", "mistral", "openrouter", "orcarouter",
-                          "ollama", "llama_cpp", "vertex", "codex",
+                          "vercel", "mistral", "openrouter", "ollama",
+                          "llama_cpp", "vertex", "codex",
                           "openai_compatible".
           In the REPL, use /provider to list and change providers.
   --save <PATH>
@@ -112,7 +112,7 @@ Options:
 
 The provider, model, effort, and verbosity you choose in the REPL are remembered per-directory in `.lp-agent.zon` and reused on the next run.
 
-API keys are read from the environment: `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GOOGLE_API_KEY`/`GEMINI_API_KEY`, `HF_TOKEN`, `AI_GATEWAY_API_KEY`, `MISTRAL_API_KEY`, `OPENROUTER_API_KEY`, or `ORCAROUTER_API_KEY`. Any other OpenAI-compatible server is used through `OPENAI_BASE_URL` + `OPENAI_API_KEY`. The local servers (Ollama, llama.cpp) do not require an API key.
+API keys are read from the environment: `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GOOGLE_API_KEY`/`GEMINI_API_KEY`, `HF_TOKEN`, `AI_GATEWAY_API_KEY`, `MISTRAL_API_KEY`, or `OPENROUTER_API_KEY`. Any other OpenAI-compatible server is used through `OPENAI_BASE_URL` + `OPENAI_API_KEY`. The local servers (Ollama, llama.cpp) do not require an API key.
 
 ## Examples
 
