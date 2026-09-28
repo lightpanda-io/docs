@@ -41,16 +41,17 @@ Run a saved script, then exit. No LLM calls, no API key needed. See [how to run 
 
 ```sh copy
 lightpanda run script.js
+cat script.js | lightpanda run -                (read the script from stdin)
 ```
 
 ```console
-usage: lightpanda run <SCRIPT> [COMMON_OPTIONS]
+usage: lightpanda run <SCRIPT | -> [COMMON_OPTIONS]
 
 Arguments:
 <SCRIPT>
           Path to a .js script to run, then exit. Produce one with
           `lightpanda agent --task "..." --save script.js`, or `/save` from
-          the agent REPL.
+          the agent REPL. Pass `-` to read the script from stdin instead.
           Caution: .js files can contain evaluate(...) calls that run
           arbitrary JavaScript in the page. Only run scripts you trust, the
           same way you would a shell script.

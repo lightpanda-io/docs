@@ -178,6 +178,8 @@ In server mode (`lightpanda serve`), Lightpanda exposes a WebSocket CDP endpoint
 
 Unlike `--dump markdown` which processes a URL from scratch, `LP.getMarkdown` converts the DOM at call time. You can click, fill forms, or wait for dynamic content, then call it to capture the current state.
 
+> `LP.getMarkdown` is deprecated in favor of `LP.dump` with `format: "markdown"`, kept for existing callers. See the [LP CDP domain reference](/reference/lp-cdp-domain) for the full method list.
+
 ### Starting the CDP server
 
 ```sh copy
