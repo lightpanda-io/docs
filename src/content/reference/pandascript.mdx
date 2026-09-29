@@ -79,7 +79,7 @@ Clicked element (selector: a.login). Page url: https://example.com/app, title: D
 | `page.press` | `press(selector, key)` or `press({ key[, selector] })` | `Pressed key '<key>'` |
 | `page.selectOption` | `selectOption(selector, value)` or `selectOption({ selector, value })` | `Selected option '<value>' (<target>)` |
 | `page.setChecked` | `setChecked(selector[, checked = true])` or `setChecked({ selector, checked = true })` | `Set element (<target>) to checked` or `to unchecked` |
-| `page.scroll` | `scroll({ x = 0, y = 0 })`, never a selector | `Scrolled window to x: <x>, y: <y>` |
+| `page.scroll` | `scroll({ selector?, x, y })` — `selector` scrolls that element's scroll container instead of the window; an omitted axis keeps its current offset, it is not reset to `0` | `Scrolled window to x: <x>, y: <y>` |
 
 ## Waiting
 
@@ -117,7 +117,7 @@ They print for you to read. A script's own output is whatever it `return`s from 
 - Mix a positional with an options object: `waitForSelector("#row", { timeout: 2000 })`.
 - Or pass one object with everything: `waitForSelector({ selector: "#row", timeout: 2000 })`. This is equivalent, and it's the shape `/save` records into saved scripts.
 - An option can never be passed as a bare positional: `waitForSelector("#row", 2000)` is an error.
-- A `null` positional omits that argument: `press(null, "Enter")` presses on the document, not necessarily the focused element.
+- A `null` positional omits that argument: `press(null, "Enter")` presses on `document.activeElement` — the focused element, falling back to `<body>` when nothing is explicitly focused.
 - Setting the same field both positionally and in the options object is an error: `goto(url, { url: ... })` throws `invalid arguments`.
 - Arguments must be JSON-serializable. `undefined`, functions, and symbols throw `invalid arguments`; a cyclic object throws V8's own `TypeError: Converting circular structure to JSON` instead, since it fails before Lightpanda's own check runs.
 

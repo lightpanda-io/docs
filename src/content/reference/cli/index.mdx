@@ -29,7 +29,7 @@ Every command also accepts a shared set of [common options](/reference/cli/commo
 
 ## help
 
-Show the command list above, or `lightpanda help <command>` for one command's own reference.
+Show the command list above, or `lightpanda help <command>` for one command's own reference. `-h` also works, at the top level or after any command.
 
 ```sh copy
 lightpanda help [command]
@@ -44,11 +44,12 @@ lightpanda run script.js
 ```
 
 ```console
-usage: lightpanda run <SCRIPT> [COMMON_OPTIONS]
+usage: lightpanda run <SCRIPT | -> [COMMON_OPTIONS]
 
 Arguments:
 <SCRIPT>
-          Path to a .js script to run, then exit. Produce one with
+          Path to a .js script to run, then exit, or `-` to read the script
+          from stdin. Produce one with
           `lightpanda agent --task "..." --save script.js`, or `/save` from
           the agent REPL.
           Caution: .js files can contain evaluate(...) calls that run

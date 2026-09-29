@@ -16,13 +16,16 @@ options:
   --advertise-host <HOST>
           The host to advertise, e.g. in the /json/version response. Useful,
           for example, when --host is 0.0.0.0.
-          Defaults to --host value.
+          Defaults to --host value, except when --host is a wildcard address
+          (0.0.0.0 or ::), which is not reachable by clients — then defaults
+          to 127.0.0.1 instead.
   --cdp-max-connections <INT>
           Maximum number of simultaneous CDP connections.
           Defaults to 16.
   --cdp-max-http-message-size <INT>
-          Maximum allowed HTTP request size
-          Defaults to 4096 (maximum allowed: 16383)
+          Maximum allowed HTTP request size. Connections start with a small
+          read buffer and only grow as needed.
+          Defaults to 1048576 (1MB)
   --cdp-max-message-size <INT>
           Maximum allowed incoming websocket message size.
           Defaults to 1048576 (1MB)
@@ -54,3 +57,5 @@ options:
 ```
 
 The command also accepts the [common options](/reference/cli/common-options).
+
+Find Lightpanda's agent-optimized CDP methods in the [LP CDP domain reference](/reference/lp-cdp-domain).

@@ -8,6 +8,7 @@ const meta: MetaRecord = {
     },
   },
   'http-api': 'HTTP API',
+  'lp-cdp-domain': 'LP CDP domain',
   'mcp-tools': 'MCP tools',
   pandascript: 'PandaScript',
   python: 'Python SDK',

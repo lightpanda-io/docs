@@ -1,0 +1,71 @@
+---
+title: LP CDP domain
+description: Reference of the custom LP CDP domain exposed by Lightpanda's WebSocket CDP server.
+---
+
+# LP CDP domain
+
+Alongside the standard [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/), Lightpanda's [`serve`](/reference/cli/serve) server exposes a custom `LP` domain with agent-optimized methods that have no standard-CDP equivalent. Call them the same way as any CDP method, e.g. via `CDPSession.send('LP.<method>', params)` with Playwright or Puppeteer, or a raw WebSocket message.
+
+In the tables below, `?` marks an optional parameter.
+
+```javascript copy
+const client = await context.newCDPSession(page);
+
+const { format, content } = await client.send('LP.dump', { format: 'markdown' });
+
+const { backendNodeId } = await client.send('LP.waitForSelector', { selector: '#submit-btn', timeout: 3000 });
+await client.send('LP.clickNode', { backendNodeId });
+```
+
+## Content extraction
+
+| Method | Params | Description |
+|---|---|---|
+| `LP.dump` | `format` (`html`\|`markdown`\|`png`\|`pdf`), `strip?`, `selector?`, `backendNodeId?`, `maxBytes?` | Render the page, or a node scoped by `selector`/`backendNodeId`, in the given format. Returns `{format, content}`; `content` is text for `html`/`markdown` and base64 for `png`/`pdf`. `strip` is an object of element groups to omit — `js`, `css`, `ui`, `invisible`, `shell`, `clutter` (each an optional bool, all default `false`) — matching the CLI's `--strip-mode` groups. `maxBytes` caps `html`/`markdown` output at a UTF-8 boundary; it's a text-only option and errors if set together with `png`/`pdf`. |
+| `LP.getMarkdown` | `nodeId?` | **Deprecated**: use `LP.dump` with `format: "markdown"` instead. Kept for existing callers. Converts the current DOM (or the subtree rooted at `nodeId`) to markdown. Returns `{markdown}`. |
+| `LP.getSemanticTree` | `format?` (`text`), `prune?` (default `true`), `interactiveOnly?` (default `false`), `backendNodeId?`, `maxDepth?` | Simplified semantic DOM tree optimized for AI reasoning. Returns `{semanticTree}` as a string when `format: "text"`, otherwise as a structured object. |
+| `LP.getStructuredData` | — | Extract structured data (JSON-LD, OpenGraph, etc.) from the page. Returns `{structuredData}`. |
+
+## Interactive elements
+
+| Method | Params | Description |
+|---|---|---|
+| `LP.getInteractiveElements` | `nodeId?` | Find all interactive elements under the document, or under `nodeId` when given. Returns `{elements}`. |
+| `LP.detectForms` | — | Detect forms and their field structure and types. Returns `{forms}`. |
+| `LP.getNodeDetails` | `backendNodeId` (required) | Tag, role, name, attributes, and state for a node, plus a ready-to-use CSS selector. Returns `{nodeDetails}`. |
+| `LP.waitForSelector` | `selector` (required), `timeout?` | Wait for a CSS selector to match. `timeout` (ms) defaults to the runtime's standard wait timeout when omitted. Returns `{backendNodeId}` of the matched element. |
+
+## Actions
+
+| Method | Params | Description |
+|---|---|---|
+| `LP.clickNode` | `nodeId` or `backendNodeId` (one required) | Click a node. |
+| `LP.fillNode` | `nodeId` or `backendNodeId` (one required), `text` (required) | Fill an input, textarea, or select element. |
+| `LP.scrollNode` | `nodeId` or `backendNodeId` (optional — omitted scrolls the window), `x?`, `y?` | Scroll the page or a specific element; an omitted axis stays at its current position. Returns `{backendNodeId, x, y}` of the node that actually scrolled (a leaf inside a scroll container reports its scrollable ancestor). |
+
+## Debugging and configuration
+
+| Method | Params | Description |
+|---|---|---|
+| `LP.getContentSignal` | — | Read the current host's advisory `Content-Signal` robots.txt preferences ([contentsignals.org](https://contentsignals.org)). Returns `{available, contentSignals}`; `available` is `false` unless a robots.txt fetch has populated the store for this host (i.e. unless `--obey-robots` is on). |
+| `LP.handleJavaScriptDialog` | `accept` (required bool), `promptText?` | Pre-arm the response for the *next* `window.alert`/`confirm`/`prompt`. Lightpanda auto-dismisses dialogs headlessly, so this must be sent *before* the JS that opens the dialog, not reactively like standard CDP's `Page.handleJavaScriptDialog` (which keeps returning "No dialog is showing"). Without a pre-armed response: `confirm` returns `false`, `prompt` returns `null`, `alert` has no return value. |
+| `LP.configureCDP` | `disableSetCacheDisabled?`, `obeyRobots?`, `httpVersion?` (`"1.1"`\|`"auto"`) | Toggle CDP-session-level behaviors: cache-disable handling, whether robots.txt is fetched and obeyed, and the HTTP version negotiated by this connection's client. Each field is optional; omitting a field leaves it unchanged. |
+| `LP.configureLoading` | `subFrame?`, `worker?`, `externalStylesheets?`, `images?` | Toggle iframe, worker, external-stylesheet, and image loading for the session. Each field is optional, so a caller can flip one without resetting the others to their default. |
+| `LP.version` | — | Return the running Lightpanda version. Returns `{version}`. |
+
+## Example
+
+```javascript
+const client = await context.newCDPSession(page);
+
+// Get page as markdown
+const { content: markdown } = await client.send('LP.dump', { format: 'markdown' });
+
+// Get semantic tree
+const { semanticTree } = await client.send('LP.getSemanticTree', { format: 'text', maxDepth: 5 });
+
+// Wait for element and click it
+const { backendNodeId } = await client.send('LP.waitForSelector', { selector: '#submit-btn', timeout: 3000 });
+await client.send('LP.clickNode', { backendNodeId });
+```
