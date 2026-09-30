@@ -1,26 +1,36 @@
-import { Callout } from 'nextra/components'
+---
+title: Introduction
+description: Lightpanda is a fast, memory-efficient headless browser built for AI agents, automation, and web scraping.
+---
+import { Anchor } from 'nextra/components'
 
-## What is Lightpanda?
+Lightpanda is a headless browser built from scratch for machines, with no graphical rendering. It starts instantly, runs pages **9x faster** than Chrome, and uses **16x less** memory, so you can run far more sessions on the same hardware. See [what is Lightpanda](/core-concepts/what-is-lightpanda) for why it exists and how it fits your stack.
 
-Lightpanda is an AI-native web browser built from scratch for machines. Fast,
-scalable web automation with a minimal memory footprint.
+## Quickstarts
 
-Made for headless usage:
-    - Javascript execution
-    - Support of Web APIs
-    - Compatible with [Playwright](https://playwright.dev/), [Puppeteer](https://pptr.dev/) through CDP
-    - Built-in automation: [agent](/usage/agent) with natural language and reproducible [script](/usage/pandascript)
-
-Fast web automation for AI agents, LLM training, scraping and testing:
-    - Ultra-low memory footprint (16x less than Chrome)
-    - Exceptionally fast execution (9x faster than Chrome)
-    - Instant startup
-
-<Callout type="info" emoji="ℹ️">
-  When using Lightpanda, we recommend that you respect `robots.txt` files and
-  avoid high frequency requesting websites. DDOS could happen fast for small
-  infrastructures.
-
-  Lightpanda can follow `robots.txt` for you, just pass the `--obey-robots`
-  option.
-</Callout>
+<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-4 not-prose">
+  <Anchor href="/quickstarts/skill" className="group flex flex-col gap-1.5 rounded-lg border border-neutral-800 p-4 no-underline transition-colors hover:border-neutral-700">
+    <span className="flex items-center gap-2 font-semibold text-[var(--foreground)]">
+      <span>🧩</span> Skill <span className="transition-transform group-hover:translate-x-0.5">→</span>
+    </span>
+    <span className="text-sm text-[var(--foreground-accent)]">Teach a coding agent to use Lightpanda.</span>
+  </Anchor>
+  <Anchor href="/quickstarts/puppeteer-playwright-clients" className="group flex flex-col gap-1.5 rounded-lg border border-neutral-800 p-4 no-underline transition-colors hover:border-neutral-700">
+    <span className="flex items-center gap-2 font-semibold text-[var(--foreground)]">
+      <span>🔌</span> Puppeteer & Playwright <span className="transition-transform group-hover:translate-x-0.5">→</span>
+    </span>
+    <span className="text-sm text-[var(--foreground-accent)]">Also Chromedp and Selenium. Run your existing scripts on Lightpanda.</span>
+  </Anchor>
+  <Anchor href="/quickstarts/agent" className="group flex flex-col gap-1.5 rounded-lg border border-neutral-800 p-4 no-underline transition-colors hover:border-neutral-700">
+    <span className="flex items-center gap-2 font-semibold text-[var(--foreground)]">
+      <span>💬</span> Agent <span className="transition-transform group-hover:translate-x-0.5">→</span>
+    </span>
+    <span className="text-sm text-[var(--foreground-accent)]">Drive the browser with natural language.</span>
+  </Anchor>
+  <Anchor href="/quickstarts/mcp" className="group flex flex-col gap-1.5 rounded-lg border border-neutral-800 p-4 no-underline transition-colors hover:border-neutral-700">
+    <span className="flex items-center gap-2 font-semibold text-[var(--foreground)]">
+      <span>🔗</span> MCP <span className="transition-transform group-hover:translate-x-0.5">→</span>
+    </span>
+    <span className="text-sm text-[var(--foreground-accent)]">Connect any MCP-speaking AI application.</span>
+  </Anchor>
+</div>
