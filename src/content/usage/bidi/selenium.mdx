@@ -88,7 +88,7 @@ result = driver.browsing_context._conn.execute(command_builder(
     "script.evaluate",
     {"expression": "document.title", "target": {"context": context}, "awaitPromise": False},
 ))
-print(result["result"]["value"])
+print(result["result"]["value"], flush=True)
 
 driver.browsing_context.close(context)
 driver.quit()
