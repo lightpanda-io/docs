@@ -13,10 +13,14 @@ export const redirects = {
   '/python': '/reference/python',
   '/reference/python-api': '/reference/python',
   '/quickstart': '/quickstarts/puppeteer-playwright-clients',
-  '/quickstart/installation-and-setup': '/quickstarts/puppeteer-playwright-clients#install-your-client-library',
-  '/quickstart/your-first-test': '/quickstarts/puppeteer-playwright-clients#connect-and-read-js-rendered-content',
-  '/quickstart/build-your-first-extraction-script': '/quickstarts/puppeteer-playwright-clients#connect-and-read-js-rendered-content',
-  '/quickstart/go-to-production-with-lightpanda-cloud': '/quickstarts/puppeteer-playwright-clients#go-to-production',
+  '/quickstart/installation-and-setup':
+    '/quickstarts/puppeteer-playwright-clients#install-your-client-library',
+  '/quickstart/your-first-test':
+    '/quickstarts/puppeteer-playwright-clients#connect-and-read-js-rendered-content',
+  '/quickstart/build-your-first-extraction-script':
+    '/quickstarts/puppeteer-playwright-clients#connect-and-read-js-rendered-content',
+  '/quickstart/go-to-production-with-lightpanda-cloud':
+    '/quickstarts/puppeteer-playwright-clients#go-to-production',
   '/open-source/installation': '/run-locally/installation/one-liner',
   '/open-source/usage': '/run-locally/commands#serve',
   '/open-source/systems-requirements': '/run-locally/installation/system-requirements',
