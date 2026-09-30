@@ -53,26 +53,6 @@ INTRO = (
     "awaitable; the async sections below list only what the twin adds."
 )
 
-CONVENTIONS = [
-    "Browser actions are keyword-only methods on [`Session`](#session) and "
-    "[`AsyncSession`](#asyncsession), named in snake_case after the browser's own action "
-    "names: the `waitForSelector` action is `wait_for_selector`, and its `backendNodeId` "
-    "argument is `backend_node_id`.",
-    "Where a method accepts both `selector` and `backend_node_id`, pass one of the two. "
-    "`selector` is preferred for reproducibility and wins when both are given; "
-    "`backend_node_id` takes the values returned by [`tree`](#session-tree), "
-    "[`links`](#session-links) or [`find_element`](#session-find-element).",
-]
-
-# Fixed paragraphs shown under a class heading, after its docstring.
-CLASS_NOTES = {
-    "Session": (
-        "[`call`](#session-call) is the escape hatch that takes the action and argument "
-        "names exactly as the browser declares them. A failed action raises "
-        "[`ToolError`](#toolerror)."
-    ),
-}
-
 FENCE_RE = re.compile(r"^\s*```")
 CODE_SPAN_RE = re.compile(r"(`+)(.+?)\1", re.DOTALL)
 MODULE_PREFIX_RE = re.compile(r"\blightpanda\.\w+\.")
@@ -318,7 +298,6 @@ def class_code(cls: pdoc.doc.Class) -> str:
 def emit_class(page: Page, module: pdoc.doc.Module, cls: pdoc.doc.Class, links: dict[str, str]) -> None:
     page.heading(2, cls.name, slug(cls.name))
     page.para(render_docstring(cls, links))
-    page.para(CLASS_NOTES.get(cls.name, ""))
     # An async twin's defining fact is that it mirrors the sync class, so say so
     # before the constructor details rather than after them.
     members = listed_members(module, cls)
@@ -417,8 +396,6 @@ def generate() -> str:
     page.lines.append("# Python SDK")
     page.lines.append("")
     page.para(INTRO)
-    for paragraph in CONVENTIONS:
-        page.para(paragraph)
 
     exceptions: list[pdoc.doc.Class] = []
     for name in names:
