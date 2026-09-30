@@ -18,6 +18,14 @@ curl -fsSL https://pkg.lightpanda.io/install.sh | bash
 one-liner installer.
 </Callout>
 
+The installer puts the binary at `~/.local/bin/lightpanda` (override the directory with the `LIGHTPANDA_DIR` environment variable). If that directory isn't already on your `PATH`, the installer warns you and `lightpanda` won't be found until you add it:
+
+```bash copy
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+Add that line to your shell profile (`~/.bashrc`, `~/.zshrc`, ...) to make it permanent.
+
 By default the installer installs the last nightly build.
 But you can pick a specific release:
 

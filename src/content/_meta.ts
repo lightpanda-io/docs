@@ -13,8 +13,8 @@ const meta: MetaRecord = {
       breadcrumb: false,
     },
   },
-  quickstart: {
-    title: 'Quickstart',
+  quickstarts: {
+    title: 'Quickstarts',
     theme: {},
   },
   'run-locally': 'Run locally',

@@ -2,7 +2,7 @@
 // Renders TechArticle for reference/conceptual pages, HowTo for guide/tutorial pages.
 // Determines type from the file path — no manual per-page import needed.
 //
-// Guide paths: quickstart/*, guides/*, getting-started*
+// Guide paths: quickstarts/*, guides/*, getting-started*
 // Reference paths: everything else
 
 interface DocsAutoJsonLdProps {
@@ -12,7 +12,7 @@ interface DocsAutoJsonLdProps {
 }
 
 // Paths that indicate a guide/tutorial page (HowTo schema)
-const GUIDE_PATTERNS = ['quickstart/', 'guides/', 'getting-started']
+const GUIDE_PATTERNS = ['quickstarts/', 'guides/', 'getting-started']
 
 function isGuidePage(filePath: string): boolean {
   const normalized = filePath.replace('src/content/', '')

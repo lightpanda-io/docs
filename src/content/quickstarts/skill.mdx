@@ -1,0 +1,92 @@
+---
+title: Skill
+description: Add the Lightpanda skill to your coding agent so it knows how to browse, extract data, and automate the web.
+---
+import { Callout, Steps, Tabs } from 'nextra/components'
+
+# Skill
+
+The Lightpanda skill teaches a coding agent how to use Lightpanda: which interface fits a task, and how to call it. Add it once, then describe what you want in plain language instead of looking up commands.
+
+See the source: [lightpanda-io/agent-skill](https://github.com/lightpanda-io/agent-skill).
+
+## Prerequisites
+
+- A coding agent that supports skills, such as Claude Code, Cursor, or Windsurf. See the full list at [skills.sh](https://skills.sh).
+
+## Steps
+
+<Steps>
+
+### Install the skill
+
+<Tabs items={['skills.sh', 'Claude Code plugin', 'Manual']} className="-mb-4">
+  <Tabs.Tab>
+Needs [Node.js](https://nodejs.org/en/download):
+
+```sh copy
+npx skills add lightpanda-io/agent-skill
+```
+
+It asks which skills to add and which agent to target. Pick `lightpanda`, plus `pandascript` if you plan to save reproducible scripts.
+  </Tabs.Tab>
+  <Tabs.Tab>
+Installs the skill and wires in the MCP server:
+
+```sh copy
+/plugin marketplace add lightpanda-io/agent-skill
+/plugin install lightpanda@lightpanda
+```
+  </Tabs.Tab>
+  <Tabs.Tab>
+Clone the repo into your agent's skills directory. For Claude Code:
+
+```sh copy
+git clone https://github.com/lightpanda-io/agent-skill ~/.claude/skills/lightpanda
+ln -s ~/.claude/skills/lightpanda/pandascript ~/.claude/skills/pandascript
+```
+
+The second line adds the `pandascript` skill for replay scripts. Keep the whole directory: the skill runs the bundled `scripts/install.sh`. For other agents, check their docs for the skills directory.
+  </Tabs.Tab>
+</Tabs>
+
+### Install Lightpanda
+
+Ask your agent:
+
+```text copy
+Install lightpanda for me.
+```
+
+The skill knows the install script, the package-manager options for your platform, and the common quirks, so it runs the right command without you looking anything up.
+
+<Callout type="info" emoji="ℹ️">
+Prefer to do it yourself? Run the [one-liner](/run-locally/installation/one-liner):
+
+```sh copy
+curl -fsSL https://pkg.lightpanda.io/install.sh | bash
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+Other options: [WSL2 on Windows](/run-locally/installation/one-liner#windows--wsl2), [Docker](/run-locally/installation/docker), [package managers](/run-locally/installation/package-managers).
+</Callout>
+
+### Try it
+
+[quotes.toscrape.com](https://quotes.toscrape.com) is a public scraping-practice site built by Zyte: a fictional quotes catalog whose search page filters by author and tag through an AJAX form. Ask your agent:
+
+```text copy
+Go to quotes.toscrape.com/search.aspx and find which tags Albert Einstein's quotes are filed under, then give me his inspirational one.
+```
+
+This needs real interaction (select an author, wait for the tag list to reload, select a tag, submit), not a plain fetch. Which interface handles it depends on what's set up: the MCP server if it's connected, otherwise the skill falls back to running `lightpanda agent --task "..."` itself.
+
+Or ask it to check an existing project instead:
+
+```text copy
+I have an existing Playwright project. Check whether my tests would work with Lightpanda instead of Chrome, and flag anything that wouldn't.
+```
+
+The skill knows the differences that matter when swapping in Lightpanda. For example, Lightpanda has no graphical rendering, so tests that rely on screenshots or visual layout won't carry over, and Playwright connects to a running Lightpanda with `connectOverCDP` instead of launching its own Chromium.
+
+</Steps>
