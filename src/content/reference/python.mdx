@@ -8,10 +8,6 @@ description: Reference of every public class, method, property and exception in 
 
 Every public class, method, property and exception of the [`lightpanda` package](https://pypi.org/project/lightpanda/), with the signatures and docstrings shipped in the code. See [Use the Python SDK](/guides/use-python) for a practical walkthrough. Every sync class has an asyncio twin with the same methods, awaitable; the async sections below list only what the twin adds.
 
-Browser actions are keyword-only methods on [`Session`](#session) and [`AsyncSession`](#asyncsession), named in snake_case after the browser's own action names: the `waitForSelector` action is `wait_for_selector`, and its `backendNodeId` argument is `backend_node_id`.
-
-Where a method accepts both `selector` and `backend_node_id`, pass one of the two. `selector` is preferred for reproducibility and wins when both are given; `backend_node_id` takes the values returned by [`tree`](#session-tree), [`links`](#session-links) or [`find_element`](#session-find-element).
-
 ## Browser [#browser]
 
 A lightpanda browser process. Spawns the bundled binary on first use.
@@ -52,7 +48,8 @@ Usable as a context manager (`with`).
 tools: dict[str, dict]
 ```
 
-*Property.* Tool name → \{description, schema\}, as reported by the browser.
+*Property.* Tool name → \{description, schema, output_schema\}, as reported by
+the browser. ``output_schema`` is None for tools that declare none.
 
 ### Browser.new_session [#browser-new-session]
 
@@ -77,7 +74,19 @@ One isolated browsing context (own page, cookies, memory).
 
 Do not construct directly — use [`Browser.new_session()`](#browser-new-session).
 
-[`call`](#session-call) is the escape hatch that takes the action and argument names exactly as the browser declares them. A failed action raises [`ToolError`](#toolerror).
+Browser actions are keyword-only methods, named in snake_case after the
+browser's own action names: the ``waitForSelector`` action is
+[`wait_for_selector()`](#session-wait-for-selector), and its ``backendNodeId`` argument is
+``backend_node_id``.
+
+Where a method accepts both ``selector`` and ``backend_node_id``, pass one
+of the two. ``selector`` is preferred for reproducibility and wins when
+both are given; ``backend_node_id`` takes the values returned by
+[`tree()`](#session-tree), [`links()`](#session-links) or [`find_element()`](#session-find-element).
+
+[`call()`](#session-call) is the escape hatch that takes the action and argument names
+exactly as the browser declares them. A failed action raises
+[`ToolError`](#toolerror).
 
 ```python
 class Session(browser: Browser, session_id: str)
@@ -129,7 +138,7 @@ def click(
     *,
     selector: str | None = None,
     backend_node_id: int | None = None
-) -> Any
+) -> PageResult
 ```
 
 Click on an interactive element. Provide either a CSS selector (preferred for reproducibility) or a backendNodeId. Returns the current page URL and title after the click.
@@ -138,6 +147,15 @@ Click on an interactive element. Provide either a CSS selector (preferred for re
 **Arguments:**
  - **selector:**  CSS selector of the element to click. Preferred over backendNodeId.
  - **backend_node_id:**  The backend node ID of the element to click.
+
+
+
+**Returns:**
+> PageResult: The sentence above, with these attributes (None when absent):
+> 
+> - `url`: URL of the page the call left loaded.
+> - `http_status`: Response status of that page's own document. Absent when no response has arrived. 4xx/5xx means an error page, not the content.
+> - `title`: Document title. Empty or absent when the page has none.
 
 ### Session.console_logs [#session-console-logs]
 
@@ -153,7 +171,7 @@ Get buffered console.log/warn/error messages from the current page. Returns all 
 def detect_forms(self, *, url: str | None = None, timeout: int | None = None) -> Any
 ```
 
-Detect all forms on the page and return their structure including fields, types, and required status. If a url is provided, it navigates to that url first.
+List the forms on the page as JSON: each form's `backendNodeId`, `action`, `method` and `fields`, where each field has `backendNodeId`, `tagName`, `name`, `inputType`, `required`, `disabled`, and when present `value`, `placeholder` and select `options`. Use it before filling a form to see every field it expects. It returns no CSS selectors; get one per field with `nodeDetails` so the fill calls stay replayable. If a url is provided, it navigates there first.
 
 
 **Arguments:**
@@ -177,6 +195,7 @@ Evaluate JavaScript in the current page context — an escape hatch for page-sid
 
 
 **Arguments:**
+ - **script:**  JavaScript run in the page context. A bare trailing expression, or `return` with top-level `await`, is the result.
  - **url:**  Optional URL to navigate to before evaluating.
  - **timeout:**  Optional timeout in milliseconds. Defaults to 10000.
  - **save:**  Optional bridge-store key. The evaluate's return value is stored under this name and re-exposed as `lp.<name>` to subsequent evaluates. Objects, arrays, and strings are serialized automatically — no JSON.stringify needed.
@@ -226,7 +245,7 @@ def fill(
     value: str,
     selector: str | None = None,
     backend_node_id: int | None = None
-) -> Any
+) -> PageResult
 ```
 
 Fill text into an input element. Provide either a CSS selector (preferred for reproducibility) or a backendNodeId.
@@ -236,6 +255,15 @@ Fill text into an input element. Provide either a CSS selector (preferred for re
  - **value:**  The text to fill into the input element.
  - **selector:**  CSS selector of the input element to fill. Preferred over backendNodeId.
  - **backend_node_id:**  The backend node ID of the input element to fill.
+
+
+
+**Returns:**
+> PageResult: The sentence above, with these attributes (None when absent):
+> 
+> - `url`: URL of the page the call left loaded.
+> - `http_status`: Response status of that page's own document. Absent when no response has arrived. 4xx/5xx means an error page, not the content.
+> - `title`: Document title. Empty or absent when the page has none.
 
 ### Session.find_element [#session-find-element]
 
@@ -292,16 +320,25 @@ def goto(
     url: str,
     timeout: int | None = None,
     wait_until: str | None = None
-) -> Any
+) -> PageResult
 ```
 
-Navigate to a specified URL and load the page in memory so it can be reused later for info extraction.
+Navigate the current page to a URL. Returns the HTTP status once `waitUntil` fires (default `load`), or a timeout notice; a 4xx or 5xx means the page you got is an error page, not the content — check it before reading on; content rendered by post-load JavaScript may not be there yet (see `waitForState`). The page stays loaded for later reads and actions. To navigate and read in one call, pass `url` to [`markdown`](#session-markdown), [`tree`](#session-tree) or [`html`](#session-html) instead; use [`goto`](#session-goto) when the next step is an action or [`extract`](#session-extract).
 
 
 **Arguments:**
  - **url:**  The URL to navigate to, must be a valid URL.
  - **timeout:**  Optional timeout in milliseconds. Defaults to 10000.
  - **wait_until:**  Event that completes the navigation. Defaults to 'load'. Prefer 'domcontentloaded' followed by waitForSelector on pages whose late scripts (ads) hold 'load' back. Avoid 'done' (full quiescence): on pages with constant background activity it is the slowest choice and can run to the timeout.
+
+
+
+**Returns:**
+> PageResult: The sentence above, with these attributes (None when absent):
+> 
+> - `url`: URL of the page the call left loaded.
+> - `http_status`: Response status of that page's own document. Absent when no response has arrived. 4xx/5xx means an error page, not the content.
+> - `title`: Document title. Empty or absent when the page has none.
 
 ### Session.hover [#session-hover]
 
@@ -311,7 +348,7 @@ def hover(
     *,
     selector: str | None = None,
     backend_node_id: int | None = None
-) -> Any
+) -> PageResult
 ```
 
 Hover over an element, triggering mouseover and mouseenter events. Provide either a CSS selector (preferred for reproducibility) or a backendNodeId. Useful for menus, tooltips, and hover states.
@@ -320,6 +357,15 @@ Hover over an element, triggering mouseover and mouseenter events. Provide eithe
 **Arguments:**
  - **selector:**  CSS selector of the element to hover over. Preferred over backendNodeId.
  - **backend_node_id:**  The backend node ID of the element to hover over.
+
+
+
+**Returns:**
+> PageResult: The sentence above, with these attributes (None when absent):
+> 
+> - `url`: URL of the page the call left loaded.
+> - `http_status`: Response status of that page's own document. Absent when no response has arrived. 4xx/5xx means an error page, not the content.
+> - `title`: Document title. Empty or absent when the page has none.
 
 ### Session.html [#session-html]
 
@@ -353,7 +399,7 @@ Raw HTML for the document or, with `selector`/`backendNodeId`, a single node's o
 def interactive_elements(self, *, url: str | None = None, timeout: int | None = None) -> Any
 ```
 
-Extract interactive elements from the opened page. If a url is provided, it navigates to that url first.
+List every visible interactive element on the page as a JSON array: native controls, ARIA widgets, contenteditable regions, elements with event listeners, and focusable elements. Each entry has `backendNodeId`, `tagName`, `role`, `name`, `type` (why it counts as interactive), `tabIndex`, and when present `listeners`, `disabled`, [`id`](#session-id), `class`, `href`, `inputType`, `value`, `elementName` and `placeholder`. Use it to survey what can be acted on; to locate one element by role or name, `findElement` is cheaper. If a url is provided, it navigates there first.
 
 
 **Arguments:**
@@ -427,7 +473,7 @@ def press(
     key: str,
     selector: str | None = None,
     backend_node_id: int | None = None
-) -> Any
+) -> PageResult
 ```
 
 Press a keyboard key, dispatching keydown and keyup events. Use key names like 'Enter', 'Tab', 'Escape', 'ArrowDown', 'Backspace', or single characters like 'a', '1'. Common shorthand is normalized: 'enter'/'return' → 'Enter', 'esc' → 'Escape', 'up'/'down'/'left'/'right' → 'Arrow*', 'space' → ' '. Pressing 'Enter' on a form input or submit button triggers implicit form submission.
@@ -437,6 +483,15 @@ Press a keyboard key, dispatching keydown and keyup events. Use key names like '
  - **key:**  The key to press (e.g. 'Enter', 'Tab', 'a').
  - **selector:**  Optional CSS selector of the element to target. Preferred over backendNodeId.
  - **backend_node_id:**  Optional backend node ID of the element to target. Defaults to the document when neither selector nor backendNodeId is provided; 0 is treated as omitted.
+
+
+
+**Returns:**
+> PageResult: The sentence above, with these attributes (None when absent):
+> 
+> - `url`: URL of the page the call left loaded.
+> - `http_status`: Response status of that page's own document. Absent when no response has arrived. 4xx/5xx means an error page, not the content.
+> - `title`: Document title. Empty or absent when the page has none.
 
 ### Session.screenshot [#session-screenshot]
 
@@ -472,19 +527,30 @@ Render the page, or one node, as a PNG: the text layout Lightpanda computes, not
 def scroll(
     self,
     *,
+    selector: str | None = None,
     backend_node_id: int | None = None,
     x: int | None = None,
     y: int | None = None
-) -> Any
+) -> PageResult
 ```
 
-Scroll the page or a specific element. Returns the scroll position and current page URL and title.
+Scroll the window, or an element's scroll container, to an absolute position; an omitted axis keeps its current offset. Target an element with a CSS selector (preferred for reproducibility) or a backendNodeId; omit both to scroll the window. Page scripts receive a [`scroll`](#session-scroll) event, so content that loads on scroll (infinite feeds, lazy lists) may appear: read the page again afterwards, with `waitForState` if it is still loading. Returns the final scroll position and the current page URL and title.
 
 
 **Arguments:**
- - **backend_node_id:**  Optional: The backend node ID of the element to scroll. If the element is not itself a scroll container, its nearest scrollable ancestor is scrolled instead. If omitted (or 0), scrolls the window.
+ - **selector:**  Optional: CSS selector of the element to scroll. Preferred over backendNodeId. If the element is not itself a scroll container, its nearest scrollable ancestor is scrolled instead.
+ - **backend_node_id:**  Optional: The backend node ID of the element to scroll. If the element is not itself a scroll container, its nearest scrollable ancestor is scrolled instead. If neither this nor selector is given (or it is 0), scrolls the window.
  - **x:**  Optional: The horizontal scroll offset.
  - **y:**  Optional: The vertical scroll offset.
+
+
+
+**Returns:**
+> PageResult: The sentence above, with these attributes (None when absent):
+> 
+> - `url`: URL of the page the call left loaded.
+> - `http_status`: Response status of that page's own document. Absent when no response has arrived. 4xx/5xx means an error page, not the content.
+> - `title`: Document title. Empty or absent when the page has none.
 
 ### Session.search [#session-search]
 
@@ -508,7 +574,7 @@ def select_option(
     value: str,
     selector: str | None = None,
     backend_node_id: int | None = None
-) -> Any
+) -> PageResult
 ```
 
 Select an option in a &lt;select> dropdown element by its value. Provide either a CSS selector (preferred for reproducibility) or a backendNodeId. Dispatches input and change events.
@@ -519,6 +585,15 @@ Select an option in a &lt;select> dropdown element by its value. Provide either 
  - **selector:**  CSS selector of the &lt;select> element. Preferred over backendNodeId.
  - **backend_node_id:**  The backend node ID of the &lt;select> element.
 
+
+
+**Returns:**
+> PageResult: The sentence above, with these attributes (None when absent):
+> 
+> - `url`: URL of the page the call left loaded.
+> - `http_status`: Response status of that page's own document. Absent when no response has arrived. 4xx/5xx means an error page, not the content.
+> - `title`: Document title. Empty or absent when the page has none.
+
 ### Session.set_checked [#session-set-checked]
 
 ```python
@@ -528,7 +603,7 @@ def set_checked(
     checked: bool,
     selector: str | None = None,
     backend_node_id: int | None = None
-) -> Any
+) -> PageResult
 ```
 
 Check or uncheck a checkbox or radio button. Provide either a CSS selector (preferred for reproducibility) or a backendNodeId. Dispatches input, change, and click events.
@@ -539,13 +614,22 @@ Check or uncheck a checkbox or radio button. Provide either a CSS selector (pref
  - **selector:**  CSS selector of the checkbox or radio input element. Preferred over backendNodeId.
  - **backend_node_id:**  The backend node ID of the checkbox or radio input element.
 
+
+
+**Returns:**
+> PageResult: The sentence above, with these attributes (None when absent):
+> 
+> - `url`: URL of the page the call left loaded.
+> - `http_status`: Response status of that page's own document. Absent when no response has arrived. 4xx/5xx means an error page, not the content.
+> - `title`: Document title. Empty or absent when the page has none.
+
 ### Session.structured_data [#session-structured-data]
 
 ```python
 def structured_data(self, *, url: str | None = None, timeout: int | None = None) -> Any
 ```
 
-Extract structured data (like JSON-LD, OpenGraph, etc) from the opened page. If a url is provided, it navigates to that url first.
+Page metadata as JSON: `jsonLd` (each JSON-LD block as a string), `openGraph`, `twitterCard`, `meta` and [`links`](#session-links) (key/value lists), plus `alternate` (hreflang variants) and `linkHeaders` (relations from the HTTP Link header) when present. Empty sections come back as empty arrays. Use it for publisher-declared facts such as product price, article author or canonical URL before scraping the visible text for them. If a url is provided, it navigates there first.
 
 
 **Arguments:**
@@ -565,7 +649,7 @@ def tree(
 ) -> Any
 ```
 
-Simplified semantic DOM tree (role, name, value, backendNodeId per node). Pass `backendNodeId` to scope, `maxDepth` to limit depth.
+Semantic outline of the page as indented text: one node per line with its role, accessible name, value and backendNodeId, plus checked state and select options with the selected one marked. The default first read of an unfamiliar page; input and select values are already here, so no `nodeDetails` call is needed to read them. Pass `backendNodeId` to scope to a subtree and `maxDepth` to survey structure before going deeper. Read it again after any page-changing action, since the DOM it describes may have changed; use `nodeDetails` to turn a backendNodeId into a CSS selector for actions.
 
 
 **Arguments:**
@@ -612,6 +696,648 @@ Wait for the CURRENT page to reach a load state (no navigation). After a [`goto`
 **Arguments:**
  - **state:**  Load state to wait for. 'networkidle' = network settled (the usual choice to finish a dynamic page).
  - **timeout:**  Optional timeout in milliseconds. Defaults to 5000.
+
+## PageResult [#pageresult]
+
+What a navigation or action answered: a sentence that also carries fields.
+
+``goto`` and the action tools describe what they did in prose — which
+element was clicked, whether a new window took over — and separately
+report where that left the page. Dropping either would lose something, so
+this is the sentence, unchanged for printing and comparison, with the
+fields as attributes:
+
+```python
+r = page.goto(url="https://example.com/missing")
+print(r)        # Navigated successfully. HTTP 404 Not Found.
+r.http_status   # 404
+```
+
+[``http_status``](#pageresult-http-status) is None before any response has arrived, [``title``](#pageresult-title) on a
+document that has none.
+
+```python
+class PageResult
+```
+
+### PageResult.url [#pageresult-url]
+
+```python
+url: str
+```
+
+### PageResult.http_status [#pageresult-http-status]
+
+```python
+http_status: int | None
+```
+
+### PageResult.title [#pageresult-title]
+
+```python
+def title(self, /)
+```
+
+Return a version of the string where each word is titlecased.
+
+More specifically, words start with uppercased characters and all
+remaining cased characters have lower case.
+
+### PageResult.encode [#pageresult-encode]
+
+```python
+def encode(self, /, encoding='utf-8', errors='strict')
+```
+
+Encode the string using the codec registered for encoding.
+
+encoding
+
+```text
+The encoding in which to encode the string.
+```
+
+errors
+
+```text
+The error handling scheme to use for encoding errors.
+The default is 'strict' meaning that encoding errors raise a
+UnicodeEncodeError.  Other possible values are 'ignore', 'replace'
+and 'xmlcharrefreplace' as well as any other name registered with
+codecs.register_error that can handle UnicodeEncodeErrors.
+```
+
+### PageResult.replace [#pageresult-replace]
+
+```python
+def replace(self, old, new, /, count=-1)
+```
+
+Return a copy with all occurrences of substring old replaced by new.
+
+```text
+count
+  Maximum number of occurrences to replace.
+  -1 (the default value) means replace all occurrences.
+```
+
+
+If the optional argument count is given, only the first count occurrences are
+replaced.
+
+### PageResult.split [#pageresult-split]
+
+```python
+def split(self, /, sep=None, maxsplit=-1)
+```
+
+Return a list of the substrings in the string, using sep as the separator string.
+
+```text
+sep
+  The separator used to split the string.
+```
+
+
+```text
+  When set to None (the default value), will split on any
+  whitespace character (including \n \r \t \f and spaces) and
+  will discard empty strings from the result.
+maxsplit
+  Maximum number of splits.
+  -1 (the default value) means no limit.
+```
+
+
+Splitting starts at the front of the string and works to the end.
+
+Note, str.split() is mainly useful for data that has been
+intentionally delimited.  With natural text that includes
+punctuation, consider using the regular expression module.
+
+### PageResult.rsplit [#pageresult-rsplit]
+
+```python
+def rsplit(self, /, sep=None, maxsplit=-1)
+```
+
+Return a list of the substrings in the string, using sep as the separator string.
+
+```text
+sep
+  The separator used to split the string.
+```
+
+
+```text
+  When set to None (the default value), will split on any
+  whitespace character (including \n \r \t \f and spaces) and
+  will discard empty strings from the result.
+maxsplit
+  Maximum number of splits.
+  -1 (the default value) means no limit.
+```
+
+
+Splitting starts at the end of the string and works to the front.
+
+### PageResult.join [#pageresult-join]
+
+```python
+def join(self, iterable, /)
+```
+
+Concatenate any number of strings.
+
+The string whose method is called is inserted in between each given
+string.  The result is returned as a new string.
+
+Example: '.'.join(['ab', 'pq', 'rs']) -> 'ab.pq.rs'
+
+### PageResult.capitalize [#pageresult-capitalize]
+
+```python
+def capitalize(self, /)
+```
+
+Return a capitalized version of the string.
+
+More specifically, make the first character have upper case and the
+rest lower case.
+
+### PageResult.casefold [#pageresult-casefold]
+
+```python
+def casefold(self, /)
+```
+
+Return a version of the string suitable for caseless comparisons.
+
+### PageResult.center [#pageresult-center]
+
+```python
+def center(self, width, fillchar=' ', /)
+```
+
+Return a centered string of length width.
+
+Padding is done using the specified fill character (default is
+a space).
+
+### PageResult.count [#pageresult-count]
+
+```python
+def count(unknown)
+```
+
+Return the number of non-overlapping occurrences of substring sub in string S[start:end].
+
+Optional arguments start and end are interpreted as in slice
+notation.
+
+### PageResult.expandtabs [#pageresult-expandtabs]
+
+```python
+def expandtabs(self, /, tabsize=8)
+```
+
+Return a copy where all tab characters are expanded using spaces.
+
+If tabsize is not given, a tab size of 8 characters is assumed.
+
+### PageResult.find [#pageresult-find]
+
+```python
+def find(unknown)
+```
+
+Return the lowest index in S where substring sub is found, such that sub is contained within S[start:end].
+
+Optional arguments start and end are interpreted as in slice
+notation.  Return -1 on failure.
+
+### PageResult.partition [#pageresult-partition]
+
+```python
+def partition(self, sep, /)
+```
+
+Partition the string into three parts using the given separator.
+
+This will search for the separator in the string.  If the separator
+is found, returns a 3-tuple containing the part before the
+separator, the separator itself, and the part after it.
+
+If the separator is not found, returns a 3-tuple containing
+the original string and two empty strings.
+
+### PageResult.index [#pageresult-index]
+
+```python
+def index(unknown)
+```
+
+Return the lowest index in S where substring sub is found, such that sub is contained within S[start:end].
+
+Optional arguments start and end are interpreted as in slice
+notation.  Raises ValueError when the substring is not found.
+
+### PageResult.ljust [#pageresult-ljust]
+
+```python
+def ljust(self, width, fillchar=' ', /)
+```
+
+Return a left-justified string of length width.
+
+Padding is done using the specified fill character (default is
+a space).
+
+### PageResult.lower [#pageresult-lower]
+
+```python
+def lower(self, /)
+```
+
+Return a copy of the string converted to lowercase.
+
+### PageResult.lstrip [#pageresult-lstrip]
+
+```python
+def lstrip(self, chars=None, /)
+```
+
+Return a copy of the string with leading whitespace removed.
+
+If chars is given and not None, remove characters in chars instead.
+
+### PageResult.rfind [#pageresult-rfind]
+
+```python
+def rfind(unknown)
+```
+
+Return the highest index in S where substring sub is found, such that sub is contained within S[start:end].
+
+Optional arguments start and end are interpreted as in slice
+notation.  Return -1 on failure.
+
+### PageResult.rindex [#pageresult-rindex]
+
+```python
+def rindex(unknown)
+```
+
+Return the highest index in S where substring sub is found, such that sub is contained within S[start:end].
+
+Optional arguments start and end are interpreted as in slice
+notation.  Raises ValueError when the substring is not found.
+
+### PageResult.rjust [#pageresult-rjust]
+
+```python
+def rjust(self, width, fillchar=' ', /)
+```
+
+Return a right-justified string of length width.
+
+Padding is done using the specified fill character (default is
+a space).
+
+### PageResult.rstrip [#pageresult-rstrip]
+
+```python
+def rstrip(self, chars=None, /)
+```
+
+Return a copy of the string with trailing whitespace removed.
+
+If chars is given and not None, remove characters in chars instead.
+
+### PageResult.rpartition [#pageresult-rpartition]
+
+```python
+def rpartition(self, sep, /)
+```
+
+Partition the string into three parts using the given separator.
+
+This will search for the separator in the string, starting at the
+end.  If the separator is found, returns a 3-tuple containing the
+part before the separator, the separator itself, and the part after
+it.
+
+If the separator is not found, returns a 3-tuple containing two
+empty strings and the original string.
+
+### PageResult.splitlines [#pageresult-splitlines]
+
+```python
+def splitlines(self, /, keepends=False)
+```
+
+Return a list of the lines in the string, breaking at line boundaries.
+
+Line breaks are not included in the resulting list unless keepends
+is given and true.
+
+### PageResult.strip [#pageresult-strip]
+
+```python
+def strip(self, chars=None, /)
+```
+
+Return a copy of the string with leading and trailing whitespace removed.
+
+If chars is given and not None, remove characters in chars instead.
+
+### PageResult.swapcase [#pageresult-swapcase]
+
+```python
+def swapcase(self, /)
+```
+
+Convert uppercase characters to lowercase and lowercase characters to uppercase.
+
+### PageResult.translate [#pageresult-translate]
+
+```python
+def translate(self, table, /)
+```
+
+Replace each character in the string using the given translation table.
+
+```text
+table
+  Translation table, which must be a mapping of Unicode ordinals
+  to Unicode ordinals, strings, or None.
+```
+
+
+The table must implement lookup/indexing via __getitem__, for
+instance a dictionary or list.  If this operation raises
+LookupError, the character is left untouched.  Characters mapped to
+None are deleted.
+
+### PageResult.upper [#pageresult-upper]
+
+```python
+def upper(self, /)
+```
+
+Return a copy of the string converted to uppercase.
+
+### PageResult.startswith [#pageresult-startswith]
+
+```python
+def startswith(unknown)
+```
+
+Return True if the string starts with the specified prefix, False otherwise.
+
+prefix
+
+```text
+A string or a tuple of strings to try.
+```
+
+start
+
+```text
+Optional start position. Default: start of the string.
+```
+
+end
+
+```text
+Optional stop position. Default: end of the string.
+```
+
+### PageResult.endswith [#pageresult-endswith]
+
+```python
+def endswith(unknown)
+```
+
+Return True if the string ends with the specified suffix, False otherwise.
+
+suffix
+
+```text
+A string or a tuple of strings to try.
+```
+
+start
+
+```text
+Optional start position. Default: start of the string.
+```
+
+end
+
+```text
+Optional stop position. Default: end of the string.
+```
+
+### PageResult.removeprefix [#pageresult-removeprefix]
+
+```python
+def removeprefix(self, prefix, /)
+```
+
+Return a str with the given prefix string removed if present.
+
+If the string starts with the prefix string, return
+string[len(prefix):].  Otherwise, return a copy of the original
+string.
+
+### PageResult.removesuffix [#pageresult-removesuffix]
+
+```python
+def removesuffix(self, suffix, /)
+```
+
+Return a str with the given suffix string removed if present.
+
+If the string ends with the suffix string and that suffix is not
+empty, return string[:-len(suffix)].  Otherwise, return a copy of
+the original string.
+
+### PageResult.isascii [#pageresult-isascii]
+
+```python
+def isascii(self, /)
+```
+
+Return True if all characters in the string are ASCII, False otherwise.
+
+ASCII characters have code points in the range U+0000-U+007F.
+Empty string is ASCII too.
+
+### PageResult.islower [#pageresult-islower]
+
+```python
+def islower(self, /)
+```
+
+Return True if the string is a lowercase string, False otherwise.
+
+A string is lowercase if all cased characters in the string are
+lowercase and there is at least one cased character in the string.
+
+### PageResult.isupper [#pageresult-isupper]
+
+```python
+def isupper(self, /)
+```
+
+Return True if the string is an uppercase string, False otherwise.
+
+A string is uppercase if all cased characters in the string are
+uppercase and there is at least one cased character in the string.
+
+### PageResult.istitle [#pageresult-istitle]
+
+```python
+def istitle(self, /)
+```
+
+Return True if the string is a title-cased string, False otherwise.
+
+In a title-cased string, upper- and title-case characters may only
+follow uncased characters and lowercase characters only cased ones.
+
+### PageResult.isspace [#pageresult-isspace]
+
+```python
+def isspace(self, /)
+```
+
+Return True if the string is a whitespace string, False otherwise.
+
+A string is whitespace if all characters in the string are
+whitespace and there is at least one character in the string.
+
+### PageResult.isdecimal [#pageresult-isdecimal]
+
+```python
+def isdecimal(self, /)
+```
+
+Return True if the string is a decimal string, False otherwise.
+
+A string is a decimal string if all characters in the string are
+decimal and there is at least one character in the string.
+
+### PageResult.isdigit [#pageresult-isdigit]
+
+```python
+def isdigit(self, /)
+```
+
+Return True if the string is a digit string, False otherwise.
+
+A string is a digit string if all characters in the string are
+digits and there is at least one character in the string.
+
+### PageResult.isnumeric [#pageresult-isnumeric]
+
+```python
+def isnumeric(self, /)
+```
+
+Return True if the string is a numeric string, False otherwise.
+
+A string is numeric if all characters in the string are numeric and
+there is at least one character in the string.
+
+### PageResult.isalpha [#pageresult-isalpha]
+
+```python
+def isalpha(self, /)
+```
+
+Return True if the string is an alphabetic string, False otherwise.
+
+A string is alphabetic if all characters in the string are
+alphabetic and there is at least one character in the string.
+
+### PageResult.isalnum [#pageresult-isalnum]
+
+```python
+def isalnum(self, /)
+```
+
+Return True if the string is an alpha-numeric string, False otherwise.
+
+A string is alpha-numeric if all characters in the string are
+alpha-numeric and there is at least one character in the string.
+
+### PageResult.isidentifier [#pageresult-isidentifier]
+
+```python
+def isidentifier(self, /)
+```
+
+Return True if the string is a valid Python identifier, False otherwise.
+
+Call keyword.iskeyword(s) to test whether string s is a reserved
+identifier, such as "def" or "class".
+
+### PageResult.isprintable [#pageresult-isprintable]
+
+```python
+def isprintable(self, /)
+```
+
+Return True if all characters in the string are printable, False otherwise.
+
+A character is printable if repr() may use it in its output.
+
+### PageResult.zfill [#pageresult-zfill]
+
+```python
+def zfill(self, width, /)
+```
+
+Pad a numeric string with zeros on the left, to fill a field of the given width.
+
+The string is never truncated.
+
+### PageResult.format [#pageresult-format]
+
+```python
+def format(self, /, *args, **kwargs)
+```
+
+Return a formatted version of the string, using substitutions from args and kwargs.
+The substitutions are identified by braces ('\{' and '\}').
+
+### PageResult.format_map [#pageresult-format-map]
+
+```python
+def format_map(self, mapping, /)
+```
+
+Return a formatted version of the string, using substitutions from mapping.
+The substitutions are identified by braces ('\{' and '\}').
+
+### PageResult.maketrans [#pageresult-maketrans]
+
+```python
+def maketrans(unknown)
+```
+
+Return a translation table usable for str.translate().
+
+If there is only one argument, it must be a dictionary mapping
+Unicode ordinals (integers) or characters to Unicode ordinals,
+strings or None.  Character keys will be then converted to ordinals.
+If there are two arguments, they must be strings of equal length,
+and in the resulting dictionary, each character in x will be mapped
+to the character at the same position in y.  If there is a third
+argument, it must be a string, whose characters will be mapped to
+None in the result.
 
 ## run_script [#run-script]
 
@@ -705,6 +1431,10 @@ unscoped form.
 One isolated browsing context (own page, cookies, memory), async.
 
 Do not construct directly — use [`AsyncBrowser.new_session()`](#browser-new-session).
+
+Same conventions as [`Session`](#session) — keyword-only actions in snake_case,
+``selector`` winning over ``backend_node_id``, [`call()`](#session-call) as the escape
+hatch — with every method a coroutine to await.
 
 Every public method and property of [`Session`](#session) exists on `AsyncSession` with the same name and signature; methods are coroutines to `await`. `AsyncSession` adds no members of its own.
 
