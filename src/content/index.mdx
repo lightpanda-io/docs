@@ -4,7 +4,13 @@ description: Lightpanda is a fast, memory-efficient headless browser built for A
 ---
 import { Anchor } from 'nextra/components'
 
-Lightpanda is a headless browser built from scratch for machines, with no graphical rendering. It starts instantly, runs pages **9x faster** than Chrome, and uses **16x less** memory, so you can run far more sessions on the same hardware. See [what is Lightpanda](/core-concepts/what-is-lightpanda) for why it exists and how it fits your stack.
+# Lightpanda documentation
+
+<div className="mt-6 border-l-2 border-[var(--primary)] pl-4 text-lg font-medium text-[var(--foreground)]">
+  The headless browser built for machines: 9x faster than Chrome, with 16x less memory.
+</div>
+
+Built from scratch with no graphical rendering, Lightpanda starts instantly and uses little memory, so you can run far more sessions on the same hardware. It still executes JavaScript and supports the Web APIs modern sites rely on, so it fits AI agents, LLM training, search indexing, scraping, and testing. See [what is Lightpanda](/core-concepts/what-is-lightpanda) for why it exists and how it fits your stack.
 
 ## Quickstarts
 
@@ -17,9 +23,9 @@ Lightpanda is a headless browser built from scratch for machines, with no graphi
   </Anchor>
   <Anchor href="/quickstarts/puppeteer-playwright-clients" className="group flex flex-col gap-1.5 rounded-lg border border-neutral-800 p-4 no-underline transition-colors hover:border-neutral-700">
     <span className="flex items-center gap-2 font-semibold text-[var(--foreground)]">
-      <span>🔌</span> Puppeteer & Playwright <span className="transition-transform group-hover:translate-x-0.5">→</span>
+      <span>🔌</span> CDP / WebDriver <span className="transition-transform group-hover:translate-x-0.5">→</span>
     </span>
-    <span className="text-sm text-[var(--foreground-accent)]">Also Chromedp and Selenium. Run your existing scripts on Lightpanda.</span>
+    <span className="text-sm text-[var(--foreground-accent)]">Puppeteer, Playwright, Chromedp, or Selenium. Run your existing scripts on Lightpanda.</span>
   </Anchor>
   <Anchor href="/quickstarts/agent" className="group flex flex-col gap-1.5 rounded-lg border border-neutral-800 p-4 no-underline transition-colors hover:border-neutral-700">
     <span className="flex items-center gap-2 font-semibold text-[var(--foreground)]">
