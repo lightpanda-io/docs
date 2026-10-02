@@ -28,7 +28,7 @@ The script context installs two globals, `Page` and [`console`](#console), and n
 |-----------|-----------|---------|---------|
 | `page.extract` | `extract(schema)` or `extract({ schema })` | An object or an array, shaped by the schema | Schema forms are listed [below](#extraction-schema). |
 | `page.evaluate` | `evaluate(script[, { url, timeout = 10000, save }])` | The page value as a string, JSON-encoded when it is an object or array | `url` navigates before running the script, and `timeout` bounds that navigation, not the script. |
-| `page.screenshot` | `screenshot({ path, selector?, backendNodeId?, fullPage?, strip?, url?, timeout? })`, never positional | `Saved <width>x<height> PNG to <path>` | `path` is required in scripts: a script cannot display an inline image, so omitting it throws `pass \`path\`: this client cannot display an inline image`. Renders the page, or one scoped node, as a PNG: the text layout Lightpanda computes, not a pixel-accurate rendering (no images, fonts, or CSS colours). `strip` is an object of element groups to omit: `js`, `css`, `ui`, `invisible`, `shell`, `clutter`. |
+| `page.screenshot` | `screenshot({ path, selector?, fullPage?, strip?, url?, timeout? })`, never positional | `Saved <width>x<height> PNG to <path>` | `path` is required in scripts: a script cannot display an inline image, so omitting it throws `pass \`path\`: this client cannot display an inline image`. Renders the page, or one scoped node, as a PNG: the text layout Lightpanda computes, not a pixel-accurate rendering (no images, fonts, or CSS colours). `strip` is an object of element groups to omit: `js`, `css`, `ui`, `invisible`, `shell`, `clutter`. |
 
 ### Extraction schema
 
@@ -65,10 +65,10 @@ The object form accepts only the `schema` key, so the REPL's `save` option is re
 
 ## Interaction
 
-Every interaction below reports the page URL and title reached after the action, so a script can tell whether it triggered a navigation. A `click` returns, in full:
+Every interaction below reports the page URL, HTTP status and title reached after the action, so a script can tell whether it triggered a navigation, and whether it landed on an error page. A `click` returns, in full:
 
 ```
-Clicked element (selector: a.login). Page url: https://example.com/app, title: Dashboard
+Clicked element (selector: a.login). Page url: https://example.com/app, HTTP 200 OK, title: Dashboard
 ```
 
 | Primitive | Arguments | Returns |
@@ -79,7 +79,7 @@ Clicked element (selector: a.login). Page url: https://example.com/app, title: D
 | `page.press` | `press(selector, key)` or `press({ key[, selector] })` | `Pressed key '<key>'` |
 | `page.selectOption` | `selectOption(selector, value)` or `selectOption({ selector, value })` | `Selected option '<value>' (<target>)` |
 | `page.setChecked` | `setChecked(selector[, checked = true])` or `setChecked({ selector, checked = true })` | `Set element (<target>) to checked` or `to unchecked` |
-| `page.scroll` | `scroll({ x = 0, y = 0 })`, never a selector | `Scrolled window to x: <x>, y: <y>` |
+| `page.scroll` | `scroll({ selector?, x?, y? })`, never positional. `selector` scrolls that element's scroll container (its nearest scrollable ancestor if it isn't one) instead of the window; an omitted axis keeps its current offset | `Scrolled window to x: <x>, y: <y>`, `Scrolled element (<target>) to ...`, or `Scrolled scroll container (<container>) of element (<target>) to ...` |
 
 ## Waiting
 
@@ -117,7 +117,7 @@ They print for you to read. A script's own output is whatever it `return`s from 
 - Mix a positional with an options object: `waitForSelector("#row", { timeout: 2000 })`.
 - Or pass one object with everything: `waitForSelector({ selector: "#row", timeout: 2000 })`. This is equivalent, and it's the shape `/save` records into saved scripts.
 - An option can never be passed as a bare positional: `waitForSelector("#row", 2000)` is an error.
-- A `null` positional omits that argument: `press(null, "Enter")` presses on the document, not necessarily the focused element.
+- A `null` positional omits that argument: `press(null, "Enter")` presses on `document.activeElement` (the focused element, or `<body>` when nothing is focused).
 - Setting the same field both positionally and in the options object is an error: `goto(url, { url: ... })` throws `invalid arguments`.
 - Arguments must be JSON-serializable. `undefined`, functions, and symbols throw `invalid arguments`; a cyclic object throws V8's own `TypeError: Converting circular structure to JSON` instead, since it fails before Lightpanda's own check runs.
 

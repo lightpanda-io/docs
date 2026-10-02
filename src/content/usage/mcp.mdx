@@ -202,6 +202,6 @@ Which tool the agent picks depends on the model and its own reasoning, not a fix
 
 A genuine navigation failure (DNS resolution, connection refused, ...) makes `goto` return an error directly: `"navigation failed: CouldntResolveHost"` (`isError: true`). Two cases still report success though:
 
-- **A timeout** doesn't fail: `"Navigation started but the page did not finish loading before the timeout."`
-- **An HTTP error page** (404, 500, ...) is still a successful navigation at the network level: `"Navigated successfully."` Check the content result to tell an error page from real content.
+- **A timeout** doesn't fail: `"Navigation started (HTTP 200 OK) but the page did not finish loading before the timeout."`
+- **An HTTP error page** (404, 500, ...) is still a successful navigation at the network level, but the result carries the status: `"Navigated successfully. HTTP 404 Not Found."` in the text, and `httpStatus` in `structuredContent`. Check it before reading the page as content.
 
