@@ -42,11 +42,8 @@ const driver = await new Builder()
   .withCapabilities(caps)
   .build()
 
-const bidi = await driver.getBidi()
-await bidi.waitForConnection()
-
-const browsingContext = new BrowsingContext(bidi)
-const script = new Script(bidi)
+const browsingContext = await BrowsingContext.create(driver)
+const script = await Script.create(driver)
 
 const { context } = await browsingContext.create({ type: 'tab' })
 await browsingContext.navigate({ context, url: 'https://wikipedia.com/', wait: 'complete' })
