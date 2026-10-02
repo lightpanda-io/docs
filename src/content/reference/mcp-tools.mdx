@@ -18,10 +18,17 @@ Every call goes through the MCP `tools/call` method, with `name` and `arguments`
  "params":{"name":"fill","arguments":{"selector":"#search","value":"lightpanda"}}}
 ```
 ```json
-{"result":{"content":[{"type":"text","text":"Filled element (selector: #search) with \"lightpanda\". Page url: https://example.com, title: Example Domain"}],"isError":false}}
+{"result":{"content":[{"type":"text","text":"Filled element (selector: #search) with \"lightpanda\". Page url: https://example.com, HTTP 200 OK, title: Example Domain"}],
+ "structuredContent":{"url":"https://example.com","httpStatus":200,"title":"Example Domain"},"isError":false}}
 ```
 
-The result comes back as `{"result":{"content":[{"type":"text","text":"..."}],"isError":false}}`. `goto` returns an error directly on a genuine navigation failure (e.g. `navigation failed: CouldntResolveHost`); a timeout instead reports `"Navigation started but the page did not finish loading before the timeout."`, and an HTTP error page (404/500) still reports `"Navigated successfully."` (see [Known behaviors](/usage/mcp#known-behaviors)).
+The result comes back as `{"result":{"content":[{"type":"text","text":"..."}],"isError":false}}`.
+
+**Page state.** `goto` and the tools that act on the page (`click`, `fill`, `scroll`, `hover`, `press`, `selectOption`, `setChecked`) end their text with `Page url: <url>, HTTP <status>, title: <title>`; `goto` reports `Navigated successfully. HTTP <status>.` A 4xx or 5xx status means the page is an error page, not the content.
+
+The same tools also return `structuredContent` with `url`, `httpStatus` and `title`, declared by each tool's `outputSchema` in `tools/list`. Only `url` is always present; `httpStatus` is absent before any response arrives.
+
+`goto` returns an error directly on a genuine navigation failure (e.g. `navigation failed: CouldntResolveHost`); a timeout reports `"Navigation started (HTTP <status>) but the page did not finish loading before the timeout."` (see [Known behaviors](/usage/mcp#known-behaviors)).
 
 ## Navigation and search
 
@@ -29,7 +36,7 @@ These tools bring a page into the browser:
 
 | Name | Arguments | Description |
 |---|---|---|
-| `goto` | `url`, `timeout?`, `waitUntil?` | Navigate to a specified URL and load the page in memory so it can be reused later for info extraction. `waitUntil` accepts the same states as `waitForState` and defaults to `load`; prefer `domcontentloaded` plus a follow-up `waitForSelector` on pages whose late scripts (ads) hold `load` back, and avoid `done` on pages with constant background activity, since it can run to the timeout. |
+| `goto` | `url`, `timeout?`, `waitUntil?` | Navigate to a specified URL and load the page in memory so it can be reused later for info extraction. Returns the HTTP status once `waitUntil` fires, or a timeout notice: a 4xx or 5xx means you got an error page, so check it before reading on. `waitUntil` accepts the same states as `waitForState` and defaults to `load`; prefer `domcontentloaded` plus a follow-up `waitForSelector` on pages whose late scripts (ads) hold `load` back, and avoid `done` on pages with constant background activity, since it can run to the timeout. |
 | `search` | `query`, `timeout?` | Run a web search and return results as markdown: a numbered list of `{title, url, snippet}`. Search tries brave, tavily, exa, then keenable in order, each when its API key (`BRAVE_API_KEY`, `TAVILY_API_KEY`, `EXA_API_KEY` or `KEENABLE_API_KEY`) is set; keenable also works without a key through its public endpoint (rate-limited per client IP). Prefer this over goto-ing google.com/search directly (Google blocks the browser on User-Agent/TLS). The browser does not navigate; to open a result, use `goto` with its URL. |
 
 ## Reading the page

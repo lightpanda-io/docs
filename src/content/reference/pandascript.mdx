@@ -65,10 +65,10 @@ The object form accepts only the `schema` key, so the REPL's `save` option is re
 
 ## Interaction
 
-Every interaction below reports the page URL and title reached after the action, so a script can tell whether it triggered a navigation. A `click` returns, in full:
+Every interaction below reports the page URL, HTTP status and title reached after the action, so a script can tell whether it triggered a navigation, and whether it landed on an error page. A `click` returns, in full:
 
 ```
-Clicked element (selector: a.login). Page url: https://example.com/app, title: Dashboard
+Clicked element (selector: a.login). Page url: https://example.com/app, HTTP 200 OK, title: Dashboard
 ```
 
 | Primitive | Arguments | Returns |
