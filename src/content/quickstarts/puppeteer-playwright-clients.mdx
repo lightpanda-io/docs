@@ -63,7 +63,7 @@ go get github.com/chromedp/chromedp
   </Tabs.Tab>
   <Tabs.Tab>
 <Callout type="warning">
-  BiDi support is new and covers less than CDP: only `browsingContext` and a subset of `script` are implemented. Lightpanda is also adding classic WebDriver HTTP commands (session, navigation, element lookup) behind the same `--protocol webdriver` flag, but that's still a work in progress too, so this example drives the browser over BiDi directly.
+  WebDriver support, classic and BiDi, is new and doesn't cover the full specs yet. If a command your scripts need is missing, [open an issue](https://github.com/lightpanda-io/browser/issues).
 </Callout>
 <Tabs items={['JavaScript', 'Python']} className="-mb-4" storageKey="quickstart-client-lang">
   <Tabs.Tab id="install-selenium-js" className="m-0">
@@ -238,7 +238,7 @@ Find more [Chromedp options](/usage/cdp/chromedp).
   <Tabs.Tab>
 <Tabs items={['JavaScript', 'Python']} className="-mb-4" storageKey="quickstart-client-lang">
   <Tabs.Tab id="connect-selenium-js" className="m-0">
-Request a BiDi session by setting the `webSocketUrl` capability to `true`, then drive it with BiDi commands. Save as `index.js`:
+This example drives the browser over BiDi: request a BiDi session by setting the `webSocketUrl` capability to `true`. Without it, the session uses classic WebDriver commands (`driver.get()`, `findElement()`, ...). Save as `index.js`:
 
 ```js copy
 'use strict'
@@ -277,7 +277,7 @@ await driver.quit()
 ```
   </Tabs.Tab>
   <Tabs.Tab id="connect-selenium-py" className="m-0">
-Request a BiDi session by setting the `webSocketUrl` capability to `True`, then drive it with BiDi commands. Save as `script.py`:
+This example drives the browser over BiDi: request a BiDi session by setting the `webSocketUrl` capability to `True`. Without it, the session uses classic WebDriver commands (`driver.get()`, `find_element()`, ...). Save as `script.py`:
 
 ```python copy
 import os
