@@ -17,7 +17,7 @@ A normal browser runs a rendering pipeline to turn a page into pixels for a huma
 
 Lightpanda drops the rendering pipeline. What remains is the set of components automation uses, the same ones detailed further down this page:
 
-- **Control surface.** The entry points you drive it through: `fetch`, `serve` (CDP or WebDriver BiDi), `agent`, `mcp`, and, on the cloud, the HTTP API.
+- **Control surface.** The entry points you drive it through: `fetch`, `serve` (CDP, or WebDriver classic and BiDi), `agent`, `mcp`, and, on the cloud, the HTTP API.
 - **Network layer.** Fetches the main document and its subresources over HTTP.
 - **HTML parser.** Turns fetched HTML into that DOM.
 - **JavaScript engine.** Runs the page's scripts. Lightpanda uses V8, the same engine as Chrome.
