@@ -1,15 +1,15 @@
 ---
-title: Selenium (BiDi)
-description: Use Lightpanda with Selenium over the WebDriver BiDi protocol, in JavaScript or Python.
+title: Selenium (WebDriver)
+description: Use Lightpanda with Selenium over classic WebDriver or WebDriver BiDi, in JavaScript or Python.
 ---
 import { Tabs, Callout } from 'nextra/components'
 
-# Selenium (BiDi)
+# Selenium (WebDriver)
 
-Use Lightpanda with [Selenium](https://www.selenium.dev/) over [WebDriver BiDi](https://w3c.github.io/webdriver-bidi/). Lightpanda only implements the BiDi handshake of the classic WebDriver protocol, not full classic automation, so a session is created the normal Selenium way but driven with BiDi commands (`browsingContext`, `script`) instead of `driver.get()` or `driver.findElement()`.
+Use Lightpanda with [Selenium](https://www.selenium.dev/) over [classic WebDriver](https://w3c.github.io/webdriver/) (HTTP) or [WebDriver BiDi](https://w3c.github.io/webdriver-bidi/) (WebSocket). A session created the normal Selenium way can be driven with classic commands (`driver.get()`, `find_element()`, `click()`, `send_keys()`, `execute_script()`, ...), and also over BiDi when it asks for the `webSocketUrl` capability.
 
 <Callout type="warning">
-  BiDi support is new and covers less than CDP: only `browsingContext` and a subset of `script` are implemented.
+  WebDriver support, classic and BiDi, is new and doesn't cover the full specs yet. If a command your scripts need is missing, [open an issue](https://github.com/lightpanda-io/browser/issues).
 </Callout>
 
 Start Lightpanda with the `webdriver` protocol enabled (find all options in the [serve command reference](/reference/cli/serve#options)):
@@ -18,7 +18,7 @@ Start Lightpanda with the `webdriver` protocol enabled (find all options in the 
 lightpanda serve --host 127.0.0.1 --port 9222 --protocol webdriver
 ```
 
-Request a BiDi session by setting the `webSocketUrl` capability to `true` (`browserName` can be any value; Lightpanda reports itself back regardless), then drive it with BiDi commands:
+This example drives the browser over BiDi: request a BiDi session by setting the `webSocketUrl` capability to `true` (`browserName` can be any value; Lightpanda reports itself back regardless). Without it, the session uses classic WebDriver commands (`driver.get()`, `findElement()`, ...).
 
 <Tabs items={['JavaScript', 'Python']} className="-mb-4">
   <Tabs.Tab id="javascript" className="m-0">
@@ -42,11 +42,8 @@ const driver = await new Builder()
   .withCapabilities(caps)
   .build()
 
-const bidi = await driver.getBidi()
-await bidi.waitForConnection()
-
-const browsingContext = new BrowsingContext(bidi)
-const script = new Script(bidi)
+const browsingContext = await BrowsingContext.create(driver)
+const script = await Script.create(driver)
 
 const { context } = await browsingContext.create({ type: 'tab' })
 await browsingContext.navigate({ context, url: 'https://wikipedia.com/', wait: 'complete' })

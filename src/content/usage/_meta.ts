@@ -8,7 +8,7 @@ const meta: MetaRecord = {
     },
   },
   bidi: {
-    title: 'BiDi',
+    title: 'WebDriver',
     theme: {
       collapsed: true,
     },

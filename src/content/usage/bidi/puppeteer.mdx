@@ -11,7 +11,7 @@ Use Lightpanda with [Puppeteer](https://pptr.dev/) over [WebDriver BiDi](https:/
 More examples in [demo/puppeteer/bidi](https://github.com/lightpanda-io/demo/tree/main/puppeteer/bidi).
 
 <Callout type="warning">
-  BiDi support is new and covers less than CDP: only `browsingContext` and a subset of `script` are implemented. `page.waitForSelector`, `page.waitForFunction`, and `page.click(selector)` don't work as a result. See the demo above for the polling and coordinate-click workarounds.
+  BiDi support is new and doesn't cover the full spec yet. Puppeteer helpers that run in an isolated sandbox, such as `page.title()`, `page.waitForSelector()`, `page.click(selector)` and `page.type()`, fail with `sandboxes are not supported`: use `page.evaluate()` and `page.waitForFunction()` instead. If a command your scripts need is missing, [open an issue](https://github.com/lightpanda-io/browser/issues).
 </Callout>
 
 Start Lightpanda with the `webdriver` protocol enabled (find all options in the [serve command reference](/reference/cli/serve#options)):
@@ -37,7 +37,7 @@ const page = await context.newPage()
 
 await page.goto('https://wikipedia.com/', { waitUntil: 'load' })
 
-const title = await page.title()
+const title = await page.evaluate(() => document.title)
 console.log(title)
 
 await page.close()
