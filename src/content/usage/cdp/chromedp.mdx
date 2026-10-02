@@ -25,19 +25,18 @@ package main
 
 import (
     "context"
-    "flag"
     "log"
 
     "github.com/chromedp/chromedp"
 )
 
 func main() {
-    ctx, cancel = chromedp.NewRemoteAllocator(ctx,
+    ctx, cancel := chromedp.NewRemoteAllocator(context.Background(),
         "ws://127.0.0.1:9222", chromedp.NoModifyURL,
     )
     defer cancel()
 
-    ctx, cancel := chromedp.NewContext(allocatorContext)
+    ctx, cancel = chromedp.NewContext(ctx)
     defer cancel()
 
     var title string

@@ -2,7 +2,6 @@
 title: Agent
 description: Lightpanda agent lets you drive a headless browser by talking to it.
 ---
-import { Callout, Tabs } from 'nextra/components'
 
 # Agent
 
@@ -30,50 +29,7 @@ The agent stacks three layers:
 
 ## Quickstart
 
-Set an API key for your preferred LLM provider:
-
-```sh copy
-export ANTHROPIC_API_KEY=<YOUR_ANTHROPIC_KEY>
-```
-
-Or `OPENAI_API_KEY`, `GOOGLE_API_KEY`, `HF_TOKEN`, `AI_GATEWAY_API_KEY`,
-`MISTRAL_API_KEY`, `OPENROUTER_API_KEY`, or a local LLM through an Ollama or
-llama.cpp server.
-
-Launch the REPL:
-
-```sh copy
-lightpanda agent
-```
-
-Tell it what you want:
-
-```console
-❯ go to news.ycombinator.com and get me the top story title and points
-```
-
-The agent navigates, extracts, prints the answer.
-
-You can also use commands:
-
-```console
-❯ /goto news.ycombinator.com
-❯ /links # This will print all the HTML links on the current webpage
-```
-
-You can generate a reproducible [PandaScript](/usage/pandascript) from your current session:
-
-```console
-❯ /save <my_script>.js
-```
-
-Then after exiting you can replay the script directly with Lightpanda (no LLM needed) with:
-
-```sh copy
-lightpanda run <my_script>.js
-```
-
-See our documentation on [PandaScript](/usage/pandascript) for more details.
+See the [Agent quickstart](/quickstarts/agent) to set an API key, launch the REPL, and save a session as a reusable [PandaScript](/usage/pandascript).
 
 ## LLM
 

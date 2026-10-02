@@ -1,0 +1,94 @@
+---
+title: MCP
+description: Connect an AI agent to Lightpanda over the Model Context Protocol and drive a real form on a live page.
+---
+import { Callout, Steps } from 'nextra/components'
+
+# MCP
+
+Lightpanda's [MCP](https://modelcontextprotocol.io) server exposes browser tools, like navigate, read, click, fill, and extract, to any AI application that speaks the Model Context Protocol. Connect it once, then prompt your agent in plain language.
+
+## Prerequisites
+
+- An MCP host: Claude Desktop, Cursor, Windsurf, or a custom client.
+
+## Steps
+
+<Steps>
+
+### Install Lightpanda
+
+```sh copy
+curl -fsSL https://pkg.lightpanda.io/install.sh | bash
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+Other options: [WSL2 on Windows](/run-locally/installation/one-liner#windows--wsl2), [Docker](/run-locally/installation/docker), [package managers](/run-locally/installation/package-managers).
+
+### Connect your AI agent
+
+Your MCP host starts `lightpanda mcp` itself and talks to it over stdin and stdout, so it needs the full path to the binary. Print it with:
+
+```sh copy
+command -v lightpanda
+```
+
+A bare `lightpanda` may not work here: your MCP host starts it outside your terminal, so it doesn't see the `PATH` you set during install.
+
+Open your host's MCP configuration:
+
+- **Claude Desktop:** Settings > Developer > Edit Config (opens `claude_desktop_config.json`)
+- **Cursor:** `.cursor/mcp.json` in your project, or `~/.cursor/mcp.json` for all projects
+- **Windsurf:** `~/.codeium/windsurf/mcp_config.json`
+
+Add Lightpanda, replacing `/path/to/lightpanda` with the path you printed:
+
+```json copy
+{
+  "mcpServers": {
+    "lightpanda": {
+      "command": "/path/to/lightpanda",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
+<Callout type="info" emoji="ℹ️">
+  Respect `robots.txt` and avoid high-frequency requests against small sites. Add `--obey-robots` to `args` to have Lightpanda follow `robots.txt` for you.
+</Callout>
+
+### Try it
+
+[quotes.toscrape.com](https://quotes.toscrape.com) is a public scraping-practice site built by Zyte: a fictional quotes catalog whose search page filters by author and tag through an AJAX form.
+
+Prompt your agent:
+
+```text copy
+Go to quotes.toscrape.com/search.aspx and find which tags Albert Einstein's quotes are filed under, then give me his inspirational one.
+```
+
+The agent chains tool calls to answer it: `goto` the search page, `detectForms` to find the author and tag dropdowns, `selectOption` the author (which reloads the tag list for that author), `selectOption` the tag, `click` search, `waitForState` for the results to load, then `extract` the quote.
+
+</Steps>
+
+## Go to production
+
+[Lightpanda Cloud](/run-on-lightpanda-cloud/getting-started) exposes the same MCP server over [Streamable HTTP](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http), so there's no process to install or keep alive. Point your host at the endpoint nearest you through [mcp-remote](https://www.npmjs.com/package/mcp-remote), the bridge MCP hosts that only support stdio need to reach a remote server:
+
+```json copy
+{
+  "mcpServers": {
+    "lightpanda-cloud": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://euwest.cloud.lightpanda.io/mcp?token=TOKEN"
+      ]
+    }
+  }
+}
+```
+
+Find more [MCP options](/usage/mcp) and every tool in the [MCP tools reference](/reference/mcp-tools).

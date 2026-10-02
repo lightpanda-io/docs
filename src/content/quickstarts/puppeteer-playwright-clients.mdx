@@ -1,0 +1,408 @@
+---
+title: Puppeteer, Playwright & other client libraries
+description: Connect Puppeteer, Playwright, Chromedp, or Selenium to Lightpanda and extract JavaScript-rendered content in under 10 minutes.
+---
+import { Callout, Steps, Tabs } from 'nextra/components'
+
+# Puppeteer, Playwright & other client libraries
+
+Connect Puppeteer, Playwright, Chromedp, or Selenium to Lightpanda in under 10 minutes, and read content that only exists once a page's JavaScript runs. Get the same automation you already know, running faster and lighter than Chrome.
+
+## Steps
+
+<Steps>
+
+### Install Lightpanda
+
+```sh copy
+curl -fsSL https://pkg.lightpanda.io/install.sh | bash
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+Other options: [WSL2 on Windows](/run-locally/installation/one-liner#windows--wsl2), [Docker](/run-locally/installation/docker), [package managers](/run-locally/installation/package-managers).
+
+### Install your client library
+
+<Tabs items={['Puppeteer', 'Playwright', 'Chromedp', 'Selenium']} className="-mb-4" storageKey="quickstart-client">
+  <Tabs.Tab>
+Needs [Node.js](https://nodejs.org/en/download). In a new project directory:
+
+```sh copy
+npm init -y
+npm pkg set type=module
+npm install --save puppeteer-core
+```
+  </Tabs.Tab>
+  <Tabs.Tab>
+<Tabs items={['JavaScript', 'Python']} className="-mb-4" storageKey="quickstart-client-lang">
+  <Tabs.Tab id="install-playwright-js" className="m-0">
+Needs [Node.js](https://nodejs.org/en/download). In a new project directory:
+
+```sh copy
+npm init -y
+npm pkg set type=module
+npm install --save playwright-core
+```
+  </Tabs.Tab>
+  <Tabs.Tab id="install-playwright-py" className="m-0">
+Needs [Python](https://www.python.org/downloads/):
+
+```sh copy
+pip install playwright
+```
+  </Tabs.Tab>
+</Tabs>
+  </Tabs.Tab>
+  <Tabs.Tab>
+Needs [Go](https://go.dev/doc/install). In a new project directory:
+
+```sh copy
+go mod init quickstart
+go get github.com/chromedp/chromedp
+```
+  </Tabs.Tab>
+  <Tabs.Tab>
+<Callout type="warning">
+  WebDriver support, classic and BiDi, is new and doesn't cover the full specs yet. If a command your scripts need is missing, [open an issue](https://github.com/lightpanda-io/browser/issues).
+</Callout>
+<Tabs items={['JavaScript', 'Python']} className="-mb-4" storageKey="quickstart-client-lang">
+  <Tabs.Tab id="install-selenium-js" className="m-0">
+Needs [Node.js](https://nodejs.org/en/download). In a new project directory:
+
+```sh copy
+npm init -y
+npm pkg set type=module
+npm install selenium-webdriver
+```
+  </Tabs.Tab>
+  <Tabs.Tab id="install-selenium-py" className="m-0">
+Needs [Python](https://www.python.org/downloads/):
+
+```sh copy
+pip install selenium
+```
+  </Tabs.Tab>
+</Tabs>
+  </Tabs.Tab>
+</Tabs>
+
+### Start Lightpanda
+
+<Tabs items={['Puppeteer', 'Playwright', 'Chromedp', 'Selenium']} className="-mb-4" storageKey="quickstart-client">
+  <Tabs.Tab>
+```sh copy
+lightpanda serve
+```
+  </Tabs.Tab>
+  <Tabs.Tab>
+```sh copy
+lightpanda serve
+```
+  </Tabs.Tab>
+  <Tabs.Tab>
+```sh copy
+lightpanda serve
+```
+  </Tabs.Tab>
+  <Tabs.Tab>
+Selenium needs the `webdriver` protocol enabled:
+
+```sh copy
+lightpanda serve --protocol webdriver
+```
+  </Tabs.Tab>
+</Tabs>
+
+Lightpanda listens on `127.0.0.1:9222` by default, the address the script connects to. Find every `serve` flag, including host/port binding, CDP connection limits, and logging, in the [serve reference](/reference/cli/serve#options).
+
+<Callout type="info" emoji="ℹ️">
+  Respect `robots.txt` and avoid high-frequency requests against small sites. Pass `--obey-robots` to have Lightpanda follow `robots.txt` for you.
+</Callout>
+
+### Connect and read JS-rendered content
+
+The script opens [quotes.toscrape.com/js](https://quotes.toscrape.com/js/) and prints the first quote. The quotes are rendered by JavaScript, so a plain HTTP fetch returns an empty list: Lightpanda runs that JavaScript before your script reads the page.
+
+<Tabs items={['Puppeteer', 'Playwright', 'Chromedp', 'Selenium']} className="-mb-4" storageKey="quickstart-client">
+  <Tabs.Tab>
+Save as `index.js`:
+
+```js copy
+'use strict'
+
+import puppeteer from 'puppeteer-core'
+
+const browser = await puppeteer.connect({
+  browserWSEndpoint: 'ws://127.0.0.1:9222',
+})
+
+const context = await browser.createBrowserContext()
+const page = await context.newPage()
+
+await page.goto('https://quotes.toscrape.com/js/')
+
+const quote = await page.$eval('.quote .text', el => el.textContent)
+console.log(quote)
+
+await page.close()
+await context.close()
+await browser.disconnect()
+```
+
+Find more [Puppeteer options](/usage/cdp/puppeteer).
+  </Tabs.Tab>
+  <Tabs.Tab>
+<Tabs items={['JavaScript', 'Python']} className="-mb-4" storageKey="quickstart-client-lang">
+  <Tabs.Tab id="connect-playwright-js" className="m-0">
+Save as `index.js`:
+
+```js copy
+import { chromium } from 'playwright-core';
+
+const browser = await chromium.connectOverCDP('ws://127.0.0.1:9222');
+
+const context = await browser.newContext({});
+const page = await context.newPage();
+
+await page.goto('https://quotes.toscrape.com/js/');
+
+const quote = await page.locator('.quote .text').first().textContent();
+console.log(quote);
+
+await page.close();
+await context.close();
+await browser.close();
+```
+  </Tabs.Tab>
+  <Tabs.Tab id="connect-playwright-py" className="m-0">
+Save as `script.py`:
+
+```python copy
+from playwright.sync_api import sync_playwright
+
+with sync_playwright() as p:
+    browser = p.chromium.connect_over_cdp("ws://127.0.0.1:9222")
+    context = browser.new_context()
+    page = context.new_page()
+
+    page.goto("https://quotes.toscrape.com/js/")
+
+    quote = page.locator(".quote .text").first.text_content()
+    print(quote)
+
+    page.close()
+    context.close()
+    browser.close()
+```
+  </Tabs.Tab>
+</Tabs>
+
+Find more [Playwright options](/usage/cdp/playwright).
+  </Tabs.Tab>
+  <Tabs.Tab>
+Save as `main.go`:
+
+```go copy
+package main
+
+import (
+	"context"
+	"log"
+
+	"github.com/chromedp/chromedp"
+)
+
+func main() {
+	allocCtx, cancel := chromedp.NewRemoteAllocator(context.Background(),
+		"ws://127.0.0.1:9222", chromedp.NoModifyURL,
+	)
+	defer cancel()
+
+	ctx, cancel := chromedp.NewContext(allocCtx)
+	defer cancel()
+
+	var quote string
+	if err := chromedp.Run(ctx,
+		chromedp.Navigate("https://quotes.toscrape.com/js/"),
+		chromedp.Text(".quote .text", &quote, chromedp.ByQuery),
+	); err != nil {
+		log.Fatalf("failed getting the quote: %v", err)
+	}
+
+	log.Println("quote:", quote)
+}
+```
+
+Find more [Chromedp options](/usage/cdp/chromedp).
+  </Tabs.Tab>
+  <Tabs.Tab>
+<Tabs items={['JavaScript', 'Python']} className="-mb-4" storageKey="quickstart-client-lang">
+  <Tabs.Tab id="connect-selenium-js" className="m-0">
+This example drives the browser over BiDi: request a BiDi session by setting the `webSocketUrl` capability to `true`. Without it, the session uses classic WebDriver commands (`driver.get()`, `findElement()`, ...). Save as `index.js`:
+
+```js copy
+'use strict'
+
+import { Builder, Capabilities } from 'selenium-webdriver'
+import { BrowsingContext } from 'selenium-webdriver/bidi/generated/browsing_context.js'
+import { Script } from 'selenium-webdriver/bidi/generated/script.js'
+
+const caps = new Capabilities()
+caps.set('browserName', 'lightpanda')
+caps.set('webSocketUrl', true)
+
+const driver = await new Builder()
+  .usingServer('http://127.0.0.1:9222')
+  .withCapabilities(caps)
+  .build()
+
+const bidi = await driver.getBidi()
+await bidi.waitForConnection()
+
+const browsingContext = new BrowsingContext(bidi)
+const script = new Script(bidi)
+
+const { context } = await browsingContext.create({ type: 'tab' })
+await browsingContext.navigate({ context, url: 'https://quotes.toscrape.com/js/', wait: 'complete' })
+
+const quote = await script.evaluate({
+  expression: "document.querySelector('.quote .text').textContent",
+  target: { context },
+  awaitPromise: false,
+})
+console.log(quote.result.value)
+
+await browsingContext.close({ context })
+await driver.quit()
+```
+  </Tabs.Tab>
+  <Tabs.Tab id="connect-selenium-py" className="m-0">
+This example drives the browser over BiDi: request a BiDi session by setting the `webSocketUrl` capability to `True`. Without it, the session uses classic WebDriver commands (`driver.get()`, `find_element()`, ...). Save as `script.py`:
+
+```python copy
+import os
+
+from selenium.webdriver.common.options import ArgOptions
+from selenium.webdriver.common.bidi.common import command_builder
+from selenium.webdriver.remote.webdriver import WebDriver
+
+options = ArgOptions()
+options.set_capability("browserName", "lightpanda")
+options.set_capability("webSocketUrl", True)
+
+driver = WebDriver(command_executor="http://127.0.0.1:9222", options=options)
+
+context = driver.browsing_context.create(type="tab")
+driver.browsing_context.navigate(context=context, url="https://quotes.toscrape.com/js/", wait="complete")
+
+# driver.script doesn't expose evaluate yet, so build the BiDi command directly.
+result = driver.browsing_context._conn.execute(command_builder(
+    "script.evaluate",
+    {"expression": "document.querySelector('.quote .text').textContent", "target": {"context": context}, "awaitPromise": False},
+))
+print(result["result"]["value"], flush=True)
+
+driver.browsing_context.close(context)
+driver.quit()
+
+# Selenium's BiDi thread outlives quit(); force the process to exit instead.
+os._exit(0)
+```
+  </Tabs.Tab>
+</Tabs>
+
+Find more [Selenium options](/usage/bidi/selenium).
+  </Tabs.Tab>
+</Tabs>
+
+### Run it
+
+<Tabs items={['Puppeteer', 'Playwright', 'Chromedp', 'Selenium']} className="-mb-4" storageKey="quickstart-client">
+  <Tabs.Tab>
+```sh copy
+node index.js
+```
+  </Tabs.Tab>
+  <Tabs.Tab>
+<Tabs items={['JavaScript', 'Python']} className="-mb-4" storageKey="quickstart-client-lang">
+  <Tabs.Tab id="run-playwright-js" className="m-0">
+```sh copy
+node index.js
+```
+  </Tabs.Tab>
+  <Tabs.Tab id="run-playwright-py" className="m-0">
+```sh copy
+python script.py
+```
+  </Tabs.Tab>
+</Tabs>
+  </Tabs.Tab>
+  <Tabs.Tab>
+```sh copy
+go run main.go
+```
+  </Tabs.Tab>
+  <Tabs.Tab>
+<Tabs items={['JavaScript', 'Python']} className="-mb-4" storageKey="quickstart-client-lang">
+  <Tabs.Tab id="run-selenium-js" className="m-0">
+```sh copy
+node index.js
+```
+  </Tabs.Tab>
+  <Tabs.Tab id="run-selenium-py" className="m-0">
+```sh copy
+python script.py
+```
+  </Tabs.Tab>
+</Tabs>
+  </Tabs.Tab>
+</Tabs>
+
+You should see the first quote printed to your terminal. For more complex examples, like filling a form and waiting for dynamic results, see [Interact with a webpage](/guides/interact-with-a-webpage).
+
+</Steps>
+
+## Go to production
+
+Switch to [Lightpanda Cloud](/run-on-lightpanda-cloud/getting-started) by exporting your token and connecting over `wss://` instead of `ws://`:
+
+```sh copy
+export LPD_TOKEN="your token here"
+```
+
+<Tabs items={['Puppeteer', 'Playwright', 'Chromedp', 'Selenium']} className="-mb-4" storageKey="quickstart-client">
+  <Tabs.Tab>
+```js copy
+const browser = await puppeteer.connect({
+  browserWSEndpoint: 'wss://euwest.cloud.lightpanda.io/ws?token=' + process.env.LPD_TOKEN,
+})
+```
+  </Tabs.Tab>
+  <Tabs.Tab>
+```js copy
+const browser = await chromium.connectOverCDP(
+  'wss://euwest.cloud.lightpanda.io/ws?token=' + process.env.LPD_TOKEN,
+);
+```
+  </Tabs.Tab>
+  <Tabs.Tab>
+```go copy
+import (
+	"context"
+	"log"
+	"os"
+
+	"github.com/chromedp/chromedp"
+)
+
+func main() {
+	allocCtx, cancel := chromedp.NewRemoteAllocator(context.Background(),
+		"wss://euwest.cloud.lightpanda.io/ws?token="+os.Getenv("LPD_TOKEN"), chromedp.NoModifyURL,
+	)
+	// ...
+```
+  </Tabs.Tab>
+  <Tabs.Tab>
+BiDi is local only for now: Lightpanda Cloud doesn't expose a BiDi endpoint yet, so Selenium has no cloud option here.
+  </Tabs.Tab>
+</Tabs>

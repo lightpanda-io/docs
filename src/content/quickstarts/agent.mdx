@@ -1,0 +1,73 @@
+---
+title: Agent
+description: Drive the Lightpanda browser with natural language, then save the session as a reproducible script.
+---
+import { Callout, Steps } from 'nextra/components'
+
+# Agent
+
+`lightpanda agent` lets you drive a headless browser by talking to it. Tell it where to go and what to extract, in plain English or with slash commands, and it controls a real browser to do the work. Then save the session as a script you can replay without an LLM.
+
+## Prerequisites
+
+- An API key for an LLM provider, such as Anthropic, OpenAI, or Gemini, or a local Ollama server. `lightpanda agent --no-llm` runs without any of these, using slash commands only.
+
+## Steps
+
+<Steps>
+
+### Install Lightpanda
+
+```sh copy
+curl -fsSL https://pkg.lightpanda.io/install.sh | bash
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+Other options: [WSL2 on Windows](/run-locally/installation/one-liner#windows--wsl2), [Docker](/run-locally/installation/docker), [package managers](/run-locally/installation/package-managers).
+
+### Set your provider's API key
+
+```sh copy
+export ANTHROPIC_API_KEY=<YOUR_ANTHROPIC_KEY>
+```
+
+Find the full list of providers and env vars in the [Agent reference](/reference/cli/agent#options).
+
+### Launch the REPL
+
+```sh copy
+lightpanda agent
+```
+
+<Callout type="info" emoji="ℹ️">
+  Respect `robots.txt` and avoid high-frequency requests against small sites. Pass `--obey-robots` to have Lightpanda follow `robots.txt` for you.
+</Callout>
+
+### Tell it what you want
+
+```console
+❯ go to news.ycombinator.com and get me the top story title and points
+```
+
+The agent navigates, extracts, and prints the answer. You can also drive it directly with commands. Here `/links` prints every link on the current page:
+
+```console
+❯ /goto news.ycombinator.com
+❯ /links
+```
+
+### Save it as a reproducible script
+
+```console
+❯ /save <my_script>.js
+```
+
+Exit the REPL, then replay the script with Lightpanda, no LLM needed:
+
+```sh copy
+lightpanda run <my_script>.js
+```
+
+</Steps>
+
+Learn more about [saved scripts](/usage/pandascript) and the agent's [commands, providers, and one-shot mode](/usage/agent).

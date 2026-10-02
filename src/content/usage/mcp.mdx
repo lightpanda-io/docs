@@ -92,50 +92,7 @@ https://euwest.cloud.lightpanda.io/mcp/sse?token=TOKEN
 
 ## Connect an AI agent
 
-### Claude Desktop / Cursor / Windsurf
-<Tabs items={['Local', 'Cloud']}>
-  <Tabs.Tab>
-Add to your MCP host configuration:
-
-- **Claude Desktop:** Settings > Developer > Edit Config
-- **Cursor:** `.cursor/mcp.json` in your project
-- **Windsurf:** Cascade MCP settings
-
-```json copy
-{
-  "mcpServers": {
-    "lightpanda": {
-      "command": "/path/to/lightpanda",
-      "args": ["mcp"]
-    }
-  }
-}
-```
-
-For robots.txt compliance, use `"args": ["mcp", "--obey-robots"]`.
-
-> Replace `/path/to/lightpanda` with the actual binary path, e.g. `/usr/local/bin/lightpanda`.
-
-  </Tabs.Tab>
-  <Tabs.Tab>
-MCP hosts that only support stdio, like Claude Desktop, need a bridge to reach the SSE endpoint. Use [mcp-remote](https://www.npmjs.com/package/mcp-remote) in the same MCP host configuration described for local use:
-
-```json copy
-{
-  "mcpServers": {
-    "lightpanda-cloud": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "mcp-remote",
-        "https://euwest.cloud.lightpanda.io/mcp/sse?token=TOKEN"
-      ]
-    }
-  }
-}
-```
-  </Tabs.Tab>
-</Tabs>
+See the [MCP quickstart](/quickstarts/mcp) for connecting Claude Desktop, Cursor, or Windsurf, locally or through Lightpanda Cloud. For robots.txt compliance, add `--obey-robots` to the `args` array in your host's MCP server config.
 
 ## Tools and resources
 
