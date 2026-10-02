@@ -8,6 +8,7 @@ const meta: MetaRecord = {
     },
   },
   'http-api': 'HTTP API',
+  javascript: 'JavaScript SDK',
   'mcp-tools': 'MCP tools',
   pandascript: 'PandaScript',
   python: 'Python SDK',
