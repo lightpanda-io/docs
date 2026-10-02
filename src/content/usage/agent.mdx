@@ -123,8 +123,9 @@ than a V8 stack trace.
 
 ### Web search
 
-`/searchEngine <engine>` sets the backend the agent's web search runs
-against: `auto` (the default), `brave`, `tavily`, `exa`, or `keenable`.
+Set the backend the agent's web search runs against with the CLI option
+`--search-engine` or the REPL command `/searchEngine`: `auto` (the default),
+`brave`, `tavily`, `exa`, or `keenable`.
 The choice is saved per-directory in `.lp-agent.zon`.
 
 An API key is optional. `auto` falls back to Keenable's keyless public
