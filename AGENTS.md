@@ -113,6 +113,6 @@ Known traps:
 - Never invent example output. Any log line or response shown must be captured from a real run.
 - Explanation pages (Core concepts, Architecture) make structural claims: ownership, lifetimes, what is real versus stubbed. Verify them against the source.
 
-Version policy. The docs mostly track the nightly build, so `main` is the default ref (the `nightly` tag points at the tip of `main`). Some hardcoded versions go stale, and the tag scheme changed from `vX.Y.Z` to `X.Y.Z` at 0.3. So each check must compare against `main` by default, fetch and check any version a page pins, and separately flag every hardcoded version string that is behind the latest release. Always report the exact ref (commit SHA and tag) compared against.
+Version policy. The docs describe the latest release, so its tag is the default ref, not `main` (the `nightly` tag points at the tip of `main`). Some hardcoded versions go stale, and the tag scheme changed from `vX.Y.Z` to `X.Y.Z` at 0.3. So each check must compare against the latest release tag by default, fetch and check any version a page pins, and separately flag every hardcoded version string that is behind the latest release. Always report the exact ref (commit SHA and tag) compared against.
 
 A drift check reports; it does not edit. Propose the specific change for each item and apply it only after confirmation.
