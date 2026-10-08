@@ -363,12 +363,6 @@ def collect_links(module: pdoc.doc.Module, names: list[str]) -> dict[str, str]:
     links: dict[str, str] = {}
     for name in names:
         doc = module.members[name]
-        target = getattr(lightpanda, name)
-        if inspect.isclass(target) and target.__name__ != name and target.__name__ in names:
-            # An alias such as `WebDriverServer = BiDiServer` gets no section
-            # of its own; point it at the class it names.
-            links[name] = slug(target.__name__)
-            continue
         links[name] = slug(name)
         if isinstance(doc, pdoc.doc.Class):
             for member in public_members(doc):

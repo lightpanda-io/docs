@@ -175,7 +175,7 @@ List the forms on the page as JSON: each form's `backendNodeId`, `action`, `meth
 
 
 **Arguments:**
- - **url:**  Optional URL to navigate to before processing.
+ - **url:**  Optional URL to navigate to before processing. An empty string is treated as omitted.
  - **timeout:**  Optional timeout in milliseconds. Defaults to 10000.
 
 ### Session.evaluate [#session-evaluate]
@@ -196,7 +196,7 @@ Evaluate JavaScript in the current page context — an escape hatch for page-sid
 
 **Arguments:**
  - **script:**  JavaScript run in the page context. A bare trailing expression, or `return` with top-level `await`, is the result.
- - **url:**  Optional URL to navigate to before evaluating.
+ - **url:**  Optional URL to navigate to before evaluating. An empty string is treated as omitted.
  - **timeout:**  Optional timeout in milliseconds. Defaults to 10000.
  - **save:**  Optional bridge-store key. The evaluate's return value is stored under this name and re-exposed as `lp.<name>` to subsequent evaluates. Objects, arrays, and strings are serialized automatically — no JSON.stringify needed.
 
@@ -288,7 +288,7 @@ Cookies stored in the browser. Defaults to cookies whose domain matches the curr
 
 
 **Arguments:**
- - **url:**  Restrict output to cookies matching this URL's host. Defaults to the current page.
+ - **url:**  Restrict output to cookies matching this URL's host. Defaults to the current page. An empty string is treated as omitted.
  - **all:**  If true, dump every cookie regardless of host. Overrides `url`.
 
 ### Session.get_env [#session-get-env]
@@ -390,7 +390,7 @@ Raw HTML for the document or, with `selector`/`backendNodeId`, a single node's o
  - **backend_node_id:**  Optional backend node ID. When set, dump only that node's outerHTML. 0 is treated as omitted.
  - **max_bytes:**  Optional soft cap on output size in bytes. Content is truncated at a UTF-8 boundary and a short '[truncated]' marker is appended past the cap.
  - **strip:**  Optional. Omit element groups from the output: `js` (script, noscript, script preloads), `css` (style, stylesheet links), `ui` (css plus img, picture, video, audio, svg, canvas, iframe), `invisible` (elements an author rule or inline style sets to display:none), `shell` (nav, aside, dialog, page-level header/footer and the matching landmark roles; skipped when that would drop most of the text), `clutter` (keep only the main content, in the manner of reader modes; includes `shell` and `invisible`, and falls back to `shell` when it finds too little). \{"js":true,"css":true\} keeps a page dump small.
- - **url:**  Optional URL to navigate to before dumping.
+ - **url:**  Optional URL to navigate to before dumping. An empty string is treated as omitted.
  - **timeout:**  Optional timeout in milliseconds. Defaults to 10000.
 
 ### Session.interactive_elements [#session-interactive-elements]
@@ -403,7 +403,7 @@ List every visible interactive element on the page as a JSON array: native contr
 
 
 **Arguments:**
- - **url:**  Optional URL to navigate to before processing.
+ - **url:**  Optional URL to navigate to before processing. An empty string is treated as omitted.
  - **timeout:**  Optional timeout in milliseconds. Defaults to 10000.
 
 ### Session.links [#session-links]
@@ -423,7 +423,7 @@ Extract the visible links in the opened page as JSON objects with `text` (anchor
 
 **Arguments:**
  - **limit:**  Optional. Return at most this many links, in document order.
- - **url:**  Optional URL to navigate to before processing.
+ - **url:**  Optional URL to navigate to before processing. An empty string is treated as omitted.
  - **timeout:**  Optional timeout in milliseconds. Defaults to 10000.
 
 ### Session.markdown [#session-markdown]
@@ -449,7 +449,7 @@ Render the page (or a subtree) as markdown. Scope with `selector` or `backendNod
  - **backend_node_id:**  Optional backend node ID. Render markdown for just that node's subtree. 0 is treated as omitted.
  - **max_bytes:**  Optional soft cap on output size in bytes. Content is truncated at a UTF-8 boundary and a short '[truncated]' marker is appended past the cap.
  - **strip:**  Optional. Omit element groups from the output; same groups as the html tool's strip. `shell` (page chrome by markup) and `clutter` (keep only the main content, in the manner of reader modes) are the ones that matter for reading; `ui` also drops images.
- - **url:**  Optional URL to navigate to before rendering.
+ - **url:**  Optional URL to navigate to before rendering. An empty string is treated as omitted.
  - **timeout:**  Optional timeout in milliseconds. Defaults to 10000.
 
 ### Session.node_details [#session-node-details]
@@ -518,7 +518,7 @@ Render the page, or one node, as a PNG: the text layout Lightpanda computes, not
  - **backend_node_id:**  Optional backend node ID. When set, render only that node. 0 is treated as omitted.
  - **full_page:**  Render the whole content height instead of one viewport. Defaults to false.
  - **strip:**  Optional. Omit element groups from the render; same groups as the html tool's strip (`js`, `css`, `ui`, `invisible`, `shell`, `clutter`).
- - **url:**  Optional URL to navigate to before rendering.
+ - **url:**  Optional URL to navigate to before rendering. An empty string is treated as omitted.
  - **timeout:**  Optional timeout in milliseconds. Defaults to 10000.
 
 ### Session.scroll [#session-scroll]
@@ -633,7 +633,7 @@ Page metadata as JSON: `jsonLd` (each JSON-LD block as a string), `openGraph`, `
 
 
 **Arguments:**
- - **url:**  Optional URL to navigate to before processing.
+ - **url:**  Optional URL to navigate to before processing. An empty string is treated as omitted.
  - **timeout:**  Optional timeout in milliseconds. Defaults to 10000.
 
 ### Session.tree [#session-tree]
@@ -653,7 +653,7 @@ Semantic outline of the page as indented text: one node per line with its role, 
 
 
 **Arguments:**
- - **url:**  Optional URL to navigate to before fetching the semantic tree.
+ - **url:**  Optional URL to navigate to before fetching the semantic tree. An empty string is treated as omitted.
  - **timeout:**  Optional timeout in milliseconds. Defaults to 10000.
  - **backend_node_id:**  Optional backend node ID to get the tree for a specific element instead of the document root. 0 is treated as omitted.
  - **max_depth:**  Optional maximum depth of the tree to return. Useful for exploring high-level structure first.
@@ -1588,40 +1588,37 @@ async def start(self)
 
 Spawn the server process. Idempotent.
 
-## BiDiServer [#bidiserver]
+## WebDriverServer [#webdriverserver]
 
-A lightpanda process serving WebDriver BiDi on 127.0.0.1.
+A lightpanda process serving WebDriver, classic and BiDi, on 127.0.0.1.
 
 ```python
-from lightpanda import BiDiServer
+from lightpanda import WebDriverServer
 from selenium import webdriver
-from selenium.webdriver.common.options import ArgOptions
+from selenium.webdriver.common.by import By
 
-options = ArgOptions()
-options.web_socket_url = True  # ask for a WebDriver BiDi session
-
-with BiDiServer() as server:
-    driver = webdriver.Remote(command_executor=server.http_endpoint, options=options)
-    context = driver.browsing_context.create(type="tab")
-    driver.browsing_context.navigate(context=context, url="https://example.com", wait="complete")
-    print(driver.script.execute("() => document.title", context_id=context)["value"])
+with WebDriverServer() as server:
+    # Selenium requires an options object; Lightpanda accepts any browser's.
+    driver = webdriver.Remote(command_executor=server.http_endpoint, options=webdriver.ChromeOptions())
+    driver.get("https://example.com")
+    print(driver.find_element(By.CSS_SELECTOR, "h1").text)
     driver.quit()
 ```
 
-[`http_endpoint`](#bidiserver-http-endpoint) is Selenium's ``command_executor``. The browser
-serves the BiDi modules (``session``, ``browser``, ``browsingContext``,
-``script``, ``input``) over the WebSocket plus the classic session
-bootstrap (``GET /status``, ``POST /session`` with the ``webSocketUrl``
-capability, ``DELETE /session/<id>``); other classic WebDriver commands
-such as Selenium's ``driver.get`` or ``find_element`` are not served, so
-drive the page through ``driver.browsing_context`` and ``driver.script``
-with an explicit context, created first as above. Pass
-``args=["--protocol", "cdp"]`` to serve CDP on the same port as well
-(``--protocol`` is additive). The process is stopped by [`close()`](#bidiserver-close) /
-leaving the ``with`` block, and on Linux also when the interpreter dies.
+[`http_endpoint`](#webdriverserver-http-endpoint) is Selenium's ``command_executor``. The browser
+serves classic WebDriver over HTTP (navigation, element lookup and
+interaction, script execution, actions, cookies) and, for a session
+created with the ``webSocketUrl`` capability (Selenium's
+``options.web_socket_url = True``), the BiDi modules (``session``,
+``browser``, ``browsingContext``, ``script``, ``input``) over the
+WebSocket, reached through ``driver.browsing_context`` and
+``driver.script``. Pass ``args=["--protocol", "cdp"]`` to serve CDP on the
+same port as well (``--protocol`` is additive). The process is stopped by
+[`close()`](#webdriverserver-close) / leaving the ``with`` block, and on Linux also when the
+interpreter dies.
 
 ```python
-class BiDiServer(
+class WebDriverServer(
     binary: str | os.PathLike | None = None,
     env: dict[str, str] | None = None,
     verbose: bool = False,
@@ -1646,7 +1643,7 @@ Spawn the server process.
 
 Usable as a context manager (`with`).
 
-### BiDiServer.bidi_endpoint [#bidiserver-bidi-endpoint]
+### WebDriverServer.bidi_endpoint [#webdriverserver-bidi-endpoint]
 
 ```python
 bidi_endpoint: str
@@ -1661,7 +1658,7 @@ capability.
 Keep the IP literal: the WebSocket upgrade rejects any ``Origin``
 header and only accepts an IP-literal or ``localhost`` host.
 
-### BiDiServer.status [#bidiserver-status]
+### WebDriverServer.status [#webdriverserver-status]
 
 ```python
 def status(self) -> dict
@@ -1669,7 +1666,7 @@ def status(self) -> dict
 
 The ``GET /status`` value, ``{"ready": True, "message": ""}``.
 
-### BiDiServer.port [#bidiserver-port]
+### WebDriverServer.port [#webdriverserver-port]
 
 ```python
 port: int
@@ -1677,7 +1674,7 @@ port: int
 
 *Property.* The port the server listens on.
 
-### BiDiServer.http_endpoint [#bidiserver-http-endpoint]
+### WebDriverServer.http_endpoint [#webdriverserver-http-endpoint]
 
 ```python
 http_endpoint: str
@@ -1687,7 +1684,7 @@ http_endpoint: str
 (``browserURL``) and Playwright (``connect_over_cdp`` with an http URL)
 discover the CDP WebSocket from, and Selenium's ``command_executor``.
 
-### BiDiServer.close [#bidiserver-close]
+### WebDriverServer.close [#webdriverserver-close]
 
 ```python
 def close(self) -> None
@@ -1695,15 +1692,15 @@ def close(self) -> None
 
 Stop the server process. Idempotent.
 
-## AsyncBiDiServer [#asyncbidiserver]
+## AsyncWebDriverServer [#asyncwebdriverserver]
 
-[`BiDiServer`](#bidiserver) for asyncio: the process is spawned by
-[`start()`](#asyncbidiserver-start), called automatically on ``async with`` entry.
+[`WebDriverServer`](#webdriverserver) for asyncio: the process is spawned by
+[`start()`](#asyncwebdriverserver-start), called automatically on ``async with`` entry.
 
-Every public method and property of [`BiDiServer`](#bidiserver) exists on `AsyncBiDiServer` with the same name and signature; methods are coroutines to `await`. Only the members `AsyncBiDiServer` adds are listed below.
+Every public method and property of [`WebDriverServer`](#webdriverserver) exists on `AsyncWebDriverServer` with the same name and signature; methods are coroutines to `await`. Only the members `AsyncWebDriverServer` adds are listed below.
 
 ```python
-class AsyncBiDiServer(
+class AsyncWebDriverServer(
     binary: str | os.PathLike | None = None,
     env: dict[str, str] | None = None,
     verbose: bool = False,
@@ -1712,13 +1709,13 @@ class AsyncBiDiServer(
 )
 ```
 
-Store the settings; the process is spawned by [`start()`](#asyncbidiserver-start).
+Store the settings; the process is spawned by [`start()`](#asyncwebdriverserver-start).
 
 Arguments are forwarded to the sync class.
 
 Usable as a context manager (`async with`).
 
-### AsyncBiDiServer.start [#asyncbidiserver-start]
+### AsyncWebDriverServer.start [#asyncwebdriverserver-start]
 
 ```python
 async def start(self)
