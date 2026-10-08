@@ -19,8 +19,11 @@ Create a `hn-scraper` directory and initialize a new Node.js project. You can ac
 ```sh copy
 mkdir hn-scraper && \
   cd hn-scraper && \
-  npm init
+  npm init && \
+  npm pkg set type=module
 ```
+
+`npm pkg set type=module` tells Node.js to load `index.js` as an ES module, the format its `import` statements need.
 
 Install the `lightpanda` and the [`puppeteer-core`](https://www.npmjs.com/package/puppeteer-core) *or* [`playwright-core`](https://www.npmjs.com/package/playwright-core) npm package.
 
@@ -348,17 +351,16 @@ node index.js
 
 ```sh
 $ node index.js
-🐼 Running Lightpanda's CDP server… { pid: 598201 }
 [
   {
     title: 'Show HN: Lightpanda, an open-source headless browser in Zig',
     url: 'https://news.ycombinator.com/item?id=42817439',
-    meta: [ '319 points', 'fbouvier', '9 months ago', '137 comments' ]
+    meta: [ '319 points', 'fbouvier', '2 years ago', '137 comments' ]
   },
   {
-    title: 'Lightpanda: Headless browser designed for AI and automation',
-    url: 'https://news.ycombinator.com/item?id=42812859',
-    meta: [ '154 points', 'tosh', '9 months ago', '1 comments' ]
+    title: 'Why we built Lightpanda in Zig',
+    url: 'https://news.ycombinator.com/item?id=46165249',
+    meta: [ '212 points', 'ashvardanian', '10 months ago', '187 comments' ]
   },
   ...
 ]

@@ -19,8 +19,11 @@ Create a `hn-scraper` directory and initialize a new Node.js project. You can ac
 ```sh copy
 mkdir hn-scraper && \
   cd hn-scraper && \
-  npm init
+  npm init && \
+  npm pkg set type=module
 ```
+
+`npm pkg set type=module` tells Node.js to load `index.js` as an ES module, the format its `import` statements need.
 
 Install the `lightpanda` and the [`puppeteer-core`](https://www.npmjs.com/package/puppeteer-core) *or* [`playwright-core`](https://www.npmjs.com/package/playwright-core) npm packages.
 
@@ -274,13 +277,12 @@ node index.js
 
 ```sh
 $ node index.js
-🐼 Running Lightpanda's CDP server... { pid: 34389 }
 all reference links [
+  'https://deviceatlas.com/blog/which-devices-have-browsers',
+  'https://web.archive.org/web/20251016102827/https://deviceatlas.com/blog/which-devices-have-browsers',
   'https://gs.statcounter.com/browser-market-share',
+  'https://web.archive.org/web/20171011022101/https://gs.statcounter.com/browser-market-share/desktop/worldwide',
   'https://radar.cloudflare.com/reports/browser-market-share-2024-q1',
-  'https://web.archive.org/web/20240523140912/https://www.internetworldstats.com/stats.htm',
-  'https://www.internetworldstats.com/stats.htm',
-  'https://www.reference.com/humanities-culture/purpose-browser-e61874e41999ede',
   ...
 ]
 ```
