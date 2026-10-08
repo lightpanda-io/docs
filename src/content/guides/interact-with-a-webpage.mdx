@@ -12,7 +12,7 @@ This example requires Lightpanda because HackerNews uses XHR requests to display
 
 ## Prerequisites
 
-You'll need [Node.js](https://nodejs.org/en/download) installed on your computer. 
+You'll need [Node.js](https://nodejs.org/en/download) 22 or newer installed on your computer. 
 
 Create a `hn-scraper` directory and initialize a new Node.js project. You can accept all the default values in the npm init prompts. 
 
@@ -32,16 +32,18 @@ Install the `lightpanda` and the [`puppeteer-core`](https://www.npmjs.com/packag
   <Tabs.Tab id="puppeteer" className="m-0">
 ```sh copy
 npm install --save puppeteer-core @lightpanda/browser
+npx @lightpanda/browser install
 ```
   </Tabs.Tab>
   <Tabs.Tab id="playwright" className="m-0">
 ```sh copy
 npm install --save playwright-core @lightpanda/browser
+npx @lightpanda/browser install
 ```
   </Tabs.Tab>
 </Tabs>
 
-This guide uses a local Lightpanda instance — see [installation](/run-locally/installation/one-liner) for setup details. The code can be adapted to connect to [Lightpanda Cloud](/run-on-lightpanda-cloud/getting-started).
+This guide uses a local Lightpanda instance: `npx @lightpanda/browser install` downloads the browser to `~/.cache/lightpanda-node`, and `lightpanda.serve()` starts it from there. The code can be adapted to connect to [Lightpanda Cloud](/run-on-lightpanda-cloud/getting-started).
 
 ## Create index.js
 
