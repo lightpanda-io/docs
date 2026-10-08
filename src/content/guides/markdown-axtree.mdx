@@ -248,7 +248,7 @@ await browser.close();
 | Parameter | Type | Description |
 |---|---|---|
 | `selector` | string | CSS selector of the element to convert. The first match is used. A selector that matches nothing returns an `InvalidParams` error. |
-| `backendNodeId` | integer | Backend DOM node ID of the element to convert. Takes precedence over `selector`. |
+| `backendNodeId` | integer | Backend DOM node ID of the element to convert, for example from [`LP.getSemanticTree`](#lpgetsemantictree). Takes precedence over `selector`. |
 | `strip` | object | Element groups to omit, each set to `true`: `js`, `css`, `ui`, `invisible`, `shell`, `clutter`. `{ clutter: true }` keeps only the main content. The groups match the CLI [`--strip-mode`](/reference/cli/fetch#options) values. |
 | `maxBytes` | integer | Output size cap in bytes. Longer output is cut and ends with a `[truncated]` marker. |
 
@@ -315,6 +315,36 @@ console.log(JSON.stringify(result.nodes, null, 2));
 | `childIds` | array | Child node IDs |
 
 For `example.com`, the CDP accessibility tree contains **12 nodes**.
+
+### `LP.getSemanticTree`
+
+`LP.getSemanticTree` returns Lightpanda's semantic tree, the tree behind the CLI `semantic_tree` and `semantic_tree_text` formats. By default, the semantic tree skips layout containers, so it is more compact than the CDP accessibility tree.
+
+In the [`LP.dump` example](#using-lpdump), replace the `LP.dump` call and its `console.log` with:
+
+```javascript copy
+const result = await client.send('LP.getSemanticTree', { format: 'text', interactiveOnly: true });
+console.log(result.semanticTree);
+```
+
+For `example.com`, the script prints:
+
+```text
+1 RootWebArea 'Example Domain'
+ 16 [i] link 'Learn more'
+```
+
+Each line starts with the node's backend DOM node ID, which `LP.dump` accepts as `backendNodeId`. `[i]` marks an interactive node.
+
+All parameters are optional:
+
+| Parameter | Type | Description |
+|---|---|---|
+| `format` | string | `text` returns the tree as an indented string. Without it, `semanticTree` is a JSON object with the same node fields as the CLI `semantic_tree` format. |
+| `prune` | boolean | Skips layout containers, such as `div`, `main`, lists, and tables, unless they are interactive or have an `aria-label` or `title`. Their children stay in the tree. Defaults to `true`. |
+| `interactiveOnly` | boolean | Keeps only the root, interactive nodes, and named content nodes such as headings. Overrides `prune`. Defaults to `false`. |
+| `backendNodeId` | integer | Backend DOM node ID of the subtree root. Defaults to the document. |
+| `maxDepth` | integer | Maximum DOM depth below the root. Containers skipped by `prune` still count toward it. |
 
 ---
 
