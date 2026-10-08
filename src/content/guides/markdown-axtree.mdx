@@ -194,26 +194,6 @@ curl http://127.0.0.1:9222/json/version
 ### Using `LP.getMarkdown`
 
 <Tabs items={['Puppeteer', 'Playwright']} className="-mb-4">
-  <Tabs.Tab id="Playwright" className="m-0">
-```javascript copy
-// install: npm install playwright-core
-import { chromium } from 'playwright-core';
-
-const browser = await chromium.connectOverCDP('ws://127.0.0.1:9222');
-const context = await browser.newContext();
-const page = await context.newPage();
-
-await page.goto('https://example.com');
-
-const client = await page.context().newCDPSession(page);
-const result = await client.send('LP.getMarkdown', {});
-console.log(result.markdown);
-
-await page.close();
-await context.close();
-await browser.close();
-```
-  </Tabs.Tab>
   <Tabs.Tab id="Puppeteer" className="m-0">
 
 ```javascript copy
@@ -238,6 +218,26 @@ await context.close();
 await browser.disconnect();
 ```
 
+  </Tabs.Tab>
+  <Tabs.Tab id="Playwright" className="m-0">
+```javascript copy
+// install: npm install playwright-core
+import { chromium } from 'playwright-core';
+
+const browser = await chromium.connectOverCDP('ws://127.0.0.1:9222');
+const context = await browser.newContext();
+const page = await context.newPage();
+
+await page.goto('https://example.com');
+
+const client = await page.context().newCDPSession(page);
+const result = await client.send('LP.getMarkdown', {});
+console.log(result.markdown);
+
+await page.close();
+await context.close();
+await browser.close();
+```
   </Tabs.Tab>
 </Tabs>
 
