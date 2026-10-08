@@ -20,7 +20,7 @@ Three ways to get Markdown and Accessibility tree from any web page:
 | Pathway | Best for | How |
 |---|---|---|
 | **CLI** `fetch --dump markdown` | Scripts, pipelines, quick extraction | Single command, stdout |
-| **CDP** `LP.getMarkdown` | Puppeteer/Playwright automation | Programmatic, after page interactions |
+| **CDP** `LP.dump` | Puppeteer/Playwright automation | Programmatic, after page interactions |
 | **MCP** server | AI agent / LLM tool integration | Model Context Protocol over stdio |
 
 ## CLI: `fetch --dump`
@@ -172,11 +172,11 @@ lightpanda fetch --dump semantic_tree_text https://example.com
 
 ---
 
-## CDP: `LP.getMarkdown`
+## CDP: `LP.dump`
 
-In server mode (`lightpanda serve`), Lightpanda exposes a WebSocket CDP endpoint with a custom **LP domain**. `LP.getMarkdown` converts the current page's live DOM to Markdown.
+In server mode (`lightpanda serve`), Lightpanda exposes a WebSocket CDP endpoint with a custom **LP domain**. `LP.dump` with `format: 'markdown'` converts the current page's live DOM to Markdown.
 
-Unlike `--dump markdown` which processes a URL from scratch, `LP.getMarkdown` converts the DOM at call time. You can click, fill forms, or wait for dynamic content, then call it to capture the current state.
+Unlike `--dump markdown` which processes a URL from scratch, `LP.dump` converts the DOM at call time. You can click, fill forms, or wait for dynamic content, then call it to capture the current state.
 
 ### Starting the CDP server
 
@@ -191,7 +191,7 @@ lightpanda serve --host 0.0.0.0 --port 9333
 curl http://127.0.0.1:9222/json/version
 ```
 
-### Using `LP.getMarkdown`
+### Using `LP.dump`
 
 <Tabs items={['Puppeteer', 'Playwright']} className="-mb-4">
   <Tabs.Tab id="Puppeteer" className="m-0">
@@ -210,8 +210,8 @@ const client = await page.createCDPSession();
 
 await page.goto('https://example.com', { waitUntil: 'networkidle0' });
 
-const result = await client.send('LP.getMarkdown', {});
-console.log(result.markdown);
+const result = await client.send('LP.dump', { format: 'markdown' });
+console.log(result.content);
 
 await page.close();
 await context.close();
@@ -231,8 +231,8 @@ const page = await context.newPage();
 await page.goto('https://example.com');
 
 const client = await page.context().newCDPSession(page);
-const result = await client.send('LP.getMarkdown', {});
-console.log(result.markdown);
+const result = await client.send('LP.dump', { format: 'markdown' });
+console.log(result.content);
 
 await page.close();
 await context.close();
@@ -241,9 +241,18 @@ await browser.close();
   </Tabs.Tab>
 </Tabs>
 
-> `LP.getMarkdown` works the same way locally or on [Lightpanda Cloud](https://console.lightpanda.io/signup).
+> `LP.dump` works the same way locally or on [Lightpanda Cloud](https://console.lightpanda.io/signup).
 
-> `LP.getMarkdown` supports converting a sub-portion of the page by targeting specific DOM nodes, useful for skipping headers, footers, and sidebars.
+`LP.dump` returns `{ format, content }`, with the Markdown in `content`. Optional parameters scope or trim the output, for example to skip headers, footers, and sidebars:
+
+| Parameter | Type | Description |
+|---|---|---|
+| `selector` | string | CSS selector of the element to convert. The first match is used. A selector that matches nothing returns an `InvalidParams` error. |
+| `backendNodeId` | integer | Backend DOM node ID of the element to convert. Takes precedence over `selector`. |
+| `strip` | object | Element groups to omit, each set to `true`: `js`, `css`, `ui`, `invisible`, `shell`, `clutter`. `{ clutter: true }` keeps only the main content. The groups match the CLI [`--strip-mode`](/reference/cli/fetch#options) values. |
+| `maxBytes` | integer | Output size cap in bytes. Longer output is cut and ends with a `[truncated]` marker. |
+
+> `LP.getMarkdown`, which returns `{ markdown }`, still works but is deprecated in favor of `LP.dump`.
 
 ## CDP: Accessibility tree
 
