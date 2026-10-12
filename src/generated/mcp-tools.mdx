@@ -90,7 +90,7 @@ reproducing the user's goal, not replaying the transcript:
   aggregating across pages — becomes plain top-level JavaScript, so the
   script reaches the result without you.
 - Read pages with page.extract(schema) — `const page = new Page(); await
-  page.goto(url); page.extract(\{...\})`. CSS selectors lift text and
+  page.goto(url); page.extract({...})`. CSS selectors lift text and
   attributes as strings, and every trim/split/regex/parse/merge on those
   strings is top-level JavaScript. Do NOT write a page.evaluate(...) that
   querySelects the page and massages the result — that is page.extract +
