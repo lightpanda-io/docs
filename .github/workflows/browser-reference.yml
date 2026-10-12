@@ -1,0 +1,61 @@
+name: browser-reference
+
+# Refresh the generated browser reference partials in src/generated/ from the
+# browser's nightly release and open a pull request when they changed. The
+# browser renders them with `zig build docs` from its tool registry and
+# attaches them to each release as lightpanda-docs.tar.gz; the pages under
+# src/content/reference import them. Runs daily after the nightly build, by
+# hand, or as a smoke run when this workflow changes.
+
+on:
+  schedule:
+    - cron: "47 6 * * *"
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/browser-reference.yml
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: browser-reference
+  cancel-in-progress: true
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch the partials
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release download nightly -R lightpanda-io/browser -p lightpanda-docs.tar.gz -O "$RUNNER_TEMP/docs.tar.gz"
+          rm -f src/generated/*.mdx
+          tar -xzf "$RUNNER_TEMP/docs.tar.gz" -C src/generated
+          git status --short src/generated
+
+      - name: Open a pull request if the reference changed
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [ -z "$(git status --porcelain src/generated)" ]; then
+            echo "reference already matches the browser nightly"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B browser-reference
+          git add -A src/generated
+          git commit -m "Update the browser reference to the lightpanda nightly"
+          git push --force origin browser-reference
+          if [ -z "$(gh pr list --head browser-reference --state open --json number -q '.[].number')" ]; then
+            gh pr create --base main --head browser-reference \
+              --title "Update the browser reference to the lightpanda nightly" \
+              --body "Regenerated \`src/generated/\` from the browser's nightly \`lightpanda-docs.tar.gz\` (\`zig build docs\`)."
+          fi
