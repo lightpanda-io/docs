@@ -3,6 +3,8 @@ title: Commands
 description: Overview of the Lightpanda CLI commands to fetch, serve, run MCP or agent mode locally.
 ---
 
+import { Tabs } from 'nextra/components'
+
 # Commands
 
 ## Fetch
@@ -84,3 +86,36 @@ Produce a script to replay with `lightpanda agent --task "..." --save script.js`
 Find all options in the [run command reference](/reference/cli#run).
 
 See [Agent](/usage/agent) and [PandaScript](/usage/pandascript) usage for more details.
+
+## Shell completion
+
+`lightpanda completion <bash | fish | zsh>` prints a completion script for commands, flags and their values. Save it where your shell loads completions from:
+
+<Tabs items={['bash', 'fish', 'zsh']}>
+  <Tabs.Tab>
+Requires the [bash-completion](https://github.com/scop/bash-completion) package.
+
+```sh copy
+mkdir -p ~/.local/share/bash-completion/completions
+lightpanda completion bash > ~/.local/share/bash-completion/completions/lightpanda
+```
+  </Tabs.Tab>
+  <Tabs.Tab>
+```sh copy
+mkdir -p ~/.config/fish/completions
+lightpanda completion fish > ~/.config/fish/completions/lightpanda.fish
+```
+  </Tabs.Tab>
+  <Tabs.Tab>
+```sh copy
+mkdir -p ~/.zfunc
+lightpanda completion zsh > ~/.zfunc/_lightpanda
+```
+
+Then add `fpath=(~/.zfunc $fpath)` before `compinit` in your `~/.zshrc`.
+  </Tabs.Tab>
+</Tabs>
+
+Open a new shell, then press <kbd>Tab</kbd> after `lightpanda` to complete commands, after `--` to complete flags, or after a flag like `--dump` to complete its values.
+
+Regenerate the script after updating Lightpanda to pick up new commands and flags.

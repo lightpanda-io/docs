@@ -16,6 +16,7 @@ The available commands are:
 | Command | Description |
 |---|---|
 | [`agent`](/reference/cli/agent) | Starts an interactive AI agent that can browse the web |
+| [`completion`](#completion) | Prints a shell completion script (bash, fish, zsh) |
 | [`fetch`](/reference/cli/fetch) | Fetches the specified URL |
 | [`help`](#help) | Displays this message |
 | [`mcp`](/reference/cli/mcp) | Starts an MCP (Model Context Protocol) server (stdio or HTTP) |
@@ -26,6 +27,27 @@ The available commands are:
 Use `lightpanda help <command>` for more information about a command.
 
 Every command also accepts a shared set of [common options](/reference/cli/common-options).
+
+## completion
+
+Print a shell completion script for commands, flags and their values to stdout. See [how to install shell completion](/run-locally/commands#shell-completion).
+
+```sh copy
+lightpanda completion fish > ~/.config/fish/completions/lightpanda.fish
+```
+
+```console
+usage: lightpanda completion <bash | fish | zsh>
+
+Prints a shell completion script for lightpanda to stdout.
+
+Examples:
+  lightpanda completion fish | source
+  lightpanda completion fish > ~/.config/fish/completions/lightpanda.fish
+  lightpanda completion bash > ~/.local/share/bash-completion/completions/lightpanda
+  lightpanda completion zsh > ~/.zfunc/_lightpanda
+          then add `fpath=(~/.zfunc $fpath)` before `compinit` in ~/.zshrc
+```
 
 ## help
 
