@@ -1,0 +1,82 @@
+name: javascript-reference
+
+# Regenerate the JavaScript SDK API reference page from the lightpanda-js main
+# branch and open a pull request when the output changed. The page is
+# src/content/reference/javascript.mdx, written by
+# scripts/generate-javascript-reference.mjs from the JSON TypeDoc produces for
+# the package (with the TypeDoc version and settings pinned in lightpanda-js),
+# so it renders like any other docs page and goes live at
+# https://lightpanda.io/docs/reference/javascript once the website bumps its
+# docs submodule like any other docs change. TypeDoc reads the package's
+# sources, so no browser binary is needed here. Runs daily to pick up new
+# package changes, by hand, or as a smoke run when the generator itself
+# changes.
+
+on:
+  schedule:
+    - cron: "37 6 * * *"
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - scripts/generate-javascript-reference.mjs
+      - .github/workflows/javascript-reference.yml
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: javascript-reference
+  cancel-in-progress: true
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve lightpanda-js main
+        id: resolve
+        run: |
+          sha=$(git ls-remote https://github.com/lightpanda-io/lightpanda-js.git refs/heads/main | cut -f1)
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "short=${sha::7}" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/checkout@v4
+        with:
+          repository: lightpanda-io/lightpanda-js
+          ref: ${{ steps.resolve.outputs.sha }}
+          path: _lightpanda-js
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Generate the reference page
+        run: |
+          (cd _lightpanda-js && npm ci --ignore-scripts && npx typedoc --json "$RUNNER_TEMP/api.json")
+          node scripts/generate-javascript-reference.mjs --json "$RUNNER_TEMP/api.json"
+          git status --short src/content/reference/javascript.mdx
+
+      - name: Open a pull request if the reference changed
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ steps.resolve.outputs.short }}
+        run: |
+          if [ -z "$(git status --porcelain src/content/reference/javascript.mdx)" ]; then
+            echo "reference already matches lightpanda-js $SHA"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B javascript-reference-update
+          git add src/content/reference/javascript.mdx
+          git commit -m "Update the JavaScript SDK API reference to lightpanda-js $SHA"
+          git push --force origin javascript-reference-update
+          if [ -z "$(gh pr list --head javascript-reference-update --state open --json number -q '.[].number')" ]; then
+            gh pr create --base main --head javascript-reference-update \
+              --title "Update the JavaScript SDK API reference to lightpanda-js $SHA" \
+              --body "Regenerated \`src/content/reference/javascript.mdx\` from lightpanda-js $SHA. Served at https://lightpanda.io/docs/reference/javascript after the website's submodule bump."
+          fi
