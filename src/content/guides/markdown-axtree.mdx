@@ -283,7 +283,7 @@ console.log(JSON.stringify(result.nodes, null, 2));
 
 ```json
 {
-  "nodeId": 6,
+  "nodeId": "6",
   "backendDOMNodeId": 6,
   "role": { "type": "role", "value": "heading" },
   "ignored": false,
@@ -295,8 +295,8 @@ console.log(JSON.stringify(result.nodes, null, 2));
   "properties": [
     { "name": "level", "value": { "type": "integer", "value": 1 } }
   ],
-  "parentId": 5,
-  "childIds": [9]
+  "parentId": "5",
+  "childIds": ["9"]
 }
 ```
 
@@ -304,15 +304,15 @@ console.log(JSON.stringify(result.nodes, null, 2));
 
 | Field | Type | Description |
 |---|---|---|
-| `nodeId` | integer | Unique node identifier |
+| `nodeId` | string | Unique node identifier |
 | `backendDOMNodeId` | integer | Backend DOM node ID |
 | `role` | object | `{ type: "role", value: "<role>" }` - ARIA role |
 | `ignored` | boolean | Whether the node is ignored for accessibility |
 | `ignoredReasons` | array | Why the node is ignored (if applicable) |
 | `name` | object | `{ type: "computedString", value: "<name>", sources: [...] }` |
 | `properties` | array | ARIA properties (e.g., `level`, `url`, `focusable`) |
-| `parentId` | integer | Parent node ID |
-| `childIds` | array | Child node IDs |
+| `parentId` | string | Parent node ID |
+| `childIds` | array | Child node IDs, as strings |
 
 For `example.com`, the CDP accessibility tree contains **12 nodes**.
 
