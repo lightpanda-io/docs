@@ -243,14 +243,14 @@ await browser.close();
 
 > `LP.dump` works the same way locally or on [Lightpanda Cloud](https://console.lightpanda.io/signup).
 
-`LP.dump` returns `{ format, content }`, with the Markdown in `content`. Optional parameters scope or trim the output, for example to skip headers, footers, and sidebars:
+`LP.dump` takes a required `format` (`markdown`, `html`, `png` or `pdf`) and returns `{ format, content }`, with the Markdown in `content`. Optional parameters scope or trim the output, for example to skip headers, footers, and sidebars:
 
 | Parameter | Type | Description |
 |---|---|---|
 | `selector` | string | CSS selector of the element to convert. The first match is used. A selector that matches nothing returns an `InvalidParams` error. |
 | `backendNodeId` | integer | Backend DOM node ID of the element to convert, for example from [`LP.getSemanticTree`](#lpgetsemantictree). Takes precedence over `selector`. |
 | `strip` | object | Element groups to omit, each set to `true`: `js`, `css`, `ui`, `invisible`, `shell`, `clutter`. `{ clutter: true }` keeps only the main content. The groups match the CLI [`--strip-mode`](/reference/cli/fetch#options) values. |
-| `maxBytes` | integer | Output size cap in bytes. Longer output is cut and ends with a `[truncated]` marker. |
+| `maxBytes` | integer | Output size cap in bytes. Longer output is cut and ends with a `[truncated]` marker. Not accepted with `png` and `pdf`. |
 
 > `LP.getMarkdown`, which returns `{ markdown }`, still works but is deprecated in favor of `LP.dump`.
 
