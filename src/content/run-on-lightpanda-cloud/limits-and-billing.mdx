@@ -31,8 +31,8 @@ Both limits apply regardless of how you open a session: over CDP, MCP, the HTTP 
 
 ## When you reach a limit
 
-If you open more sessions than your concurrency limit allows, the extra sessions are rejected with HTTP `429 Too Many Requests`. Retry once a running session ends, or upgrade for more concurrency.
+If you open more sessions than your concurrency limit allows, or no browser is free in the region right now, the extra sessions are rejected with HTTP `429 Too Many Requests`. Retry once a running session ends (or after a short wait if the region is full), or upgrade for more concurrency.
 
 When you use up your monthly browser hours, the behavior depends on your plan. The free plan stops until its monthly pool resets. Paid plans keep running and bill the overage at your plan's per-hour rate.
 
-Some limits do not depend on your plan. A CDP connection closes after 15 minutes, whatever your pool has left, so split long jobs across sessions. An MCP session closes after 5 minutes without a request, so an active one keeps running.
+Some limits do not depend on your plan. A CDP connection closes after 15 minutes, whatever your pool has left, so split long jobs across sessions. Each CDP message your client sends is limited to 1 MB. An MCP session closes after 5 minutes without a request, so an active one keeps running.
