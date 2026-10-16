@@ -33,18 +33,3 @@ The same tools also return `structuredContent` with `url`, `httpStatus` and `tit
 `goto` returns an error directly on a genuine navigation failure (e.g. `navigation failed: CouldntResolveHost`); a timeout reports `"Navigation started (HTTP <status>) but the page did not finish loading before the timeout."` (see [Known behaviors](/usage/mcp#known-behaviors)).
 
 <McpTools />
-
-## Sessions
-
-`session_new`, `session_list` and `session_close` require the HTTP transport (`lightpanda mcp --port <PORT>`); over stdio only the `default` session exists and these calls return an error. Over [HTTP transport](/usage/mcp#http-transport), every other tool operates on whichever session the `Mcp-Session-Id` header names, falling back to the always-present `default` session.
-
-## Reading a resource
-
-The two page resources need a loaded page; `mcp://skill/pandascript` doesn't.
-
-```json copy
-{"jsonrpc":"2.0","id":2,"method":"resources/read",
- "params":{"uri":"mcp://page/markdown"}}
-```
-
-> The `markdown` tool and the `mcp://page/markdown` resource return the same content. The difference is who initiates: **tools** are called by the agent during its workflow; **resources** are read by the host application (e.g. an IDE displaying page state in the background).

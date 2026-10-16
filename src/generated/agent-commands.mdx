@@ -9,7 +9,7 @@ These commands configure the REPL and never reach the model.
 | `/help [command]` | List commands, or show help for one |
 | `/quit` | Exit the REPL |
 | `/verbosity <low\|medium\|high>` | Set agent verbosity |
-| `/effort <none\|minimal\|low\|medium\|high\|xhigh>` | Set per-turn reasoning effort |
+| `/effort <null\|none\|minimal\|low\|medium\|high\|xhigh>` | Set per-turn reasoning effort |
 | `/stream [on\|off]` | Toggle streaming of assistant text |
 | `/usage` | Show token usage and cache stats for this session |
 | `/clear` | Clear conversation history and usage (keeps page/cookies) |
@@ -42,7 +42,7 @@ Every browser tool runs directly as a slash command, with no model call. A lone 
 | [`/html [selector=…] [backendNodeId=…] [maxBytes=…] [strip=…] [url=…] [timeout=…]`](/reference/browser-tools#html) | Raw HTML of the page or a node |
 | [`/screenshot [path=…] [selector=…] [backendNodeId=…] [fullPage=…] [strip=…] [url=…] [timeout=…]`](/reference/browser-tools#screenshot) | Screenshot of the page or a node |
 | [`/links [limit=…] [url=…] [timeout=…]`](/reference/browser-tools#links) | List all links on the page |
-| [`/tree [url=…] [timeout=…] [backendNodeId=…] [maxDepth=…]`](/reference/browser-tools#tree) | Semantic DOM tree of the page |
+| [`/tree [url=…] [timeout=…] [backendNodeId=…] [maxDepth=…] [maxBytes=…]`](/reference/browser-tools#tree) | Semantic DOM tree of the page |
 | [`/nodeDetails <backendNodeId>`](/reference/browser-tools#nodedetails) | Inspect a node by backendNodeId |
 | [`/interactiveElements [url=…] [timeout=…]`](/reference/browser-tools#interactiveelements) | List interactive elements on the page |
 | [`/structuredData [url=…] [timeout=…]`](/reference/browser-tools#structureddata) | Extract JSON-LD / OpenGraph data |
