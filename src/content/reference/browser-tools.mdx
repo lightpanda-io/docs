@@ -7,7 +7,7 @@ import BrowserTools from '../../generated/browser-tools.mdx'
 
 # Browser tools
 
-Lightpanda exposes one set of browser tools through every interface: the [MCP server](/reference/mcp-tools) serves them over `tools/call`, the [agent](/reference/cli/agent#repl-commands) calls them for the model and as slash commands, and [PandaScript](/reference/pandascript) records them as `page` methods. This page lists each tool with its arguments as the browser declares them.
+Lightpanda exposes one set of browser tools through these interfaces: the [MCP server](/reference/mcp-tools) serves them over `tools/call`, the [agent](/reference/cli/agent#repl-commands) calls them for the model and as slash commands, and [PandaScript](/reference/pandascript) records them as `page` methods. This page lists each tool with its arguments as the browser declares them.
 
 Tools that target an element take a `selector` or a `backendNodeId`. Prefer `selector` for reproducibility; it also wins when you pass both. `backendNodeId` values come from a prior `tree`, `links` or `findElement` call.
 
