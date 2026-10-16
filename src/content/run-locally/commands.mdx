@@ -15,10 +15,9 @@ Fetch one or more URLs and dump the rendered result to stdout. Each URL is loade
 lightpanda fetch --obey-robots --log-level info --dump html https://demo-browser.lightpanda.io/campfire-commerce/
 ```
 ```sh
-$time=1785335542796 $scope=frame $level=info $msg="navigate" url=https://demo-browser.lightpanda.io/campfire-commerce/ method=GET reason=address_bar body=false req_id=1 type=root
-$time=1785335543068 $scope=browser $level=info $msg="executing script" src=https://demo-browser.lightpanda.io/campfire-commerce/script.js kind=javascript cacheable=true
-$time=1785335543139 $scope=http $level=info $msg="request complete" source=xhr url=https://demo-browser.lightpanda.io/campfire-commerce/json/product.json status=200 len=4770
-$time=1785335543140 $scope=http $level=info $msg="request complete" source=fetch url=https://demo-browser.lightpanda.io/campfire-commerce/json/reviews.json status=200 len=1615
+$time=1792158244214 $scope=telemetry $level=info $msg="telemetry status" disabled=false
+$time=1792158244217 $scope=frame $level=info $msg="navigation start" $page=1 url=https://demo-browser.lightpanda.io/campfire-commerce/ method=GET reason=address_bar body=false type=root
+$time=1792158244341 $scope=browser $level=info $msg="executing script" $page=1 src=https://demo-browser.lightpanda.io/campfire-commerce/script.js kind=javascript
 <!DOCTYPE html>
 ...
 ```
@@ -33,7 +32,7 @@ Start Lightpanda as a server for automation clients. By default it speaks [CDP](
 lightpanda serve --obey-robots
 ```
 ```sh
-$time=1785335600862 $scope=app $level=note $msg="server running" address=127.0.0.1:9222
+$time=1792158249294 $scope=note $level=note $msg="server running" address=127.0.0.1:9222 max_connections=16208 max_browser_connections=16
 ```
 
 Find all options in the [serve command reference](/reference/cli/serve#options).
