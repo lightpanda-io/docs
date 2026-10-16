@@ -207,7 +207,6 @@ def extract(self, *, schema: str | dict | list, save: str | None = None) -> Any
 ```
 
 Extract structured data from the current page (navigate first). `schema` is a JSON object (passed as a string) mapping output field names to CSS-selector specs. It is NOT a JSON Schema — no "type"/"properties" wrappers; the keys ARE your output fields. Value shapes:
-
 ```text
 "<sel>"                                → first match's text (trimmed; null if no match)
 ["<sel>"]                              → every match's text (string[])
@@ -215,13 +214,11 @@ Extract structured data from the current page (navigate first). `schema` is a JS
 [{"selector":"<sel>","attr":"<name>"}] → every match's attribute (string[])
 [{"selector":"<sel>","fields":{…}}]    → one object per match; field selectors resolve relative to that match and accept any shape above ("" = the match's own text; nest arrays for per-item sub-lists)
 ```
-
 Add "limit": N inside any array's object spec to cap matches.
 Every extracted value is a string or null — parse numbers downstream. An empty array is a valid result, but if ALL top-level keys miss, the call errors: inspect the page (tree/markdown) and retry with corrected selectors.
 Finish data tasks with extract — it is the only read recorded as a replayable `extract(...)` script call; answers lifted from [`markdown`](#session-markdown) text in chat are not.
 
 Examples (schema → result):
-
 ```text
 {"karma": "#karma"} → {"karma":"42"}
 {"items": [".story .title"]} → {"items":["Title 1","Title 2"]}
@@ -229,7 +226,6 @@ Examples (schema → result):
 {"links": [{"selector":"a.title","attr":"href"}]} → {"links":["https://site/a","https://site/b"]}
 {"stories": [{"selector":".athing","fields":{"title":".titleline","rank":".rank"}}]} → {"stories":[{"title":"Foo","rank":"1"}]}
 ```
-
 
 
 **Arguments:**
@@ -268,7 +264,12 @@ Fill text into an input element. Provide either a CSS selector (preferred for re
 ### Session.find_element [#session-find-element]
 
 ```python
-def find_element(self, *, role: str | None = None, name: str | None = None) -> Any
+def find_element(
+    self,
+    *,
+    role: str | None = None,
+    name: str | None = None
+) -> list[Element]
 ```
 
 Find interactive elements by role and/or accessible name. Returns matching elements with their backend node IDs. Useful for locating specific elements without parsing the full semantic tree.
@@ -396,7 +397,12 @@ Raw HTML for the document or, with `selector`/`backendNodeId`, a single node's o
 ### Session.interactive_elements [#session-interactive-elements]
 
 ```python
-def interactive_elements(self, *, url: str | None = None, timeout: int | None = None) -> Any
+def interactive_elements(
+    self,
+    *,
+    url: str | None = None,
+    timeout: int | None = None
+) -> list[Element]
 ```
 
 List every visible interactive element on the page as a JSON array: native controls, ARIA widgets, contenteditable regions, elements with event listeners, and focusable elements. Each entry has `backendNodeId`, `tagName`, `role`, `name`, `type` (why it counts as interactive), `tabIndex`, and when present `listeners`, `disabled`, [`id`](#session-id), `class`, `href`, `inputType`, `value`, `elementName` and `placeholder`. Use it to survey what can be acted on; to locate one element by role or name, `findElement` is cheaper. If a url is provided, it navigates there first.
@@ -645,7 +651,8 @@ def tree(
     url: str | None = None,
     timeout: int | None = None,
     backend_node_id: int | None = None,
-    max_depth: int | None = None
+    max_depth: int | None = None,
+    max_bytes: int | None = None
 ) -> Any
 ```
 
@@ -657,6 +664,7 @@ Semantic outline of the page as indented text: one node per line with its role, 
  - **timeout:**  Optional timeout in milliseconds. Defaults to 10000.
  - **backend_node_id:**  Optional backend node ID to get the tree for a specific element instead of the document root. 0 is treated as omitted.
  - **max_depth:**  Optional maximum depth of the tree to return. Useful for exploring high-level structure first.
+ - **max_bytes:**  Optional cap on output size in bytes. Past it, lines are kept by priority (alerts, dialogs, invalid fields and the focused element, then controls and named nodes, then text; list entries breadth-first), and dropped lines are counted in a '[+N more @id]' marker. id is the backendNodeId of the node holding them, often a list item or list that isn't printed itself: call tree with backendNodeId=id to read them.
 
 ### Session.wait_for_script [#session-wait-for-script]
 
@@ -696,6 +704,358 @@ Wait for the CURRENT page to reach a load state (no navigation). After a [`goto`
 **Arguments:**
  - **state:**  Load state to wait for. 'networkidle' = network settled (the usual choice to finish a dynamic page).
  - **timeout:**  Optional timeout in milliseconds. Defaults to 5000.
+
+## Element [#element]
+
+A node [`Session.find_element()`](#session-find-element) or [`Session.interactive_elements()`](#session-interactive-elements)
+found, which acts on itself.
+
+Still the dict the browser sent, so ``element["name"]`` reads its fields,
+with every action that takes a [``backend_node_id``](#element-backend-node-id) as a method aimed at
+this node:
+
+```python
+found = page.find_element(role="button", name="Accept")
+if found:
+    found[0].click()
+```
+
+The element belongs to its page: once the page navigates away, its node
+is gone and the methods fail.
+
+```python
+class Element
+```
+
+### Element.backend_node_id [#element-backend-node-id]
+
+```python
+backend_node_id: int
+```
+
+*Property.* The node's id, as [`Session.click()`](#session-click) and the others take it.
+
+### Element.call [#element-call]
+
+```python
+def call(self, tool: str, **kwargs)
+```
+
+Invoke a browser tool on this node; see [`Session.call()`](#session-call).
+
+### Element.click [#element-click]
+
+```python
+def click(self) -> PageResult
+```
+
+Click on an interactive element. Provide either a CSS selector (preferred for reproducibility) or a backendNodeId. Returns the current page URL and title after the click.
+
+
+**Returns:**
+> PageResult: The sentence above, with these attributes (None when absent):
+> 
+> - `url`: URL of the page the call left loaded.
+> - `http_status`: Response status of that page's own document. Absent when no response has arrived. 4xx/5xx means an error page, not the content.
+> - `title`: Document title. Empty or absent when the page has none.
+
+### Element.fill [#element-fill]
+
+```python
+def fill(self, *, value: str) -> PageResult
+```
+
+Fill text into an input element. Provide either a CSS selector (preferred for reproducibility) or a backendNodeId.
+
+
+**Arguments:**
+ - **value:**  The text to fill into the input element.
+
+
+
+**Returns:**
+> PageResult: The sentence above, with these attributes (None when absent):
+> 
+> - `url`: URL of the page the call left loaded.
+> - `http_status`: Response status of that page's own document. Absent when no response has arrived. 4xx/5xx means an error page, not the content.
+> - `title`: Document title. Empty or absent when the page has none.
+
+### Element.hover [#element-hover]
+
+```python
+def hover(self) -> PageResult
+```
+
+Hover over an element, triggering mouseover and mouseenter events. Provide either a CSS selector (preferred for reproducibility) or a backendNodeId. Useful for menus, tooltips, and hover states.
+
+
+**Returns:**
+> PageResult: The sentence above, with these attributes (None when absent):
+> 
+> - `url`: URL of the page the call left loaded.
+> - `http_status`: Response status of that page's own document. Absent when no response has arrived. 4xx/5xx means an error page, not the content.
+> - `title`: Document title. Empty or absent when the page has none.
+
+### Element.html [#element-html]
+
+```python
+def html(self, *, max_bytes: int | None = None, strip: dict | None = None) -> Any
+```
+
+Raw HTML for the document or, with `selector`/`backendNodeId`, a single node's outerHTML. Verbose; use only when you need attributes that markdown discards.
+
+
+**Arguments:**
+ - **max_bytes:**  Optional soft cap on output size in bytes. Content is truncated at a UTF-8 boundary and a short '[truncated]' marker is appended past the cap.
+ - **strip:**  Optional. Omit element groups from the output: `js` (script, noscript, script preloads), `css` (style, stylesheet links), `ui` (css plus img, picture, video, audio, svg, canvas, iframe), `invisible` (elements an author rule or inline style sets to display:none), `shell` (nav, aside, dialog, page-level header/footer and the matching landmark roles; skipped when that would drop most of the text), `clutter` (keep only the main content, in the manner of reader modes; includes `shell` and `invisible`, and falls back to `shell` when it finds too little). \{"js":true,"css":true\} keeps a page dump small.
+
+### Element.markdown [#element-markdown]
+
+```python
+def markdown(self, *, max_bytes: int | None = None, strip: dict | None = None) -> Any
+```
+
+Render the page (or a subtree) as markdown. Scope with `selector` or `backendNodeId` to read just the relevant region — full-page markdown is the last resort. Use `maxBytes` to cap long pages.
+
+
+**Arguments:**
+ - **max_bytes:**  Optional soft cap on output size in bytes. Content is truncated at a UTF-8 boundary and a short '[truncated]' marker is appended past the cap.
+ - **strip:**  Optional. Omit element groups from the output; same groups as the html tool's strip. `shell` (page chrome by markup) and `clutter` (keep only the main content, in the manner of reader modes) are the ones that matter for reading; `ui` also drops images.
+
+### Element.node_details [#element-node-details]
+
+```python
+def node_details(self) -> Any
+```
+
+Details for a node by backendNodeId: a ready-to-use CSS `selector` that resolves to the node (the first match, as click/fill resolve it), plus tag, role, name, interactivity, disabled, value, input type, placeholder, href, id, class, checked, select options. The canonical way to turn a tree backendNodeId into a CSS selector.
+
+### Element.press [#element-press]
+
+```python
+def press(self, *, key: str) -> PageResult
+```
+
+Press a keyboard key, dispatching keydown and keyup events. Use key names like 'Enter', 'Tab', 'Escape', 'ArrowDown', 'Backspace', or single characters like 'a', '1'. Common shorthand is normalized: 'enter'/'return' → 'Enter', 'esc' → 'Escape', 'up'/'down'/'left'/'right' → 'Arrow*', 'space' → ' '. Pressing 'Enter' on a form input or submit button triggers implicit form submission.
+
+
+**Arguments:**
+ - **key:**  The key to press (e.g. 'Enter', 'Tab', 'a').
+
+
+
+**Returns:**
+> PageResult: The sentence above, with these attributes (None when absent):
+> 
+> - `url`: URL of the page the call left loaded.
+> - `http_status`: Response status of that page's own document. Absent when no response has arrived. 4xx/5xx means an error page, not the content.
+> - `title`: Document title. Empty or absent when the page has none.
+
+### Element.screenshot [#element-screenshot]
+
+```python
+def screenshot(
+    self,
+    *,
+    path: str | None = None,
+    full_page: bool | None = None,
+    strip: dict | None = None
+) -> Any
+```
+
+Render the page, or one node, as a PNG: the text layout Lightpanda computes, not a pixel-accurate browser rendering (no images, fonts or CSS colours). With `path`, writes the file at full size and returns its location; without it, returns the image inline where the client can display one, at most 1280px wide and 4096px tall. Use it to see spatial layout; read content with [`markdown`](#element-markdown)/[`tree`](#element-tree).
+
+
+**Arguments:**
+ - **path:**  Optional relative path (no '..' segments) to write the PNG to. Created or overwritten. Without it the image is returned inline, which needs a client that can display images.
+ - **full_page:**  Render the whole content height instead of one viewport. Defaults to false.
+ - **strip:**  Optional. Omit element groups from the render; same groups as the html tool's strip (`js`, `css`, `ui`, `invisible`, `shell`, `clutter`).
+
+### Element.scroll [#element-scroll]
+
+```python
+def scroll(
+    self,
+    *,
+    x: int | None = None,
+    y: int | None = None
+) -> PageResult
+```
+
+Scroll the window, or an element's scroll container, to an absolute position; an omitted axis keeps its current offset. Target an element with a CSS selector (preferred for reproducibility) or a backendNodeId; omit both to scroll the window. Page scripts receive a [`scroll`](#element-scroll) event, so content that loads on scroll (infinite feeds, lazy lists) may appear: read the page again afterwards, with `waitForState` if it is still loading. Returns the final scroll position and the current page URL and title.
+
+
+**Arguments:**
+ - **x:**  Optional: The horizontal scroll offset.
+ - **y:**  Optional: The vertical scroll offset.
+
+
+
+**Returns:**
+> PageResult: The sentence above, with these attributes (None when absent):
+> 
+> - `url`: URL of the page the call left loaded.
+> - `http_status`: Response status of that page's own document. Absent when no response has arrived. 4xx/5xx means an error page, not the content.
+> - `title`: Document title. Empty or absent when the page has none.
+
+### Element.select_option [#element-select-option]
+
+```python
+def select_option(self, *, value: str) -> PageResult
+```
+
+Select an option in a &lt;select> dropdown element by its value. Provide either a CSS selector (preferred for reproducibility) or a backendNodeId. Dispatches input and change events.
+
+
+**Arguments:**
+ - **value:**  The value of the option to select.
+
+
+
+**Returns:**
+> PageResult: The sentence above, with these attributes (None when absent):
+> 
+> - `url`: URL of the page the call left loaded.
+> - `http_status`: Response status of that page's own document. Absent when no response has arrived. 4xx/5xx means an error page, not the content.
+> - `title`: Document title. Empty or absent when the page has none.
+
+### Element.set_checked [#element-set-checked]
+
+```python
+def set_checked(self, *, checked: bool) -> PageResult
+```
+
+Check or uncheck a checkbox or radio button. Provide either a CSS selector (preferred for reproducibility) or a backendNodeId. Dispatches input, change, and click events.
+
+
+**Arguments:**
+ - **checked:**  Whether to check (true) or uncheck (false) the element.
+
+
+
+**Returns:**
+> PageResult: The sentence above, with these attributes (None when absent):
+> 
+> - `url`: URL of the page the call left loaded.
+> - `http_status`: Response status of that page's own document. Absent when no response has arrived. 4xx/5xx means an error page, not the content.
+> - `title`: Document title. Empty or absent when the page has none.
+
+### Element.tree [#element-tree]
+
+```python
+def tree(
+    self,
+    *,
+    max_depth: int | None = None,
+    max_bytes: int | None = None
+) -> Any
+```
+
+Semantic outline of the page as indented text: one node per line with its role, accessible name, value and backendNodeId, plus checked state and select options with the selected one marked. The default first read of an unfamiliar page; input and select values are already here, so no `nodeDetails` call is needed to read them. Pass `backendNodeId` to scope to a subtree and `maxDepth` to survey structure before going deeper. Read it again after any page-changing action, since the DOM it describes may have changed; use `nodeDetails` to turn a backendNodeId into a CSS selector for actions.
+
+
+**Arguments:**
+ - **max_depth:**  Optional maximum depth of the tree to return. Useful for exploring high-level structure first.
+ - **max_bytes:**  Optional cap on output size in bytes. Past it, lines are kept by priority (alerts, dialogs, invalid fields and the focused element, then controls and named nodes, then text; list entries breadth-first), and dropped lines are counted in a '[+N more @id]' marker. id is the backendNodeId of the node holding them, often a list item or list that isn't printed itself: call tree with backendNodeId=id to read them.
+
+### Element.get [#element-get]
+
+```python
+def get(self, key, default=None, /)
+```
+
+Return the value for key if key is in the dictionary, else default.
+
+### Element.setdefault [#element-setdefault]
+
+```python
+def setdefault(self, key, default=None, /)
+```
+
+Insert key with a value of default if key is not in the dictionary.
+
+Return the value for key if key is in the dictionary, else default.
+
+### Element.pop [#element-pop]
+
+```python
+def pop(unknown)
+```
+
+D.pop(k[,d]) -> v, remove specified key and return the corresponding value.
+
+If the key is not found, return the default if given; otherwise,
+raise a KeyError.
+
+### Element.popitem [#element-popitem]
+
+```python
+def popitem(self, /)
+```
+
+Remove and return a (key, value) pair as a 2-tuple.
+
+Pairs are returned in LIFO (last-in, first-out) order.
+Raises KeyError if the dict is empty.
+
+### Element.keys [#element-keys]
+
+```python
+def keys(self, /)
+```
+
+Return a set-like object providing a view on the dict's keys.
+
+### Element.items [#element-items]
+
+```python
+def items(self, /)
+```
+
+Return a set-like object providing a view on the dict's items.
+
+### Element.values [#element-values]
+
+```python
+def values(self, /)
+```
+
+Return an object providing a view on the dict's values.
+
+### Element.update [#element-update]
+
+```python
+def update(unknown)
+```
+
+D.update([E, ]**F) -> None.  Update D from mapping/iterable E and F.
+If E is present and has a .keys() method, then does:  for k in E.keys(): D[k] = E[k]
+If E is present and lacks a .keys() method, then does:  for k, v in E: D[k] = v
+In either case, this is followed by: for k in F:  D[k] = F[k]
+
+### Element.fromkeys [#element-fromkeys]
+
+```python
+def fromkeys(type, iterable, value=None, /)
+```
+
+Create a new dictionary with keys from iterable and values set to value.
+
+### Element.clear [#element-clear]
+
+```python
+def clear(self, /)
+```
+
+Remove all items from the dict.
+
+### Element.copy [#element-copy]
+
+```python
+def copy(self, /)
+```
+
+Return a shallow copy of the dict.
 
 ## PageResult [#pageresult]
 
@@ -1446,6 +1806,25 @@ class AsyncSession(
 ```
 
 Usable as a context manager (`async with`).
+
+## AsyncElement [#asyncelement]
+
+A node [`AsyncSession.find_element()`](#session-find-element) or
+[`AsyncSession.interactive_elements()`](#session-interactive-elements) found, which acts on itself.
+
+Same as [`Element`](#element), with every method a coroutine to await:
+
+```python
+found = await page.find_element(role="button", name="Accept")
+if found:
+    await found[0].click()
+```
+
+Every public method and property of [`Element`](#element) exists on `AsyncElement` with the same name and signature; methods are coroutines to `await`. `AsyncElement` adds no members of its own.
+
+```python
+class AsyncElement
+```
 
 ## run_script_async [#run-script-async]
 
