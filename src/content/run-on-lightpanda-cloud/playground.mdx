@@ -64,10 +64,10 @@ You do not need to hard-code a token in your script. `CDP_WS_URL` holds the WebS
 
 | Default variable | Values | What it controls |
 | --- | --- | --- |
-| Region | `euwest`, `uswest` | Which region serves the browser |
 | Token | one of your active tokens | Which token the run authenticates with |
-| Browser | `lightpanda`, `chrome` | Which browser runs. Chrome is for debugging, not production traffic |
 | Proxy | one of your proxies, or none | The outbound IP the browser uses |
+
+Playground runs always use Lightpanda in the `euwest` region.
 
 Pass `process.env.CDP_WS_URL` to whichever client you use.
 
