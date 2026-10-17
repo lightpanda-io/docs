@@ -72,7 +72,7 @@ These tools inspect browser state outside the DOM.
 
 ## MCP-only tools
 
-These tools exist only in the MCP server, not in the agent or in scripts. Over the [HTTP transport](/usage/mcp#http-transport), every tool call runs in the session the `Mcp-Session-Id` header names, falling back to the always-present `default` session; the `session_*` tools create, list and close those sessions.
+These tools exist only in the MCP server, not in the agent or in scripts.
 
 ### save
 
@@ -139,7 +139,7 @@ Hints: destructive, idempotent
 
 ### session_new
 
-**Create an isolated browser session.** Create a new isolated browser session (its own page, cookies and memory) and return its id. Use it to give a separate agent its own browsing context, or to obtain an id to share. Pass that id back as the `Mcp-Session-Id` header to route calls to it. Needs the HTTP transport (`lightpanda mcp --port <PORT>`); over stdio only the `default` session exists and this call returns an error.
+**Create an isolated browser session.** Create a new isolated browser session (its own page, cookies and memory) and return its id. Use it to give a separate agent its own browsing context, or to obtain an id to share. Pass that id back as the `Mcp-Session-Id` header to route calls to it.
 
 | Argument | Type | Required | Description |
 |---|---|---|---|
@@ -149,7 +149,7 @@ Hints: idempotent
 
 ### session_list
 
-**List browser sessions.** List the active browser sessions with their id and current URL. The `default` session always exists. Needs the HTTP transport (`lightpanda mcp --port <PORT>`); over stdio only the `default` session exists and this call returns an error.
+**List browser sessions.** List the active browser sessions with their id and current URL. The `default` session always exists.
 
 No arguments.
 
@@ -157,7 +157,7 @@ Hints: read-only, idempotent
 
 ### session_close
 
-**Close a browser session.** Close a browser session, freeing its page and memory. The `default` session cannot be closed. Needs the HTTP transport (`lightpanda mcp --port <PORT>`); over stdio only the `default` session exists and this call returns an error.
+**Close a browser session.** Close a browser session, freeing its page and memory. The `default` session cannot be closed.
 
 | Argument | Type | Required | Description |
 |---|---|---|---|
@@ -167,17 +167,10 @@ Hints: destructive
 
 ## Resources
 
-The host application reads these with `resources/read`. The page resources need a loaded page; the skill resources don't.
+Read with `resources/read`.
 
 | URI | MIME type | Description |
 |---|---|---|
 | `mcp://page/html` | `text/html` | The serialized HTML DOM of the current page |
 | `mcp://page/markdown` | `text/markdown` | The token-efficient markdown representation of the current page |
 | `mcp://skill/pandascript` | `text/markdown` | Write PandaScript agent scripts (.js) — Lightpanda's replayable browser-automation format, run token-free with `lightpanda run script.js`. |
-
-```json copy
-{"jsonrpc":"2.0","id":2,"method":"resources/read",
- "params":{"uri":"mcp://page/markdown"}}
-```
-
-The `markdown` tool and the `mcp://page/markdown` resource return the same content; the difference is who initiates. The agent calls **tools** during its workflow, while the host application reads **resources**, e.g. an IDE displaying page state in the background.
