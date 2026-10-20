@@ -23,8 +23,8 @@
     "@tabler/icons-react": "^3.34.0",
     "next": "^15.2.2",
     "next-plausible": "^3.12.4",
-    "nextra": "^4.2.16",
-    "nextra-theme-docs": "^4.2.16",
+    "nextra": "^4.3.0",
+    "nextra-theme-docs": "^4.3.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
