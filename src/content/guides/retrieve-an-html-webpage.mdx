@@ -12,15 +12,18 @@ Unlike [curl](https://curl.se/), which only fetches raw HTML, Lightpanda execute
 
 ## Prerequisites
 
-You'll need [Node.js](https://nodejs.org/en/download) installed on your computer. 
+You'll need [Node.js](https://nodejs.org/en/download) 22 or newer installed on your computer. 
 
 Create a `hn-scraper` directory and initialize a new Node.js project. You can accept all the default values in the npm init prompts. 
 
 ```sh copy
 mkdir hn-scraper && \
   cd hn-scraper && \
-  npm init
+  npm init && \
+  npm pkg set type=module
 ```
+
+`npm pkg set type=module` tells Node.js to load `index.js` as an ES module, the format its `import` statements need.
 
 Install the `lightpanda` and the [`puppeteer-core`](https://www.npmjs.com/package/puppeteer-core) *or* [`playwright-core`](https://www.npmjs.com/package/playwright-core) npm packages.
 
@@ -32,16 +35,18 @@ Install the `lightpanda` and the [`puppeteer-core`](https://www.npmjs.com/packag
   <Tabs.Tab id="puppeteer" className="m-0">
 ```sh copy
 npm install --save puppeteer-core @lightpanda/browser
+npx @lightpanda/browser install
 ```
   </Tabs.Tab>
   <Tabs.Tab id="playwright" className="m-0">
 ```sh copy
 npm install --save playwright-core @lightpanda/browser
+npx @lightpanda/browser install
 ```
   </Tabs.Tab>
 </Tabs>
 
-This guide uses a local Lightpanda instance — see [installation](/run-locally/installation/one-liner) for setup details. The code can be adapted to connect to [Lightpanda Cloud](/run-on-lightpanda-cloud/getting-started).
+This guide uses a local Lightpanda instance: `npx @lightpanda/browser install` downloads the browser to `~/.cache/lightpanda-node`, and `lightpanda.serve()` starts it from there. The code can be adapted to connect to [Lightpanda Cloud](/run-on-lightpanda-cloud/getting-started).
 
 ## Create index.js
 
@@ -272,13 +277,12 @@ node index.js
 
 ```sh
 $ node index.js
-🐼 Running Lightpanda's CDP server... { pid: 34389 }
 all reference links [
+  'https://deviceatlas.com/blog/which-devices-have-browsers',
+  'https://web.archive.org/web/20251016102827/https://deviceatlas.com/blog/which-devices-have-browsers',
   'https://gs.statcounter.com/browser-market-share',
+  'https://web.archive.org/web/20171011022101/https://gs.statcounter.com/browser-market-share/desktop/worldwide',
   'https://radar.cloudflare.com/reports/browser-market-share-2024-q1',
-  'https://web.archive.org/web/20240523140912/https://www.internetworldstats.com/stats.htm',
-  'https://www.internetworldstats.com/stats.htm',
-  'https://www.reference.com/humanities-culture/purpose-browser-e61874e41999ede',
   ...
 ]
 ```
