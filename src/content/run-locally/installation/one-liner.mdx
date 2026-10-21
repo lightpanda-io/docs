@@ -10,11 +10,11 @@ For Linux or MacOSx users, you can install Lightpanda with following command.
 For Windows, take a look at the [dedicated section](#windows--wsl2).
 
 ```bash copy
-curl -fsSL https://pkg.lightpanda.io/install.sh | bash
+curl -fsSL https://pkg.lightpanda.io/install.sh | bash -s "1.0.1"
 ```
 
 <Callout type="info" emoji="ℹ️">
-`curl`, `jq` and `sha256sum` are required to install Lightpanda with the
+`curl`, `jq` and `sha256sum` (or `shasum`) are required to install Lightpanda with the
 one-liner installer.
 </Callout>
 
@@ -26,8 +26,8 @@ export PATH="$HOME/.local/bin:$PATH"
 
 Add that line to your shell profile (`~/.bashrc`, `~/.zshrc`, ...) to make it permanent.
 
-By default the installer installs the last nightly build.
-But you can pick a specific release:
+Without a version, the installer installs the latest nightly build.
+But you can pick another release:
 
 ```bash copy
 curl -fsSL https://pkg.lightpanda.io/install.sh | bash -s "1.0.0"
@@ -45,7 +45,7 @@ Install & open WSL + Ubuntu from an **administrator** shell:
 Once WSL and a Linux distribution have been installed the browser can be installed in the same way it is installed for Linux.
 Inside WSL install the Lightpanda browser:
 ```bash copy
-curl -L -o lightpanda https://github.com/lightpanda-io/browser/releases/download/nightly/lightpanda-x86_64-linux && \
+curl -L -o lightpanda https://github.com/lightpanda-io/browser/releases/latest/download/lightpanda-x86_64-linux && \
 chmod a+x ./lightpanda
 ```
 
