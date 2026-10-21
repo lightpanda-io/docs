@@ -1,6 +1,6 @@
 ---
 title: Build from sources
-description: Lightpanda is written with Zig@0.14.0. You will have to install it with the right version in order to build the project.
+description: Lightpanda is written with Zig@0.17.0. You will have to install it with the right version in order to build the project.
 ---
 
 import { Callout } from 'nextra/components'
@@ -9,16 +9,16 @@ import { Callout } from 'nextra/components'
 
 ## Prerequisites
 
-Lightpanda is written with [Zig](https://ziglang.org/) `0.14.0`. You will have to
+Lightpanda is written with [Zig](https://ziglang.org/) `0.17.0`. You will have to
 install it with the right version in order to build the project.
 
 You need also to install [Rust](https://rust-lang.org/tools/install/) for building deps.
 
 Lightpanda also depends on
-[zig-js-runtime](https://github.com/lightpanda-io/zig-js-runtime/) (with v8),
+[v8](https://chromium.googlesource.com/v8/v8.git),
 [Libcurl](https://curl.se/libcurl/) and [html5ever](https://github.com/servo/html5ever).
 
-To be able to build the v8 engine for zig-js-runtime, you have to install some libs:
+To be able to build the v8 engine, you have to install some libs:
 
 **For Debian/Ubuntu based Linux:**
 
@@ -26,6 +26,12 @@ To be able to build the v8 engine for zig-js-runtime, you have to install some l
 sudo apt install xz-utils ca-certificates \
         pkg-config libglib2.0-dev \
         clang make curl git
+```
+
+**For Linux with [Nix](https://nixos.org/download/), you can use the devShell:**
+
+```bash copy
+nix develop
 ```
 
 **For MacOS, you need [Xcode](https://developer.apple.com/xcode/) and the following pacakges from homebrew:**
@@ -46,11 +52,9 @@ zig build run
 ```
 
 <Callout type="info" emoji="ℹ️">
-    The build will download and build V8. It can takes a lot of time, more than
-    1 hour.
-    You can save this part by donwloading manually a
-    [pre-built](https://github.com/lightpanda-io/zig-v8-fork/releases version)
-    and use the `-Dprebuilt_v8_path=` option.
+    Building V8 from source takes 10+ minutes. Run `make download-v8` first to
+    fetch the matching [prebuilt](https://github.com/lightpanda-io/zig-v8-fork/releases)
+    V8 instead; the build picks it up automatically (or pass `-Dprebuilt_v8_path=`).
 </Callout>
 
 ### Embed v8 snapshot
