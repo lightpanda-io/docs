@@ -64,7 +64,8 @@ common options:
              serviceworker  Enable the Service Worker API.
   --load-resources <RESOURCE>
           Sub-resource to actually request. Can be passed multiple times.
-          Defaults to requesting none of them.
+          Defaults to stylesheet for mcp and agent, and to none of them
+          otherwise. Passing it replaces the default.
           Allowed values:
              iframe      When enabled, <iframe> elements are fully loaded.
 
@@ -82,6 +83,8 @@ common options:
                          disabled, the Worker constructor still returns a
                          Worker, but no script fetch is initiated and the
                          Worker never runs.
+
+             none        Request none of them, overriding the default.
   --http-cache-dir <PATH>
           Directory used as a filesystem cache for network resources. Omitting
           this disables caching.
@@ -95,6 +98,14 @@ common options:
           Time in ms to establish an HTTP connection before timing out. 0 means
           never.
           Defaults to 8000.
+  --http-curves <CURVES>
+          Colon-separated key exchange groups offered in the TLS handshake,
+          in preference order, e.g. "X25519:P-256:P-384". Passed to
+          libcurl's CURLOPT_SSL_EC_CURVES.
+  --http-debug
+          Enables libcurl verbose output. Output written directly to stderr
+          by licurl and does not follow the configured log format.
+          Defaults to off (not set).
   --http-header <HEADER>
           Extra custom header added to every outgoing HTTP request, including redirections,
           in "Name: Value" form. Can be passed multiple times. The last one is used.
@@ -163,6 +174,11 @@ common options:
   --proxy-bearer-token <TOKEN>
           Token sent for bearer authentication with the proxy:
           Proxy-Authorization: Bearer <token>.
+  --render-font <PATH>
+          Font file (TrueType, OpenType or collection) used by the png and pdf
+          dumps, and by screenshots, for characters the bundled DejaVu fonts
+          lack, e.g. CJK. Can be passed multiple times; earlier files win.
+          e.g. --render-font NotoSansCJK-Regular.ttc
   --robot-store-entry-limit <INT>
           Maximum number of entries kept in the RobotStore. 0 means no limit.
           Defaults to 1000.

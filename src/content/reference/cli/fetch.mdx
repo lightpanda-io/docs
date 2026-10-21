@@ -20,7 +20,7 @@ options:
               html               Serialized HTML of the DOM.
               markdown           Converts content to Markdown.
               pdf                Text-only rendering of the page as a
-                                 PDF document (base64 with --json).
+                                 PDF file (base64 with --json).
               png                Text-only rendering of the page as a
                                  PNG image (base64 with --json).
               semantic_tree      JSON-serialized semantic tree.
@@ -65,7 +65,8 @@ options:
                         (which may itself fall back to a full dump).
               css       Includes style and link[rel=stylesheet].
               js        Script and link[as=script, rel=preload].
-              invisible Best-effort (e.g. display:none) hidden elements
+              invisible Best-effort hidden elements (e.g. display:none,
+                        <template>).
               shell     Page chrome by markup: nav, aside, dialog,
                         page-level header and footer. Full dump when
                         `shell` would remove most of the text.
