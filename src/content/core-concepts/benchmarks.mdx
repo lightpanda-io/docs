@@ -13,11 +13,11 @@ Lightpanda publishes three benchmarks against headless Chrome:
 - **[Single-page automation](#single-page-automation)**: repeated load-and-extract cycles over CDP.
 - **[AI agent task completion](#ai-agent-task-completion)**: task accuracy on AssistantBench and GAIA.
 
-Across all three, Lightpanda uses less memory and CPU than Chrome and finishes faster. Each section below states the source of its numbers. For exact commands and raw output, see [Reproduce these results](#reproduce-these-results).
+Across all three, Lightpanda outperforms Chrome. Each section below states the source of its numbers. For exact commands and raw output, see [Reproduce these results](#reproduce-these-results).
 
 ## How results are measured
 
-The crawling and single-page benchmarks track peak memory (via `smem`, using PSS so shared pages aren't double-counted), CPU utilization (via `ps aux`), and wall-clock duration, sampled every 100ms during the run. Both run on an AWS m5.xlarge instance with a fresh Ubuntu install, comparing Lightpanda against Google Chrome 143.0.7499.169.
+The crawling and single-page benchmarks track peak memory (via `smem`, using PSS so shared pages aren't double-counted), CPU utilization (via `ps aux`), and wall-clock duration, sampled every 100ms during the run. Both run on an AWS m5.xlarge instance with a fresh Ubuntu install, comparing Lightpanda against Chrome.
 
 The AI agent benchmark grades differently: each task's final answer is checked against a known correct answer, not a screenshot, since Lightpanda has no rendered page to screenshot in the first place.
 
