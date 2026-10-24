@@ -58,6 +58,7 @@ Render the page (or a subtree) as markdown. Scope with `selector` or `backendNod
 | `maxBytes` | integer | no | Optional soft cap on output size in bytes. Content is truncated at a UTF-8 boundary and a short '[truncated]' marker is appended past the cap. |
 | `strip` | object | no | Optional. Omit element groups from the output; same groups as the html tool's strip. `shell` (page chrome by markup) and `clutter` (keep only the main content, in the manner of reader modes) are the ones that matter for reading; `ui` also drops images. Keys: `js`, `css`, `ui`, `invisible`, `shell`, `clutter`. |
 | `url` | string | no | Optional URL to navigate to before rendering. An empty string is treated as omitted. |
+| `alternate` | boolean | no | Optional. When the page links a markdown version of itself (&lt;link rel="alternate" type="text/markdown">), return that file instead of converting the page. It is the author's file and can differ from the rendered page; the output then starts with a comment naming its URL, which maxBytes does not count. Falls back to the page when there is no such link, the page itself failed to load (HTTP error status or bot challenge), or the alternate does not load as markdown within what is left of the timeout. Cannot be combined with selector or backendNodeId. Defaults to false. |
 | `timeout` | integer | no | Optional timeout in milliseconds. Defaults to 10000. |
 
 Navigates first when given `url`.
