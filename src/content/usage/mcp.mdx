@@ -74,19 +74,21 @@ Use `--log-level debug` for the most verbose output. Keep `warn` in production.
   </Tabs.Tab>
   <Tabs.Tab>
 <Callout type="info" emoji="ℹ️">
-This is still a work in progress version. The cloud version does not support all tools.
+Each MCP session gets its own browser. The `session_new`, `session_list` and `session_close` tools are not available on the cloud and return an error. The `save` tool writes the script on the cloud machine, so you can't retrieve it.
 </Callout>
 
-Lightpanda Cloud exposes the MCP server over [SSE](https://modelcontextprotocol.io/specification/2024-11-05/basic/transports#http-with-sse). Connect to the endpoint nearest to you:
+Lightpanda Cloud exposes the MCP server over [Streamable HTTP](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http). Connect to the endpoint nearest to you:
 
-- `https://euwest.cloud.lightpanda.io/mcp/sse` (Europe West)
-- `https://uswest.cloud.lightpanda.io/mcp/sse` (US West)
+- `https://euwest.cloud.lightpanda.io/mcp` (Europe West)
+- `https://uswest.cloud.lightpanda.io/mcp` (US West)
 
 Pass your API token either as a `token` query parameter or in an `Authorization: Bearer TOKEN` header:
 
 ```text copy
-https://euwest.cloud.lightpanda.io/mcp/sse?token=TOKEN
+https://euwest.cloud.lightpanda.io/mcp?token=TOKEN
 ```
+
+The endpoint accepts the same `proxy` and `country` query parameters as the CDP endpoint. See [use a proxy on Lightpanda Cloud](/guides/configure-a-proxy#use-a-proxy-on-lightpanda-cloud).
   </Tabs.Tab>
 </Tabs>
 
