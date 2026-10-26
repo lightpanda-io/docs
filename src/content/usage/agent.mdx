@@ -86,19 +86,41 @@ line, or (when an LLM is configured) a natural-language prompt.
 
 commands accept:
 
-- A single positional value, when the tool has exactly one required field.
-  `/goto 'https://example.com'`. The value can itself be quoted JSON when
-  that's what the field takes: `/extract '{"karma":"#karma"}'` passes the
-  string to extract's one required field, `schema`.
 - `key=value` pairs. Values may be bare or quoted; strings with whitespace
-  must be quoted. `/fill selector='#email' value='user@x.com'`. A positional
-  and `key=value` pairs can be mixed, but the positional must come first:
-  `/extract '{"karma":"#karma"}' save=me`.
+  must be quoted. `/fill selector='#email' value='user@x.com'`.
+- A single positional value, for tools with exactly one required field and
+  no prompt form (see below): `/goto 'https://example.com'`,
+  `/waitForSelector '#logout'`, `/press Enter`. A positional and `key=value`
+  pairs can be mixed, but the positional must come first:
+  `/goto https://example.com timeout=5000`.
 - A raw `{json}` blob, handed straight to the tool.
   `/findElement {"role":"button"}`.
 
-Tools whose selector is optional (`/click`, `/hover`, `/findElement`) take
-no positional and must use `key=value` form: `/click selector='a.login'`.
+`/click`, `/fill`, `/hover`, `/selectOption`, `/setChecked`, `/extract` and
+`/evaluate` take no positional: their fields are always `key=value`, as in
+`/extract schema='{"karma":"#karma"}'`.
+
+### Prompt commands
+
+Those same seven commands also accept a prompt in place of their fields.
+Leading text without `key=value` is a description of what you want, and the
+model fills in the selector, schema or script:
+
+```console
+> /click the sign in button
+> /fill the email field value=$LP_EMAIL
+> /setChecked uncheck the newsletter box
+> /extract all products with name, price and description
+```
+
+The model inspects the current page with the read-only tools, then makes
+one call to that command's tool. The call is recorded like any other, so
+`/save` writes an explicit selector or schema and the script replays without
+a model. `key=value` fields typed beside the prompt are kept as written: the
+model is told their names but not their values, so a literal password in
+`/fill` never reaches it.
+
+A prompt command needs an LLM. Without one, pass the fields as `key=value`.
 
 Quoting is content-aware: `'…'`, `"…"`, and triple-quoted `'''…'''` /
 `"""…"""` for values that mix quote styles or span multiple lines. Paste a
@@ -162,7 +184,7 @@ require an LLM — `--no-llm` rejects them.
   ghost text after the cursor and disappears as you type over it. It
   previews the rest of the first matching command name, the argument shape
   of the tool you're typing (`/evaluate ` shows
-  `<script> [url=…] [timeout=…] [save=…]`), and contextual nudges like
+  `script=… [url=…] [timeout=…] [save=…]`), and contextual nudges like
   "press Ctrl-D again to exit".
 - **JS mode (`!`).** Type `!` on an empty prompt to toggle a scratchpad
   where the whole line runs as page-side JavaScript, same context as
