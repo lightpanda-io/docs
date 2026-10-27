@@ -114,7 +114,7 @@ A few things worth knowing:
 Confirm the login worked:
 
 ```console
-> /extract '{"karma": "#karma"}'
+> /extract schema='{"karma": "#karma"}'
 {"karma":"42"}
 ```
 
@@ -131,7 +131,7 @@ Now go to the front page and pull the story list:
 
 ```console
 > /goto https://news.ycombinator.com
-> /extract '''
+> /extract schema='''
 {
   "topStories": [{
     "selector": ".athing",
@@ -163,6 +163,16 @@ collide with signup.
 
 `/nodeDetails backendNodeId=<n>` is the alternative: it returns a
 ready-to-use CSS selector for any node ID from `/tree`.
+
+With an LLM configured, you can also describe the element and let the
+model find the selector:
+
+```console
+> /fill the username field of the login form value='$LP_HN_USERNAME'
+```
+
+The command it runs is recorded with the selector it chose. See
+[prompt commands](/usage/agent#prompt-commands).
 
 ## 4. Save the session as a script
 
