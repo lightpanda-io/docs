@@ -26,7 +26,7 @@ Every call goes through the MCP `tools/call` method, with `name` and `arguments`
 
 The result comes back as `{"result":{"content":[{"type":"text","text":"..."}],"isError":false}}`.
 
-**Page state.** `goto` and the tools that act on the page (`click`, `fill`, `scroll`, `hover`, `press`, `selectOption`, `setChecked`) end their text with `Page url: <url>, HTTP <status>, title: <title>`; `goto` reports `Navigated successfully. HTTP <status>.` A 4xx or 5xx status means the page is an error page, not the content.
+**Page state.** `goto` and the tools that act on the page (`click`, `fill`, `scroll`, `hover`, `press`, `selectOption`, `setChecked`) end their text with `Page url: <url>, HTTP <status>, title: <title>`; `goto` reports `Navigated. HTTP <status>.` A 4xx or 5xx status means the page is an error page, not the content.
 
 The same tools also return `structuredContent` with `url`, `httpStatus` and `title`, declared by each tool's `outputSchema` in `tools/list`. Only `url` is always present; `httpStatus` is absent before any response arrives.
 
