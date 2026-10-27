@@ -28,6 +28,8 @@ The result comes back as `{"result":{"content":[{"type":"text","text":"..."}],"i
 
 **Page state.** `goto` and the tools that act on the page (`click`, `fill`, `scroll`, `hover`, `press`, `selectOption`, `setChecked`) end their text with `Page url: <url>, HTTP <status>, title: <title>`; `goto` reports `Navigated. HTTP <status>.` A 4xx or 5xx status means the page is an error page, not the content.
 
+**Notes before the result.** When a tool navigates, its text can start with notes on what the page lacks: `"The page asked for WebGL, which Lightpanda does not provide: anything it renders that way is missing."`, `"<n> iframe(s) were not loaded: subframe loading is off."`, or that some of the page's own requests were refused with HTTP 403/429 or blocked by a bot challenge. A 4xx or 5xx page starts with `"HTTP <status>: this is likely an error or rate-limit page, not the requested content."`, and a bot challenge page with `"Blocked by a <vendor> bot challenge (HTTP <status>): this is not the requested content."`
+
 The same tools also return `structuredContent` with `url`, `httpStatus` and `title`, declared by each tool's `outputSchema` in `tools/list`. Only `url` is always present; `httpStatus` is absent before any response arrives.
 
 `goto` returns an error directly on a genuine navigation failure (e.g. `navigation failed: CouldntResolveHost`); a timeout reports `"Navigation started (HTTP <status>) but the page did not finish loading before the timeout."` (see [Known behaviors](/usage/mcp#known-behaviors)).
