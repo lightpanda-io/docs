@@ -120,6 +120,10 @@ a model. `key=value` fields typed beside the prompt are kept as written: the
 model is told their names but not their values, so a literal password in
 `/fill` never reaches it.
 
+The prompt ends at the first `key=value` word, and the prompt must come
+before the fields. Quote the prompt if it contains `=` itself:
+`/click "the item with id=5"`.
+
 A prompt command needs an LLM. Without one, pass the fields as `key=value`.
 
 Quoting is content-aware: `'…'`, `"…"`, and triple-quoted `'''…'''` /
