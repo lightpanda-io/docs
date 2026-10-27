@@ -3,6 +3,8 @@ title: PandaScript Reference
 description: Primitives, calling conventions, extraction schema and errors of the PandaScript runtime.
 ---
 
+import PandascriptBuiltins from '../../generated/pandascript-builtins.mdx'
+
 # PandaScript Reference
 
 A PandaScript is a plain JavaScript automation script that Lightpanda runs directly, with no LLM call. Learn the execution model and see complete examples in the [PandaScript usage page](/usage/pandascript).
@@ -11,26 +13,53 @@ A PandaScript is a plain JavaScript automation script that Lightpanda runs direc
 lightpanda run <my_script>.js
 ```
 
-The script context installs two globals, `Page` and [`console`](#console), and nothing else from the browser toolset. A script creates a page with `new Page()`, then calls every primitive below as a method on that page. Every `timeout` is in milliseconds.
+The script context installs two globals, `Page` and [`console`](#console), and nothing else from the browser toolset. A script creates a page with `new Page()`, then calls every method below on that page. Every `timeout` is in milliseconds; each method links to its [browser tool](/reference/browser-tools) for the full list of arguments.
 
-## Navigation
+<PandascriptBuiltins />
 
-| Primitive | Arguments | Returns | Comment |
-|-----------|-----------|---------|---------|
-| `page.goto` | `goto(url[, { timeout = 10000, waitUntil = "load" }])` | The same page object it was called on | Resolves once `waitUntil` is reached. `waitUntil` takes the same states as [`waitForState`](#waiting): `load` (default, a fast snapshot that skips content rendered by post-load JavaScript), `domcontentloaded`, `networkalmostidle`, `networkidle`, or `done`. |
-| `page.close` | `close()` | Nothing | Stales the handle, so later calls on it fail. The page itself is reclaimed on the next `goto` or at script end. |
+Console methods print for you to read. A script's own output is whatever it `return`s from the top level, which is where objects and arrays get JSON-formatted.
 
-## Reading the page
+## Return values
 
 `evaluate` runs a JavaScript string inside the page, where `window` and `document` exist, and `extract` resolves its schema selectors there too. That code runs in the page, so it cannot see the variables of your agent script. `screenshot` doesn't run any page JavaScript; it renders the same computed layout `extract` and markdown read as a PNG instead of text.
 
-| Primitive | Arguments | Returns | Comment |
-|-----------|-----------|---------|---------|
-| `page.extract` | `extract(schema)` or `extract({ schema })` | An object or an array, shaped by the schema | Schema forms are listed [below](#extraction-schema). |
-| `page.evaluate` | `evaluate(script[, { url, timeout = 10000, save }])` | The page value as a string, JSON-encoded when it is an object or array | `url` navigates before running the script, and `timeout` bounds that navigation, not the script. |
-| `page.screenshot` | `screenshot({ path, selector?, fullPage?, strip?, url?, timeout? })`, never positional | `Saved <width>x<height> PNG to <path>` | `path` is required in scripts: a script cannot display an inline image, so omitting it throws `pass \`path\`: this client cannot display an inline image`. Renders the page, or one scoped node, as a PNG: the text layout Lightpanda computes, not a pixel-accurate rendering (no images, fonts, or CSS colours). `strip` is an object of element groups to omit: `js`, `css`, `ui`, `invisible`, `shell`, `clutter`. |
+Every interaction reports the page URL, HTTP status and title reached after the action, so a script can tell whether it triggered a navigation, and whether it landed on an error page. A `click` returns, in full:
 
-### Extraction schema
+```
+Clicked element (selector: a.login). Page url: https://example.com/app, HTTP 200 OK, title: Dashboard
+```
+
+| Method | Returns | Comment |
+|--------|---------|---------|
+| `goto` | The same page object it was called on | Resolves once `waitUntil` is reached. `waitUntil` takes the same states as [`waitForState`](#load-states): `load` (default, a fast snapshot that skips content rendered by post-load JavaScript), `domcontentloaded`, `networkalmostidle`, `networkidle`, or `done`. |
+| `close` | Nothing | |
+| `extract` | An object or an array, shaped by the schema | Schema forms are listed [below](#extraction-schema). |
+| `evaluate` | The page value as a string, JSON-encoded when it is an object or array | `url` navigates before running the script, and `timeout` bounds that navigation, not the script. |
+| `screenshot` | `Saved <width>x<height> PNG to <path>` | `path` is required in scripts: a script cannot display an inline image, so omitting it throws `` pass `path`: this client cannot display an inline image ``. Renders the page, or one scoped node, as a PNG: the text layout Lightpanda computes, not a pixel-accurate rendering (no images, fonts, or CSS colours). |
+| `click` | `Clicked element (<target>)` | |
+| `fill` | `Filled element (<target>) with "<value>"` | |
+| `hover` | `Hovered element (<target>)` | |
+| `press` | `Pressed key '<key>'` | A `null` selector presses on `document.activeElement`. |
+| `selectOption` | `Selected option '<value>' (<target>)` | |
+| `setChecked` | `Set element (<target>) to checked` or `to unchecked` | `checked` defaults to `true`. |
+| `scroll` | `Scrolled window to x: <x>, y: <y>`, `Scrolled element (<target>) to ...`, or `Scrolled scroll container (<container>) of element (<target>) to ...` | `selector` scrolls that element's scroll container (its nearest scrollable ancestor if it isn't one) instead of the window; an omitted axis keeps its current offset. |
+| `waitForSelector` | `Element found. backendNodeId: <id>` | `timeout` defaults to 5000ms once the page has reached `load`, or 15000ms (the navigation budget plus 5000) if it hasn't yet. A script cannot act on that ID, since every method takes a CSS selector. |
+| `waitForScript` | `Script returned truthy.` | Same default-`timeout` rule as `waitForSelector`. Re-evaluates the script in the page context until it returns truthy. |
+| `waitForState` | `Page reached <state>.` | Takes one of the [load states](#load-states). `timeout` defaults to 5000ms. |
+
+### Load states
+
+The states `waitForState` and `goto`'s `waitUntil` accept:
+
+| `state` | Resolves when |
+|---------|---------------|
+| `"load"` | The `load` event fires: the frame and all its subresources, including async scripts, have finished loading. |
+| `"domcontentloaded"` | The HTML is parsed and deferred scripts have run. Subresources (images, stylesheets, async scripts) may still be loading. |
+| `"networkalmostidle"` | At most 2 requests stay in flight for 500 ms straight. |
+| `"networkidle"` | Zero requests stay in flight for 500 ms straight. |
+| `"done"` | The page goes fully idle: no scheduled JavaScript work and no network activity. Every `waitForState` call eventually resolves to this, even if the requested state is never reached. |
+
+## Extraction schema
 
 `page.extract(...)` takes a schema object mapping output field names to CSS-selector specs. The schema forms are:
 
@@ -62,53 +91,6 @@ The object form accepts only the `schema` key, so the REPL's `save` option is re
 | A bare array, `[{ selector: "a" }]` | The array itself |
 | An array field matching nothing | `[]` |
 | Every field in the schema missing | Throws `no schema selector matched any element` |
-
-## Interaction
-
-Every interaction below reports the page URL, HTTP status and title reached after the action, so a script can tell whether it triggered a navigation, and whether it landed on an error page. A `click` returns, in full:
-
-```
-Clicked element (selector: a.login). Page url: https://example.com/app, HTTP 200 OK, title: Dashboard
-```
-
-| Primitive | Arguments | Returns |
-|-----------|-----------|---------|
-| `page.click` | `click(selector)` or `click({ selector })` | `Clicked element (<target>)` |
-| `page.fill` | `fill(selector, value)` or `fill({ selector, value })` | `Filled element (<target>) with "<value>"` |
-| `page.hover` | `hover(selector)` or `hover({ selector })` | `Hovered element (<target>)` |
-| `page.press` | `press(selector, key)` or `press({ key[, selector] })` | `Pressed key '<key>'` |
-| `page.selectOption` | `selectOption(selector, value)` or `selectOption({ selector, value })` | `Selected option '<value>' (<target>)` |
-| `page.setChecked` | `setChecked(selector[, checked = true])` or `setChecked({ selector, checked = true })` | `Set element (<target>) to checked` or `to unchecked` |
-| `page.scroll` | `scroll({ selector?, x?, y? })`, never positional. `selector` scrolls that element's scroll container (its nearest scrollable ancestor if it isn't one) instead of the window; an omitted axis keeps its current offset | `Scrolled window to x: <x>, y: <y>`, `Scrolled element (<target>) to ...`, or `Scrolled scroll container (<container>) of element (<target>) to ...` |
-
-## Waiting
-
-| Primitive | Arguments | Returns | Comment |
-|-----------|-----------|---------|---------|
-| `page.waitForSelector` | `waitForSelector(selector[, { timeout }])` | `Element found. backendNodeId: <id>` | `timeout` defaults to 5000ms once the page has reached `load`, or 15000ms (the navigation budget plus 5000) if it hasn't yet. A script cannot act on that ID, since every primitive takes a CSS selector. |
-| `page.waitForScript` | `waitForScript(script[, { timeout }])` | `Script returned truthy.` | Same default-`timeout` rule as `waitForSelector`. Re-evaluates the script in the page context until it returns truthy. |
-| `page.waitForState` | `waitForState(state[, { timeout = 5000 }])` | `Page reached <state>.` | Takes one of the states below. |
-
-The states `waitForState` accepts:
-
-| `state` | Resolves when |
-|---------|---------------|
-| `"load"` | The `load` event fires: the frame and all its subresources, including async scripts, have finished loading. |
-| `"domcontentloaded"` | The HTML is parsed and deferred scripts have run. Subresources (images, stylesheets, async scripts) may still be loading. |
-| `"networkalmostidle"` | At most 2 requests stay in flight for 500 ms straight. |
-| `"networkidle"` | Zero requests stay in flight for 500 ms straight. |
-| `"done"` | The page goes fully idle: no scheduled JavaScript work and no network activity. Every `waitForState` call eventually resolves to this, even if the requested state is never reached. |
-
-## Console
-
-`console` is the second and last global. It carries five methods, split across the two output streams:
-
-| Methods | Write to |
-|---------|----------|
-| `console.log`, `console.info`, `console.debug` | stdout |
-| `console.warn`, `console.error` | stderr |
-
-They print for you to read. A script's own output is whatever it `return`s from the top level, which is where objects and arrays get JSON-formatted.
 
 ## Calling conventions
 
