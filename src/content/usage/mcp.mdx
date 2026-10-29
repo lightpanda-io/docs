@@ -120,6 +120,8 @@ Extract the current page's content as clean, token-efficient markdown.
 
 > Using `markdown` with an inline `url` is the most efficient single-call pattern: it navigates and extracts in one request.
 
+When a page links a markdown version of itself (`<link rel="alternate" type="text/markdown">`), pass `"alternate": true` to get that file instead of a conversion of the page. It is the author's file and can differ from the rendered page. If the page has no such link, the page is an error or bot challenge page, or the file doesn't load as markdown, `alternate` has no effect and the tool converts the page as usual.
+
 ### `evaluate`
 
 Execute arbitrary JavaScript in the page context and return the result as a string.
