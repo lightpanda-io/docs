@@ -124,7 +124,7 @@ Options:
 
 The provider, model, effort, and verbosity you choose in the REPL are remembered per-directory in `.lp-agent.zon` and reused on the next run.
 
-API keys are read from the environment: `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GOOGLE_API_KEY`/`GEMINI_API_KEY`, `HF_TOKEN`, `AI_GATEWAY_API_KEY`, `MISTRAL_API_KEY`, or `OPENROUTER_API_KEY`. Any other OpenAI-compatible server is used through `OPENAI_BASE_URL` + `OPENAI_API_KEY`. The local servers (Ollama, llama.cpp) do not require an API key.
+API keys are read from the environment: `ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, `GOOGLE_API_KEY`/`GEMINI_API_KEY`, `HF_TOKEN`, `AI_GATEWAY_API_KEY`, `MISTRAL_API_KEY`, or `OPENROUTER_API_KEY`. Any other OpenAI-compatible server is used through `OPENAI_BASE_URL` + `OPENAI_API_KEY`. The local servers (Ollama, llama.cpp) do not require an API key. The `codex` provider uses your ChatGPT subscription instead of a key: log in once with `/provider codex` in the REPL (see [use your ChatGPT plan](/run-locally/commands#use-your-chatgpt-plan)), and later runs reuse the stored login.
 
 ## Examples
 
@@ -134,6 +134,7 @@ lightpanda agent --provider anthropic --model claude-sonnet-4-6
 lightpanda agent --provider huggingface         (HF serverless router, HF_TOKEN)
 lightpanda agent --provider openrouter --model anthropic/claude-sonnet-5
 lightpanda agent --provider ollama --model qwen3.5:latest
+lightpanda agent --provider codex               (ChatGPT subscription, after a /provider codex login)
 lightpanda agent --no-llm                       (basic slash-command-only REPL)
 lightpanda agent --task "..." --save out.js     (synthesize a replayable script)
 ```
