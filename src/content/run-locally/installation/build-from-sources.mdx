@@ -15,10 +15,11 @@ install it with the right version in order to build the project.
 You need also to install [Rust](https://rust-lang.org/tools/install/) for building deps.
 
 Lightpanda also depends on
-[v8](https://chromium.googlesource.com/v8/v8.git),
-[Libcurl](https://curl.se/libcurl/) and [html5ever](https://github.com/servo/html5ever).
+[v8](https://chromium.googlesource.com/v8/v8.git) (through [zig-v8-fork](https://github.com/lightpanda-io/zig-v8-fork/), our Zig wrapper around v8),
+[Libcurl](https://curl.se/libcurl/), [html5ever](https://github.com/servo/html5ever) and [SQLite](https://sqlite.org/).
+The build fetches them; the full list is in [`build.zig.zon`](https://github.com/lightpanda-io/browser/blob/main/build.zig.zon).
 
-To be able to build the v8 engine, you have to install some libs:
+You have to install some libs:
 
 **For Debian/Ubuntu based Linux:**
 
@@ -27,6 +28,9 @@ sudo apt install xz-utils ca-certificates \
         pkg-config libglib2.0-dev \
         clang make curl git
 ```
+
+`pkg-config` and `libglib2.0-dev` are only needed to build V8 from source (see
+[Build and run](#build-and-run)).
 
 **For Linux with [Nix](https://nixos.org/download/), you can use the devShell:**
 
@@ -42,25 +46,38 @@ brew install cmake
 
 ## Build and run
 
-You can build the entire browser with `make build` or `make build-dev` for debug
+Lightpanda embeds the V8 JavaScript engine. The build either compiles V8 from
+source, which takes several minutes, or uses a
+[precompiled copy](https://github.com/lightpanda-io/zig-v8-fork/releases). To use
+the precompiled copy, run this once:
+
+```bash copy
+make download-v8
+```
+
+It downloads the V8 version Lightpanda needs into `.lp-cache/`. `make build` and
+`zig build` then use it instead of compiling V8. To use a V8 library stored
+elsewhere, pass its path with `-Dprebuilt_v8_path=`.
+
+<Callout type="info" emoji="ℹ️">
+    If no precompiled V8 exists for your platform, `make download-v8` fails. Skip
+    it: the build compiles V8 from source.
+</Callout>
+
+Then build the entire browser with `make build` or `make build-dev` for debug
 env.
 
-But you can directly use the zig command to run in debug mode:
+To build in debug mode and start the browser in one step, use Zig directly:
 
 ```bash copy
 zig build run
 ```
 
-<Callout type="info" emoji="ℹ️">
-    Building V8 from source takes 10+ minutes. Run `make download-v8` first to
-    fetch the matching [prebuilt](https://github.com/lightpanda-io/zig-v8-fork/releases)
-    V8 instead; the build picks it up automatically (or pass `-Dprebuilt_v8_path=`).
-</Callout>
-
 ### Embed v8 snapshot
 
-Lighpanda uses v8 snapshot. By default, it is created on startup but you can
-embed it by using the following commands:
+Lightpanda uses a v8 snapshot. `make build` builds and embeds it. With a plain
+`zig build`, it is created on startup instead, unless you embed it by using the
+following commands:
 
 Generate the snapshot.
 ```bash copy
@@ -72,7 +89,7 @@ Build using the snapshot binary.
 zig build -Dsnapshot_path=../../snapshot.bin
 ```
 
-See [#1279](https://github.com/lightpanda-io/browser/pull/1279) for more details.
+Embedding it moves the snapshot creation from each startup to build time, so the browser starts faster.
 
 ## Telemetry
 
