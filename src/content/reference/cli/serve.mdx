@@ -15,7 +15,9 @@ usage: lightpanda serve [OPTIONS] [COMMON_OPTIONS]
 options:
   --advertise-host <HOST>
           The host to advertise, e.g. in the /json/version response. Useful,
-          for example, when --host is 0.0.0.0.
+          for example, when --host is 0.0.0.0. CDP and BiDi WebSocket
+          upgrades accept this name as the Host header, alongside IP
+          literals and localhost.
           Defaults to --host value.
   --cdp-max-connections <INT>
           Maximum number of simultaneous CDP connections.
@@ -52,6 +54,16 @@ options:
               cdp        Chrome DevTools Protocol (WebSocket on /).
               webdriver  WebDriver BiDi (WebSocket on /session) plus the
                          classic WebDriver session endpoints.
+  --remote-allow-origins <ORIGIN>
+          Origin (e.g. http://localhost:3000) allowed in the Origin header
+          of CDP and BiDi WebSocket upgrades, or * to allow any. Can be
+          passed multiple times. Upgrades without an Origin header are
+          always accepted.
+          Defaults to none, rejecting any upgrade that sends an Origin.
+  --unix-socket <PATH>
+          Listen on this Unix-domain socket (mode 0600) instead of TCP.
+          Must be absolute. Cannot be combined with --host, --port or
+          --advertise-host.
 ```
 
 The command also accepts the [common options](/reference/cli/common-options).

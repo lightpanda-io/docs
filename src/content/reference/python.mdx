@@ -121,6 +121,40 @@ text. Raises [`ToolError`](#toolerror) when the tool reports a failure.
  - **tool:**  The tool name.
  - ****kwargs:**  The tool's arguments; ``None`` values are omitted.
 
+### Session.judge [#session-judge]
+
+```python
+def judge(
+    self,
+    *,
+    questions: dict | None = None,
+    threshold: float = 0.5
+) -> PageVerdict
+```
+
+Judge whether the page is worth reading: blocked, a login wall, a
+paywall, an error page and the rest of the [``classify``](#session-classify) presets, in a
+single call.
+
+Your own questions can ride along in that call instead of a second
+[`classify()`](#session-classify), which costs a whole round trip to the model; their
+answers land in [`PageVerdict.answers`](#pageverdict-answers):
+
+```python
+verdict = page.judge(questions={"has_price": "Does the page show a price?"})
+if verdict.ok:
+    print(verdict.answers["has_price"])   # 0.99
+```
+
+A page that answered 4xx or 5xx is not worth reading whatever it says,
+so its verdict comes from the status and the model is not asked; see
+[`PageVerdict.http_status`](#pageverdict-http-status).
+
+
+**Arguments:**
+ - **questions:**  Questions in the object form [`classify()`](#session-classify) takes.
+ - **threshold:**  The probability at which a check counts as true.
+
 ### Session.close [#session-close]
 
 ```python
@@ -129,6 +163,52 @@ def close(self) -> None
 
 Release the session's page. Idempotent; calls made after this
 raise [`ToolError`](#toolerror). Closing the browser closes every session.
+
+### Session.accept_cookies [#session-accept-cookies]
+
+```python
+def accept_cookies(self, *, prefer: str | None = None, selectors: list | None = None) -> Any
+```
+
+Dismiss the cookie consent banner on the current page: the browser offers the banner's own controls to TypeSafe System One (Jev), clicks the one it picks, and re-reads the page to check the banner went. Returns JSON — `dismissed` is what was clicked, `verified` whether the page agreed afterwards, `selectors` the controls clicked in order, and `reason` why nothing happened when nothing did. A click that leaves a banner up (a confirmation, say) is followed by one more pick. A page with nothing to click costs no model call; passing `selectors` clicks them in order and asks nothing, which is how a recorded call replays. Otherwise needs TYPESAFE_API_KEY.
+
+
+**Arguments:**
+ - **prefer:**  Whether to accept the cookies or refuse all non-essential ones. Defaults to 'accept'.
+ - **selectors:**  Optional CSS selectors of the controls to click in order, from an earlier call's result. Clicked without asking the model; one that is not on the page stops the clicking there.
+
+### Session.call_page_tool [#session-call-page-tool]
+
+```python
+def call_page_tool(self, *, name: str, arguments: dict | None = None) -> Any
+```
+
+Call a WebMCP tool the current page registered (see `pageTools`) and return its result: the text of an MCP-style `content` array, or JSON for any other value. A tool that throws or rejects reports its error. The tool runs the site's own code and may change the page or act on the user's account, so treat a tool without `readOnlyHint` like a form submit.
+
+
+**Arguments:**
+ - **name:**  Tool name, as `pageTools` lists it.
+ - **arguments:**  Optional. The tool's input, matching its `inputSchema`. Defaults to \{\}.
+
+### Session.classify [#session-classify]
+
+```python
+def classify(
+    self,
+    *,
+    questions: str | dict | list,
+    selector: str | None = None,
+    presets: bool | None = None
+) -> Any
+```
+
+Classify the page or an element subtree using TypeSafe System One (Jev). `questions` is a JSON array of categories (returns the one that fits), or a JSON object of questions keyed by the name each answer comes back under: `true` for a preset (isBlocked, isCaptcha, isConsentWall, isEmptyCatalog, isErrorPage, isLoginWall, isPaywall, isUnsupportedBrowser, isLoading; an empty object `{}` asks all of them), a string for a yes/no question (returns its probability), `{question, options}` for a choice, or `{question, levels}` for a score on 2-10 levels ordered low to high (returns the `score` between level indices, the nearest `level`, and per-level `probabilities`). A missing answer is null.
+
+
+**Arguments:**
+ - **questions:**  JSON string: array of categories, or object of questions (`{}` for every preset)
+ - **selector:**  Optional CSS selector to classify a specific element subtree instead of the full page
+ - **presets:**  Also ask every preset in the same call, each answered under its own name beside the questions. Needs the object form.
 
 ### Session.click [#session-click]
 
@@ -177,6 +257,19 @@ List the forms on the page as JSON: each form's `backendNodeId`, `action`, `meth
 **Arguments:**
  - **url:**  Optional URL to navigate to before processing. An empty string is treated as omitted.
  - **timeout:**  Optional timeout in milliseconds. Defaults to 10000.
+
+### Session.download [#session-download]
+
+```python
+def download(self, *, url: str, path: str) -> Any
+```
+
+Fetch a URL and save the response body to a local file, sending the session's cookies so authenticated sites work. The way to get a binary or large document (PDF, spreadsheet, archive) out of the browser. Nothing is saved unless the status is 200-203 (like Chrome), and a failed download leaves an existing file at `path` untouched. Requires a loaded page — it fails before the first [`goto`](#session-goto).
+
+
+**Arguments:**
+ - **url:**  Absolute http(s) URL to fetch.
+ - **path:**  Relative path (no '..' segments) to save the response body to. Created or overwritten. The response reports the absolute location.
 
 ### Session.evaluate [#session-evaluate]
 
@@ -432,6 +525,34 @@ Extract the visible links in the opened page as JSON objects with `text` (anchor
  - **url:**  Optional URL to navigate to before processing. An empty string is treated as omitted.
  - **timeout:**  Optional timeout in milliseconds. Defaults to 10000.
 
+### Session.login [#session-login]
+
+```python
+def login(
+    self,
+    *,
+    password: str,
+    username: str | None = None,
+    username_selector: str | None = None,
+    password_selector: str | None = None,
+    submit_selector: str | None = None,
+    next_selector: str | None = None,
+    decide_only: bool | None = None
+) -> Any
+```
+
+Sign in on the current page. The browser collects the candidate fields and sign-in controls, asks TypeSafe System One (Jev) only what the markup leaves ambiguous, fills the credentials, submits, and re-reads the page to say whether it worked. A password is only ever typed into an `input[type=password]`, and credentials only go to an https (or loopback) page whose form posts to an https URL. Pass `$LP_*` placeholders rather than literal secrets: they resolve inside the browser and never appear in the result. Returns JSON with the selectors it used, so a recorded call replays them with no model call. Otherwise needs TYPESAFE_API_KEY.
+
+
+**Arguments:**
+ - **password:**  The password, as a $LP_* placeholder.
+ - **username:**  The username, email or other identifier, as a $LP_* placeholder. Omit on a page that asks only for the password.
+ - **username_selector:**  Optional CSS selector of the identifier field, from an earlier call's result. Given with passwordSelector, the fields are filled with no model call.
+ - **password_selector:**  Optional CSS selector of the password field, from an earlier call's result. Must name an input[type=password].
+ - **submit_selector:**  Optional CSS selector of the control that submits the form. Without it, Enter is pressed in the filled field.
+ - **next_selector:**  Optional CSS selector of the control that submits the username on a page that asks for the password on a later step. Without it, Enter is pressed in the username field.
+ - **decide_only:**  Report which fields would be used and type nothing. For checking the picks on a page without sending credentials.
+
 ### Session.markdown [#session-markdown]
 
 ```python
@@ -443,6 +564,7 @@ def markdown(
     max_bytes: int | None = None,
     strip: dict | None = None,
     url: str | None = None,
+    alternate: bool | None = None,
     timeout: int | None = None
 ) -> Any
 ```
@@ -456,6 +578,7 @@ Render the page (or a subtree) as markdown. Scope with `selector` or `backendNod
  - **max_bytes:**  Optional soft cap on output size in bytes. Content is truncated at a UTF-8 boundary and a short '[truncated]' marker is appended past the cap.
  - **strip:**  Optional. Omit element groups from the output; same groups as the html tool's strip. `shell` (page chrome by markup) and `clutter` (keep only the main content, in the manner of reader modes) are the ones that matter for reading; `ui` also drops images.
  - **url:**  Optional URL to navigate to before rendering. An empty string is treated as omitted.
+ - **alternate:**  Optional. When the page links a markdown version of itself (&lt;link rel="alternate" type="text/markdown">), return that file instead of converting the page. It is the author's file and can differ from the rendered page; the output then starts with a comment naming its URL, which maxBytes does not count. Falls back to the page when there is no such link, the page itself failed to load (HTTP error status or bot challenge), or the alternate does not load as markdown within what is left of the timeout. Cannot be combined with selector or backendNodeId. Defaults to false.
  - **timeout:**  Optional timeout in milliseconds. Defaults to 10000.
 
 ### Session.node_details [#session-node-details]
@@ -469,6 +592,14 @@ Details for a node by backendNodeId: a ready-to-use CSS `selector` that resolves
 
 **Arguments:**
  - **backend_node_id:**  The backend node ID of the element to inspect.
+
+### Session.page_tools [#session-page-tools]
+
+```python
+def page_tools(self) -> Any
+```
+
+List the tools the current page registers for agents through WebMCP (`navigator.modelContext.registerTool`), as JSON with each tool's `name`, `description`, `inputSchema` and hints. A page tool runs the site's own code and can be more reliable than driving its UI; call one with `callPageTool`. Many pages register their tools after `load`: if the list is empty on a page you expect to have tools, call `waitForState` with `networkidle` and list again.
 
 ### Session.press [#session-press]
 
@@ -498,6 +629,26 @@ Press a keyboard key, dispatching keydown and keyup events. Use key names like '
 > - `url`: URL of the page the call left loaded.
 > - `http_status`: Response status of that page's own document. Absent when no response has arrived. 4xx/5xx means an error page, not the content.
 > - `title`: Document title. Empty or absent when the page has none.
+
+### Session.run [#session-run]
+
+```python
+def run(
+    self,
+    *,
+    script: str | None = None,
+    path: str | None = None,
+    timeout: int | None = None
+) -> Any
+```
+
+Run a Lightpanda agent script in this session, as `lightpanda run` does, and return its console output followed by the value it returns. Pass the source as `script`, or the `path` of a file `save` wrote. The script drives pages through `const page = new Page(); await page.goto(url);` and the builtins as methods on `page`; `$LP_*` placeholders are resolved. Pages the script opens are closed when it ends; cookies and storage stay in the session, so a login carries over to the next call. Script variables do not carry over. A thrown error, a failed step or the timeout ends the script and is reported as an error after the output so far.
+
+
+**Arguments:**
+ - **script:**  The agent script source, as `save` writes it or `lightpanda run` takes it. Pass this or `path`.
+ - **path:**  A script file to run instead of `script`, such as one `save` wrote. Relative to the server's working directory.
+ - **timeout:**  Optional. Milliseconds before the script is stopped and reported as an error with its output so far. At least 1; defaults to 60000.
 
 ### Session.screenshot [#session-screenshot]
 
@@ -564,7 +715,7 @@ Scroll the window, or an element's scroll container, to an absolute position; an
 def search(self, *, query: str, timeout: int | None = None) -> Any
 ```
 
-Run a web search and return results as markdown: a numbered list of \{title, url, snippet\}. Search tries brave, tavily, exa, then keenable in order, each when its API key (BRAVE_API_KEY, TAVILY_API_KEY, EXA_API_KEY or KEENABLE_API_KEY) is set; keenable also works without a key through its public endpoint (rate-limited per client IP). Prefer this over goto-ing google.com/search directly (Google blocks the browser on User-Agent/TLS). The browser does not navigate — to open a result, use [`goto`](#session-goto) with its URL.
+Run a web search and return results as markdown: a numbered list of \{title, url, snippet\}. Search tries brave, tavily, exa, parallel, then keenable in order, each when its API key (BRAVE_API_KEY, TAVILY_API_KEY, EXA_API_KEY, PARALLEL_API_KEY or KEENABLE_API_KEY) is set; keenable also works without a key through its public endpoint (rate-limited per client IP). Prefer this over goto-ing google.com/search directly (Google blocks the browser on User-Agent/TLS). The browser does not navigate — to open a result, use [`goto`](#session-goto) with its URL.
 
 
 **Arguments:**
@@ -812,7 +963,13 @@ Raw HTML for the document or, with `selector`/`backendNodeId`, a single node's o
 ### Element.markdown [#element-markdown]
 
 ```python
-def markdown(self, *, max_bytes: int | None = None, strip: dict | None = None) -> Any
+def markdown(
+    self,
+    *,
+    max_bytes: int | None = None,
+    strip: dict | None = None,
+    alternate: bool | None = None
+) -> Any
 ```
 
 Render the page (or a subtree) as markdown. Scope with `selector` or `backendNodeId` to read just the relevant region — full-page markdown is the last resort. Use `maxBytes` to cap long pages.
@@ -821,6 +978,7 @@ Render the page (or a subtree) as markdown. Scope with `selector` or `backendNod
 **Arguments:**
  - **max_bytes:**  Optional soft cap on output size in bytes. Content is truncated at a UTF-8 boundary and a short '[truncated]' marker is appended past the cap.
  - **strip:**  Optional. Omit element groups from the output; same groups as the html tool's strip. `shell` (page chrome by markup) and `clutter` (keep only the main content, in the manner of reader modes) are the ones that matter for reading; `ui` also drops images.
+ - **alternate:**  Optional. When the page links a markdown version of itself (&lt;link rel="alternate" type="text/markdown">), return that file instead of converting the page. It is the author's file and can differ from the rendered page; the output then starts with a comment naming its URL, which maxBytes does not count. Falls back to the page when there is no such link, the page itself failed to load (HTTP error status or bot challenge), or the alternate does not load as markdown within what is left of the timeout. Cannot be combined with selector or backendNodeId. Defaults to false.
 
 ### Element.node_details [#element-node-details]
 
@@ -1698,6 +1856,160 @@ and in the resulting dictionary, each character in x will be mapped
 to the character at the same position in y.  If there is a third
 argument, it must be a string, whose characters will be mapped to
 None in the result.
+
+## PageVerdict [#pageverdict]
+
+What [`Session.judge()`](#session-judge) found: is this page worth reading?
+
+Every preset of the ``classify`` tool, asked in one call. Each is a bool,
+true when the model's probability reaches the threshold; [``scores``](#pageverdict-scores) keeps
+the probabilities themselves (None where the model gave no answer). The
+browser decides which presets there are: one added after this release
+still appears in [``scores``](#pageverdict-scores) and as an attribute.
+
+More than one can be true: a cookie banner can sit on top of a login wall,
+and a bot block is usually an error page too. [`reason`](#pageverdict-reason) names the
+strongest one.
+
+The model is not deterministic, so the same page can score a little
+differently from one call to the next, and a score near the threshold can
+land on either side of it.
+
+```python
+verdict = page.judge()
+if not verdict.ok:
+    print("skipping:", verdict.reason)  # is_paywall
+verdict.scores["is_blocked"]        # 0.03
+```
+
+Questions passed to [`Session.judge()`](#session-judge) are asked in the same call, and
+their answers land in [`answers`](#pageverdict-answers).
+
+A page that answered 4xx or 5xx is judged by its status alone, without
+asking the model: [`http_status`](#pageverdict-http-status) holds it, the check it names is
+true, and every score and answer is None.
+
+```python
+class PageVerdict(answers: dict, threshold: float, asked: Iterable[str] = ())
+```
+
+### PageVerdict.is_blocked [#pageverdict-is-blocked]
+
+```python
+is_blocked: bool
+```
+
+The page is behind a CAPTCHA, a Cloudflare challenge or a bot block.
+
+### PageVerdict.is_captcha [#pageverdict-is-captcha]
+
+```python
+is_captcha: bool
+```
+
+A CAPTCHA or human verification challenge covers the content.
+
+### PageVerdict.is_consent_wall [#pageverdict-is-consent-wall]
+
+```python
+is_consent_wall: bool
+```
+
+A cookie consent banner covers the content.
+
+### PageVerdict.is_empty_catalog [#pageverdict-is-empty-catalog]
+
+```python
+is_empty_catalog: bool
+```
+
+A search or filter found nothing: no results, no matches, 0 items.
+
+### PageVerdict.is_error_page [#pageverdict-is-error-page]
+
+```python
+is_error_page: bool
+```
+
+An error, such as page not found, stands in for the content.
+
+### PageVerdict.is_login_wall [#pageverdict-is-login-wall]
+
+```python
+is_login_wall: bool
+```
+
+A sign-in form or prompt stands in for the content.
+
+### PageVerdict.is_paywall [#pageverdict-is-paywall]
+
+```python
+is_paywall: bool
+```
+
+A subscription or payment prompt hides or cuts off the content.
+
+### PageVerdict.is_unsupported_browser [#pageverdict-is-unsupported-browser]
+
+```python
+is_unsupported_browser: bool
+```
+
+The site says this browser is unsupported, or that JavaScript must be
+enabled: its scripts failed or rejected Lightpanda.
+
+### PageVerdict.is_loading [#pageverdict-is-loading]
+
+```python
+is_loading: bool
+```
+
+The page says it is still loading (spinners, placeholders, loading
+text). A page that is blank while it loads says nothing, so this misses it.
+
+### PageVerdict.scores [#pageverdict-scores]
+
+```python
+scores: dict[str, float | None]
+```
+
+Each check's probability, keyed by its attribute name.
+
+### PageVerdict.answers [#pageverdict-answers]
+
+```python
+answers: dict
+```
+
+The answers to the questions passed to [`Session.judge()`](#session-judge), keyed as
+asked and shaped as [`Session.classify()`](#session-classify) returns them. Empty when none
+were passed.
+
+### PageVerdict.http_status [#pageverdict-http-status]
+
+```python
+http_status: int | None
+```
+
+The 4xx or 5xx status that decided the verdict without the model, or
+None when the model was asked.
+
+### PageVerdict.ok [#pageverdict-ok]
+
+```python
+ok: bool
+```
+
+*Property.* True when no check fired.
+
+### PageVerdict.reason [#pageverdict-reason]
+
+```python
+reason: str | None
+```
+
+*Property.* The check that fired with the highest score, e.g. ``"is_paywall"``,
+to answer "why skip this page?" in one word. None when [`ok`](#pageverdict-ok).
 
 ## run_script [#run-script]
 

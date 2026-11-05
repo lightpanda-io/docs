@@ -26,10 +26,14 @@ If not set, create a new npm project and install Stagehand depencies.
 
 ```sh copy
 npm init
+npm pkg set type=module
 ```
+
+`npm pkg set type=module` tells Node.js to load `index.js` as an ES module, the format its `import` statements need.
 
 ```sh copy
 npm install @browserbasehq/stagehand@3 @lightpanda/browser
+npx @lightpanda/browser install
 ```
 
 Stay on the Stagehand 3.x line. Stagehand 4 moved its DOM work into a Chrome

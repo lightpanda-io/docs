@@ -2,11 +2,12 @@
 
 ## Navigation and search
 
-These methods bring a page into the browser.
+These methods bring a page into the browser, or save a URL to a file.
 
 | Method | Call | Summary |
 |---|---|---|
 | [`goto`](/reference/browser-tools#goto) | `await page.goto(url[, { timeout, waitUntil }])` | Open a URL and keep the page in memory |
+| [`download`](/reference/browser-tools#download) | `page.download([{ url, path }])` | Fetch a URL with the session's cookies into a file |
 
 ## Reading the page
 
@@ -24,6 +25,7 @@ These methods return structured results from the loaded page.
 |---|---|---|
 | [`evaluate`](/reference/browser-tools#evaluate) | `page.evaluate(script[, { url, timeout, save }])` | Run JavaScript in the page |
 | [`extract`](/reference/browser-tools#extract) | `page.extract(schema)` | Extract structured data via a CSS-selector schema |
+| [`classify`](/reference/browser-tools#classify) | `page.classify(questions[, { selector, presets }])` | Classify page state using semantic questions or presets |
 
 ## Interacting with the page
 
@@ -38,6 +40,8 @@ These methods dispatch real DOM events on the page.
 | [`press`](/reference/browser-tools#press) | `page.press(selector, key)` | Press a keyboard key |
 | [`selectOption`](/reference/browser-tools#selectoption) | `page.selectOption(selector, value)` | Select an option in a dropdown |
 | [`setChecked`](/reference/browser-tools#setchecked) | `page.setChecked(selector[, checked])` | Check or uncheck a box |
+| [`acceptCookies`](/reference/browser-tools#acceptcookies) | `page.acceptCookies([{ prefer, selectors }])` | Dismiss a cookie consent banner |
+| [`login`](/reference/browser-tools#login) | `page.login([{ password, username, usernameSelector, passwordSelector, submitSelector, nextSelector, decideOnly }])` | Sign in, picking the fields with Jev |
 
 ## Waiting
 
@@ -48,6 +52,14 @@ These methods block until the page reaches a condition.
 | [`waitForSelector`](/reference/browser-tools#waitforselector) | `page.waitForSelector(selector[, { timeout }])` | Wait for an element to appear |
 | [`waitForScript`](/reference/browser-tools#waitforscript) | `page.waitForScript(script[, { timeout }])` | Wait until a JS expression is truthy |
 | [`waitForState`](/reference/browser-tools#waitforstate) | `page.waitForState(state[, { timeout }])` | Wait for the page to reach a load state |
+
+## Page tools (WebMCP)
+
+These methods list and call the tools a page registers for agents through WebMCP.
+
+| Method | Call | Summary |
+|---|---|---|
+| [`callPageTool`](/reference/browser-tools#callpagetool) | `page.callPageTool([{ name, arguments }])` | Call one of the page's WebMCP tools |
 
 ## Page lifecycle
 
