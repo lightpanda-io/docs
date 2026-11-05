@@ -2,12 +2,13 @@
 
 ## Navigation and search
 
-These tools bring a page into the browser.
+These tools bring a page into the browser, or save a URL to a file.
 
 | Tool | Title | Hints |
 |---|---|---|
 | [`goto`](/reference/browser-tools#goto) | Open a URL and keep the page in memory | idempotent, open-world, page state |
 | [`search`](/reference/browser-tools#search) | Web search, results as markdown | idempotent, open-world |
+| [`download`](/reference/browser-tools#download) | Fetch a URL with the session's cookies into a file | destructive, idempotent, open-world |
 
 ## Reading the page
 
@@ -22,7 +23,7 @@ These tools read the loaded page without modifying it.
 | [`tree`](/reference/browser-tools#tree) | Semantic DOM tree of the page | idempotent, open-world |
 | [`nodeDetails`](/reference/browser-tools#nodedetails) | Inspect a node by backendNodeId | read-only, idempotent |
 | [`interactiveElements`](/reference/browser-tools#interactiveelements) | List interactive elements on the page | idempotent, open-world |
-| [`structuredData`](/reference/browser-tools#structureddata) | Extract JSON-LD / OpenGraph data | idempotent, open-world |
+| [`structuredData`](/reference/browser-tools#structureddata) | Extract JSON-LD / microdata / OpenGraph data | idempotent, open-world |
 | [`detectForms`](/reference/browser-tools#detectforms) | List forms and their fields | idempotent, open-world |
 | [`findElement`](/reference/browser-tools#findelement) | Find elements by role or name | read-only, idempotent |
 
@@ -34,6 +35,7 @@ These tools return structured results from the loaded page.
 |---|---|---|
 | [`evaluate`](/reference/browser-tools#evaluate) | Run JavaScript in the page | destructive, open-world |
 | [`extract`](/reference/browser-tools#extract) | Extract structured data via a CSS-selector schema | read-only, idempotent |
+| [`classify`](/reference/browser-tools#classify) | Classify page state using semantic questions or presets | read-only, open-world |
 
 ## Interacting with the page
 
@@ -48,6 +50,8 @@ These tools dispatch real DOM events on the page.
 | [`press`](/reference/browser-tools#press) | Press a keyboard key | destructive, open-world, page state |
 | [`selectOption`](/reference/browser-tools#selectoption) | Select an option in a dropdown | idempotent, page state |
 | [`setChecked`](/reference/browser-tools#setchecked) | Check or uncheck a box | idempotent, page state |
+| [`acceptCookies`](/reference/browser-tools#acceptcookies) | Dismiss a cookie consent banner | destructive, open-world |
+| [`login`](/reference/browser-tools#login) | Sign in, picking the fields with Jev | destructive, open-world |
 
 ## Waiting
 
@@ -69,6 +73,15 @@ These tools inspect browser state outside the DOM.
 | [`getUrl`](/reference/browser-tools#geturl) | Show the current page URL | read-only, idempotent |
 | [`getCookies`](/reference/browser-tools#getcookies) | Show stored cookies | read-only, idempotent |
 | [`getEnv`](/reference/browser-tools#getenv) | Read or list LP_* env vars | read-only, idempotent |
+
+## Page tools (WebMCP)
+
+These tools list and call the tools a page registers for agents through WebMCP.
+
+| Tool | Title | Hints |
+|---|---|---|
+| [`pageTools`](/reference/browser-tools#pagetools) | List the page's WebMCP tools | read-only, idempotent |
+| [`callPageTool`](/reference/browser-tools#callpagetool) | Call one of the page's WebMCP tools | destructive, open-world |
 
 ## MCP-only tools
 
@@ -136,6 +149,18 @@ Script rules:
 | `script` | string | yes | The JavaScript agent script to write. Synthesize it per this tool's description. |
 
 Hints: destructive, idempotent
+
+### run
+
+**Run an agent script.** Run a Lightpanda agent script in this session, as `lightpanda run` does, and return its console output followed by the value it returns. Pass the source as `script`, or the `path` of a file `save` wrote. The script drives pages through `const page = new Page(); await page.goto(url);` and the builtins as methods on `page`; `$LP_*` placeholders are resolved. Pages the script opens are closed when it ends; cookies and storage stay in the session, so a login carries over to the next call. Script variables do not carry over. A thrown error, a failed step or the timeout ends the script and is reported as an error after the output so far.
+
+| Argument | Type | Required | Description |
+|---|---|---|---|
+| `script` | string | no | The agent script source, as `save` writes it or `lightpanda run` takes it. Pass this or `path`. |
+| `path` | string | no | A script file to run instead of `script`, such as one `save` wrote. Relative to the server's working directory. |
+| `timeout` | integer | no | Optional. Milliseconds before the script is stopped and reported as an error with its output so far. At least 1; defaults to 60000. |
+
+Hints: destructive, open-world
 
 ### session_new
 
