@@ -61,6 +61,12 @@ common options:
           Behavior may change or be removed without notice.
           Defaults to none enabled.
           Allowed values:
+             privatecache  Let the HTTP cache (--http-cache-dir) store
+                           responses with a Set-Cookie header, removing
+                           the header. The cache and the cookie store
+                           have different lifetimes and are shared
+                           differently, so a cached response without its
+                           Set-Cookie can make later requests fail.
              serviceworker  Enable the Service Worker API.
   --load-resources <RESOURCE>
           Sub-resource to actually request. Can be passed multiple times.
