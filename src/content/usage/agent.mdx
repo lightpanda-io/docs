@@ -84,7 +84,9 @@ line, or (when an LLM is configured) a natural-language prompt.
 
 `/help` lists all available commands, `/help <command>` for details.
 
-commands accept:
+### Command parameters
+
+Commands accept:
 
 - `key=value` pairs. Values may be bare or quoted; strings with whitespace
   must be quoted. `/fill selector='#email' value='user@x.com'`.
@@ -100,11 +102,19 @@ commands accept:
 `/evaluate` take no positional: their fields are always `key=value`, as in
 `/extract schema='{"karma":"#karma"}'`.
 
+Quoting is content-aware: `'…'`, `"…"`, and triple-quoted `'''…'''` /
+`"""…"""` for values that mix quote styles or span multiple lines. Paste a
+multi-line command and the REPL keeps the whole paste as one input; typed
+line by line, Enter submits at each newline.
+
 ### Prompt commands
 
-Those same seven commands also accept a prompt in place of their fields.
-Leading text without `key=value` is a description of what you want, and the
-model fills in the selector, schema or script:
+With an LLM configured, `/click`, `/fill`, `/hover`, `/selectOption`,
+`/setChecked`, `/extract` and `/evaluate` also accept a prompt in place of
+their fields: describe what you want in plain words, and the command makes
+sure the model uses that tool. The model inspects the current page with the
+read-only tools, fills in the selector, schema or script, then makes one call
+to that command's tool.
 
 ```console
 > /click the sign in button
@@ -113,23 +123,14 @@ model fills in the selector, schema or script:
 > /extract all products with name, price and description
 ```
 
-The model inspects the current page with the read-only tools, then makes
-one call to that command's tool. The call is recorded like any other, so
-`/save` writes an explicit selector or schema and the script replays without
-a model. `key=value` fields typed beside the prompt are kept as written: the
-model is told their names but not their values, so a literal password in
-`/fill` never reaches it.
+The call is recorded like any other, so `/save` writes an explicit selector
+or schema and the script replays without a model. `key=value` fields typed
+beside the prompt are kept as written: the model is told their names but not
+their values, so a literal password in `/fill` never reaches it.
 
 The prompt ends at the first `key=value` word, and the prompt must come
 before the fields. Quote the prompt if it contains `=` itself:
 `/click "the item with id=5"`.
-
-A prompt command needs an LLM. Without one, pass the fields as `key=value`.
-
-Quoting is content-aware: `'…'`, `"…"`, and triple-quoted `'''…'''` /
-`"""…"""` for values that mix quote styles or span multiple lines. Paste a
-multi-line command and the REPL keeps the whole paste as one input; typed
-line by line, Enter submits at each newline.
 
 ### Extracting data
 
