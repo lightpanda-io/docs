@@ -18,13 +18,21 @@ options:
           Defaults to no dump.
           Allowed values:
               html               Serialized HTML of the DOM.
-              markdown           Converts content to Markdown.
+              markdown           Converts content to Markdown. Asks
+                                 the server for markdown first; when
+                                 it sends some, that is dumped as-is
+                                 (logged as "markdown served"). Not
+                                 with --dump-selector, --wait-selector,
+                                 --wait-script or --inject-script,
+                                 which need the DOM.
               pdf                Text-only rendering of the page as a
-                                 PDF document (base64 with --json).
+                                 PDF file (base64 with --json).
               png                Text-only rendering of the page as a
                                  PNG image (base64 with --json).
               semantic_tree      JSON-serialized semantic tree.
               semantic_tree_text Pruned plain-text semantic tree.
+              structured_data    JSON-LD, OpenGraph, Twitter card, meta
+                                 and link tags as JSON.
   --dump-max-bytes <INT>
           Soft cap on the dumped html or markdown, in bytes. Output is cut
           at a UTF-8 boundary and a '[truncated]' marker is appended.
@@ -52,6 +60,16 @@ options:
           "error" field: null, or the name of the navigation, wait or
           dump failure for that URL. One failed URL does not stop the
           others; the process exits 1 if any URL failed.
+  --markdown-alternate
+          With --dump markdown, when a page links a markdown version of
+          itself (<link rel="alternate" type="text/markdown">), dump that
+          file instead of converting the page. The file is the author's
+          and can differ from the rendered page. Falls back to converting
+          the page when there is no such link or it does not load as
+          markdown (text/markdown, or text/plain since many servers send
+          .md files that way). The alternate's URL is logged; with
+          --json, "url" is where the markdown came from. The alternate
+          loads within what is left of --wait-ms. Defaults to false.
   --metrics
           Write metrics (Prometheus text format) to stdout on exit, after
           any --dump output.
@@ -65,7 +83,8 @@ options:
                         (which may itself fall back to a full dump).
               css       Includes style and link[rel=stylesheet].
               js        Script and link[as=script, rel=preload].
-              invisible Best-effort (e.g. display:none) hidden elements
+              invisible Best-effort hidden elements (e.g. display:none,
+                        <template>).
               shell     Page chrome by markup: nav, aside, dialog,
                         page-level header and footer. Full dump when
                         `shell` would remove most of the text.
