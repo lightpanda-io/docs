@@ -3,8 +3,6 @@ title: Build from sources
 description: Lightpanda is written with Zig@0.17.0. You will have to install it with the right version in order to build the project.
 ---
 
-import { Callout } from 'nextra/components'
-
 # Build from sources
 
 ## Prerequisites
@@ -57,12 +55,9 @@ make download-v8
 
 It downloads the V8 version Lightpanda needs into `.lp-cache/`. `make build` and
 `zig build` then use it instead of compiling V8. To use a V8 library stored
-elsewhere, pass its path with `-Dprebuilt_v8_path=`.
-
-<Callout type="info" emoji="ℹ️">
-    If no precompiled V8 exists for your platform, `make download-v8` fails. Skip
-    it: the build compiles V8 from source.
-</Callout>
+elsewhere, pass its path with `-Dprebuilt_v8_path=`. If no precompiled V8 exists
+for your platform, the download fails: skip it, and the build compiles V8 from
+source.
 
 Then build the entire browser with `make build` or `make build-dev` for debug
 env.
