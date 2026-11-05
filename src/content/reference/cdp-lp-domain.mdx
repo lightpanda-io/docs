@@ -1,0 +1,357 @@
+---
+title: CDP LP Domain
+description: Reference of the Lightpanda-specific LP domain of the Chrome DevTools Protocol, with every LP command, its parameters and its result.
+---
+
+import { Tabs } from 'nextra/components'
+
+# CDP LP Domain
+
+The `LP` domain is a set of Chrome DevTools Protocol (CDP) commands that only Lightpanda implements. They give a CDP client new features, including Markdown and PDF dumps, the semantic tree, actions by node ID, and page diagnostics.
+
+The `LP` domain is available over CDP, in server mode (`lightpanda serve`) and on Lightpanda Cloud.
+
+## Send an LP command
+
+Open a CDP session on the page and send the command by name. The commands that read or act on the page use the session's page. To start Lightpanda and connect a client, see [Puppeteer](/usage/cdp/puppeteer), [Playwright](/usage/cdp/playwright) or [chromedp](/usage/cdp/chromedp).
+
+<Tabs items={['Puppeteer', 'Playwright', 'chromedp']} className="-mb-4">
+  <Tabs.Tab id="Puppeteer" className="m-0">
+
+```javascript copy
+const client = await page.createCDPSession();
+
+const status = await client.send('LP.getPageStatus');
+console.log(status.httpStatus);
+
+const result = await client.send('LP.dump', { format: 'markdown' });
+console.log(result.content);
+```
+
+  </Tabs.Tab>
+  <Tabs.Tab id="Playwright" className="m-0">
+
+```javascript copy
+const client = await context.newCDPSession(page);
+
+const status = await client.send('LP.getPageStatus');
+console.log(status.httpStatus);
+
+const result = await client.send('LP.dump', { format: 'markdown' });
+console.log(result.content);
+```
+
+  </Tabs.Tab>
+  <Tabs.Tab id="chromedp" className="m-0">
+
+```go copy
+// import "github.com/chromedp/cdproto/cdp"
+var status struct {
+    HTTPStatus int `json:"httpStatus"`
+}
+var result struct {
+    Content string `json:"content"`
+}
+err := chromedp.Run(ctx, chromedp.ActionFunc(func(ctx context.Context) error {
+    if err := cdp.Execute(ctx, "LP.getPageStatus", nil, &status); err != nil {
+        return err
+    }
+    return cdp.Execute(ctx, "LP.dump", map[string]any{"format": "markdown"}, &result)
+}))
+```
+
+  </Tabs.Tab>
+</Tabs>
+
+**Node IDs.** Commands that target an element take a `backendNodeId`. Get one from `LP.getSemanticTree`, `LP.getInteractiveElements`, `LP.detectForms` or `LP.waitForSelector`, or from a standard CDP command such as `DOM.describeNode`.
+
+**Frames.** Every command reads or acts on the main frame. A `backendNodeId` can point into an iframe: `LP.getSemanticTree`, `LP.getInteractiveElements` and `LP.getNodeDetails` then read that iframe's document.
+
+**Errors.** A failed command returns a CDP error with code `-31998` and the error name as its message. The common names are:
+
+| Error | Cause |
+|---|---|
+| `InvalidParams`, `InvalidParam` | A required parameter is missing or has the wrong type, or `selector` matches nothing. |
+| `InvalidNodeId` | The `backendNodeId` or `nodeId` is unknown. |
+| `NoBrowserContext` | The session has no page. |
+| `FrameNotLoaded` | The page has not navigated yet. |
+| `InternalError` | The action failed. `LP.waitForSelector` also returns it on timeout. |
+
+## Reading the page
+
+These commands read the current page without changing it.
+
+### LP.dump
+
+Converts the current DOM to HTML, Markdown, PNG or PDF. It reads the DOM at call time, so it captures the page after your clicks and form fills.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `format` | `html` \| `markdown` \| `png` \| `pdf` | Yes | | Output format. |
+| `strip` | object | No | `{}` | Element groups to omit, each set to `true`: `js`, `css`, `ui`, `invisible`, `shell`, `clutter`. `shell` drops navigation, sidebars, dialogs and the page-level header and footer. `clutter` keeps only the main content, in the manner of reader modes, and implies `shell` and `invisible`. |
+| `selector` | string | No | | Dumps only the first element matching this CSS selector. |
+| `backendNodeId` | integer | No | | Dumps only this node. Takes precedence over `selector`. |
+| `maxBytes` | integer | No | | Size cap for `html` and `markdown`; `png` and `pdf` return `InvalidParams`. Longer output is cut and ends with a `[truncated]` marker. |
+
+Returns `{ format, content }`. `content` is the dump as a string, base64-encoded for `png` and `pdf`.
+
+### LP.getSemanticTree
+
+Returns the semantic tree of the page. It is more compact than the CDP accessibility tree because it skips layout containers by default.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `format` | `text` | No | | Returns the tree as an indented string. Without it, the tree is a JSON object. |
+| `prune` | boolean | No | `true` | Skips layout containers, such as `div`, `main`, lists and tables, unless they are interactive or have an `aria-label` or `title`. Their children stay in the tree. |
+| `interactiveOnly` | boolean | No | `false` | Keeps only the root, interactive nodes, and named content nodes such as headings. Overrides `prune`. |
+| `backendNodeId` | integer | No | The document | Root of the subtree. |
+| `maxDepth` | integer | No | | Maximum DOM depth below the root. Containers skipped by `prune` still count toward it. |
+
+Returns `{ semanticTree }`. In `text` format, each line starts with the node's `backendNodeId`, and `[i]` marks an interactive node:
+
+```text
+1 RootWebArea 'Example Domain'
+ 16 [i] link 'Learn more'
+```
+
+### LP.getNodeDetails
+
+Describes one node and returns a CSS selector that matches only that node.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `backendNodeId` | integer | Yes | | The node to describe. |
+
+Returns `{ nodeDetails }`, for example:
+
+```json
+{
+  "nodeDetails": {
+    "backendNodeId": 37,
+    "tagName": "h1",
+    "role": "heading",
+    "name": "Outdoor Odyssey Nomad Backpack 60 liters",
+    "isInteractive": false,
+    "id": "product-name",
+    "selector": "#product-name"
+  }
+}
+```
+
+Form controls also carry their `value`, `inputType`, `placeholder`, `checked` and `options` when they apply.
+
+### LP.getStructuredData
+
+Reads the page metadata. Takes no parameters.
+
+Returns `{ structuredData }`, with `jsonLd` (an array of JSON-LD objects), `openGraph`, `twitterCard`, `meta` (including `title`) and `links`.
+
+### LP.getPageStatus
+
+Reports what went wrong, or was left out, while loading the main frame. Use it to tell a blocked or broken page from an empty one before reading its content. Takes no parameters.
+
+| Field | Type | Description |
+|---|---|---|
+| `url` | string | URL of the document. |
+| `httpStatus` | integer, optional | HTTP status of the document. |
+| `botChallenge` | `aws_waf` \| `cloudflare` \| `vercel`, optional | Bot challenge recognized on the document. |
+| `navigateError` | string, optional | Why the last navigation failed. |
+| `jsErrors` | integer | Uncaught script errors. |
+| `unsupported` | object | Calls into unsupported features, by key: `webgl`, `canvas2d`. |
+| `skipped` | object | Resources not loaded because of [`--load-resources`](/reference/cli/common-options#options) or `LP.configureLoading`, by key: `iframe`, `worker`, `image`, `stylesheet`, `beacon`. |
+| `missingGlobals` | array of strings | Globals named by uncaught `ReferenceError`s, deduplicated and capped. |
+| `failed` | object | Sub-resource loads that got a status of 400 or more, or a network error, by key: `script`, `fetch`, `xhr`. |
+| `blocked` | object | The 403 and 429 responses among `failed`, by key: `script`, `fetch`, `xhr`. |
+| `resourceChallenge` | `aws_waf` \| `cloudflare` \| `vercel`, optional | First bot challenge recognized on a sub-resource. |
+
+The counters reset on each top-level navigation.
+
+### LP.getContentSignal
+
+Returns the [Content Signals](https://contentsignals.org) that the site's `robots.txt` declares for the current host, such as whether it allows AI training. Takes no parameters.
+
+Returns `{ available, contentSignals }`. `contentSignals` is an array of `{ name, value }`.
+
+`available` is `false` when Lightpanda has not fetched the host's `robots.txt`, which is the case unless robots.txt is obeyed: start the server with [`--obey-robots`](/reference/cli/common-options#options) or send `LP.configureCDP` with `obeyRobots: true` before navigating.
+
+### LP.getInteractiveElements
+
+Lists the elements a user can interact with: native controls and links, elements with an interactive ARIA role, `contenteditable` elements, elements with a click or key listener, and focusable elements.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `nodeId` | integer | No | The document | `backendNodeId` of the subtree to search. |
+
+Returns `{ elements }`, for example:
+
+```json
+{
+  "elements": [
+    {
+      "backendNodeId": 16,
+      "tagName": "a",
+      "role": "link",
+      "name": "Learn more",
+      "type": "native",
+      "tabIndex": 0,
+      "href": "https://iana.org/domains/example"
+    }
+  ]
+}
+```
+
+`type` is `native`, `aria`, `contenteditable`, `listener` or `focusable`. Elements also carry `id`, `class`, `href`, `inputType`, `value`, `elementName` (the `name` attribute), `placeholder`, `disabled` and `listeners` when they apply. `overlay` is `{ fixed, dialog }` when the element sits in a `position: fixed` box, an open dialog or an open popover.
+
+### LP.detectForms
+
+Lists the forms of the page with their fields. Takes no parameters.
+
+Returns `{ forms }`, for example:
+
+```json
+{
+  "forms": [
+    {
+      "backendNodeId": 12,
+      "action": "/search",
+      "method": "get",
+      "fields": [
+        {
+          "backendNodeId": 14,
+          "tagName": "input",
+          "name": "q",
+          "inputType": "text",
+          "required": true,
+          "disabled": false,
+          "placeholder": "Search"
+        },
+        {
+          "backendNodeId": 15,
+          "tagName": "select",
+          "name": "sort",
+          "required": false,
+          "disabled": false,
+          "value": "date",
+          "options": [
+            { "value": "date", "text": "Newest" },
+            { "value": "score", "text": "Best match" }
+          ]
+        }
+      ]
+    }
+  ]
+}
+```
+
+`method` is `get`, `post` or `dialog`. `tagName` is `input`, `textarea` or `select`: hidden inputs and buttons are left out. `action`, `name`, `inputType`, `value` and `placeholder` appear when set, and `options` only for a `select`.
+
+## Acting on the page
+
+These commands change the page.
+
+### LP.clickNode
+
+Clicks a node.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `backendNodeId` | integer | Yes | | The node to click. `nodeId` is accepted as an alias. |
+
+Returns an empty object.
+
+### LP.fillNode
+
+Types text into an input or a textarea, or selects an option of a `select` by value. Fires the `input` and `change` events.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `backendNodeId` | integer | Yes | | The field to fill. `nodeId` is accepted as an alias. |
+| `text` | string | Yes | | The text to type, or the option value to select. |
+
+Returns an empty object.
+
+### LP.scrollNode
+
+Scrolls a node, or the page when no node is given. For a node that cannot scroll, the nearest scrollable ancestor scrolls instead. Scrolling updates the scroll position the page reads (`scrollY`, `scrollTop`) and fires `scroll` events, which is what triggers lazy loading and infinite scroll.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `backendNodeId` | integer | No | The page | The node to scroll. `nodeId` is accepted as an alias. |
+| `x` | integer | No | | Horizontal scroll position, in pixels. |
+| `y` | integer | No | | Vertical scroll position, in pixels. |
+
+Returns `{ x, y }`, the new scroll position, and `backendNodeId` when an element scrolled instead of the page.
+
+### LP.waitForSelector
+
+Waits until an element matches a CSS selector.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `selector` | string | Yes | | CSS selector to wait for. |
+| `timeout` | integer | No | `5000` | Maximum wait, in milliseconds. While the page is still loading, the default is `15000`. |
+
+Returns `{ backendNodeId }` of the first match. On timeout, returns an `InternalError` error.
+
+### LP.handleJavaScriptDialog
+
+Sets the answer to the next `confirm` or `prompt` dialog.
+
+In Chrome, a dialog pauses the page until the client answers it with `Page.handleJavaScriptDialog`. Lightpanda doesn't pause: `confirm` returns `false` and `prompt` returns `null` right away, before the client receives `Page.javascriptDialogOpening`. To get another answer, send `LP.handleJavaScriptDialog` before the dialog opens: before the action that opens it, or before `page.goto()` if the page opens it while loading. The answer stays set across navigations until a dialog uses it.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `accept` | boolean | Yes | | `true` makes `confirm` return `true` and `prompt` return a string. `false` makes `confirm` return `false` and `prompt` return `null`. |
+| `promptText` | string | No | | The string `prompt` returns when `accept` is `true`. Without it, `prompt` returns its default value. |
+
+Returns an empty object. The answer applies to one dialog only, and an `alert` uses it up too: send the command again before the dialog you want to answer.
+
+## Configuring the connection
+
+### LP.configureCDP
+
+Changes settings of the CDP connection. Each parameter is optional and leaves the setting unchanged when omitted.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `obeyRobots` | boolean | No | Value of `--obey-robots` | Fetches and obeys the `robots.txt` of each site. |
+| `httpVersion` | `auto` \| `1.1` | No | Value of `--http-version` | HTTP version to negotiate. `1.1` never offers HTTP/2. |
+| `disableSetCacheDisabled` | boolean | No | `false` | Ignores `Network.setCacheDisabled`, so the HTTP cache stays on when a client such as Puppeteer turns it off. |
+
+Returns an empty object.
+
+### LP.configureLoading
+
+Chooses which sub-resources the session loads, overriding [`--load-resources`](/reference/cli/common-options#options) for this connection. Each parameter is optional and leaves the setting unchanged when omitted.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `subFrame` | boolean | No | Value of `--load-resources` | Loads `<iframe>` content. |
+| `worker` | boolean | No | Value of `--load-resources` | Runs web workers. |
+| `externalStylesheets` | boolean | No | Value of `--load-resources` | Loads external stylesheets. |
+| `images` | boolean | No | Value of `--load-resources` | Requests images. |
+
+Returns an empty object.
+
+### LP.version
+
+Returns `{ version }`, the Lightpanda version of the server, for example `1.0.3`. Takes no parameters and works without a page.
+
+## Events
+
+### LP.downloadData
+
+Carries the body of a download in base64 chunks, when the client sent `Browser.setDownloadBehavior` with `behavior: "stream"` and `eventsEnabled: true`. The download is complete at `Browser.downloadProgress` with `state: "completed"`. Nothing is written to disk.
+
+| Field | Type | Description |
+|---|---|---|
+| `guid` | string | The download's ID, as in `Browser.downloadWillBegin`. |
+| `data` | string | A chunk of the body, base64-encoded. |
+
+`Browser.downloadWillBegin` also carries a `contentType` field, which Chrome does not send.
+
+## Deprecated commands
+
+### LP.getMarkdown
+
+`LP.getMarkdown` takes an optional `nodeId` (a `backendNodeId`) and returns `{ markdown }`. Use `LP.dump` with `format: "markdown"` instead.
