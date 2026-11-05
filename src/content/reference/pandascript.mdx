@@ -33,8 +33,10 @@ Clicked element (selector: a.login). Page url: https://example.com/app, HTTP 200
 |--------|---------|---------|
 | `goto` | The same page object it was called on | Resolves once `waitUntil` is reached. `waitUntil` takes the same states as [`waitForState`](#load-states): `load` (default, a fast snapshot that skips content rendered by post-load JavaScript), `domcontentloaded`, `networkalmostidle`, `networkidle`, or `done`. |
 | `close` | Nothing | |
+| `download` | `saved <bytes> bytes (<content type>) to <absolute path>` | Any status outside 200-203 throws `HTTP <status> <text>; nothing saved`. A failed download leaves an existing file at `path` untouched. |
 | `extract` | An object or an array, shaped by the schema | Schema forms are listed [below](#extraction-schema). |
 | `evaluate` | The page value as a string, JSON-encoded when it is an object or array | `url` navigates before running the script, and `timeout` bounds that navigation, not the script. |
+| `classify` | A string for an array of categories, the one that fits. An object for an object of questions, keyed by the name you gave each one. | In the object, a preset or yes/no question answers with its probability, a choice with the option picked, and a levels question with `{ score, level, probabilities }`. A missing answer is `null`. Every run calls Jev, replays included, so scripts need `TYPESAFE_API_KEY`. |
 | `screenshot` | `Saved <width>x<height> PNG to <path>` | `path` is required in scripts: a script cannot display an inline image, so omitting it throws `` pass `path`: this client cannot display an inline image ``. Renders the page, or one scoped node, as a PNG: the text layout Lightpanda computes, not a pixel-accurate rendering (no images, fonts, or CSS colours). |
 | `click` | `Clicked element (<target>)` | |
 | `fill` | `Filled element (<target>) with "<value>"` | |
@@ -43,9 +45,12 @@ Clicked element (selector: a.login). Page url: https://example.com/app, HTTP 200
 | `selectOption` | `Selected option '<value>' (<target>)` | |
 | `setChecked` | `Set element (<target>) to checked` or `to unchecked` | `checked` defaults to `true`. |
 | `scroll` | `Scrolled window to x: <x>, y: <y>`, `Scrolled element (<target>) to ...`, or `Scrolled scroll container (<container>) of element (<target>) to ...` | `selector` scrolls that element's scroll container (its nearest scrollable ancestor if it isn't one) instead of the window; an omitted axis keeps its current offset. |
+| `acceptCookies` | An object with `dismissed`, `verified` and `attempts`. `selectors`, `control`, `confidence`, `consentWall`, `consentWallAfter`, `candidates` and `reason` appear when set. | `dismissed` says a control was clicked, and `verified` says the page re-read showed the banner gone, so check both. A page with no banner returns `dismissed: false` and a `reason` instead of throwing. Pass `selectors` from an earlier result to click with no model call; otherwise it needs `TYPESAFE_API_KEY`. |
+| `login` | An object with `submitted`, `loggedIn`, `pressedEnter` and `calls`. `usernameSelector`, `passwordSelector`, `submitSelector`, `nextSelector`, `candidates`, `loginWall`, `errorPage` and `reason` appear when set. | A page it can't sign in on returns `submitted: false` and a `reason` instead of throwing, so check `loggedIn`. Pass the selectors from an earlier result to fill the fields with no model call; otherwise it needs `TYPESAFE_API_KEY`. |
 | `waitForSelector` | `Element found. backendNodeId: <id>` | `timeout` defaults to 5000ms once the page has reached `load`, or 15000ms (the navigation budget plus 5000) if it hasn't yet. A script cannot act on that ID, since every method takes a CSS selector. |
 | `waitForScript` | `Script returned truthy.` | Same default-`timeout` rule as `waitForSelector`. Re-evaluates the script in the page context until it returns truthy. |
 | `waitForState` | `Page reached <state>.` | Takes one of the [load states](#load-states). `timeout` defaults to 5000ms. |
+| `callPageTool` | The tool's result as a string: the text of an MCP-style `content` array, or JSON for any other value | A tool that throws or rejects, or returns `isError: true`, throws its message in the script. If the tool navigates, the string ends with `(Navigated to <url>, HTTP <status>, title: <title>)`. An unknown name throws `No WebMCP tool named "<name>" on this page; pageTools lists them.` |
 
 ### Load states
 
