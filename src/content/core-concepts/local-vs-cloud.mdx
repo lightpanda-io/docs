@@ -3,8 +3,6 @@ title: When to Use Local vs Cloud
 description: Decide when to run Lightpanda locally or on Lightpanda Cloud, and compare CDP, MCP, agent, HTTP API, proxy, and telemetry coverage across both.
 ---
 
-import { Callout } from 'nextra/components'
-
 # When to use local vs cloud
 
 Lightpanda runs the same engine two ways. You can run the binary yourself, on your own machine or infrastructure, or connect to Lightpanda Cloud and let a remote browser do the work. The engine is identical. What differs is where the browser runs, which interfaces you can reach, and who sees the traffic.
@@ -33,14 +31,10 @@ Running on the cloud, the browser runs on Lightpanda's servers, so your target U
 
 This table shows which interfaces and features you can reach in each mode. Coverage is still expanding, so the cloud does not yet match local on every interface.
 
-<Callout type="info">
-Cloud coverage is a work in progress. The cloud exposes the MCP server over SSE with a subset of the tools available locally.
-</Callout>
-
 | Interface / feature | Local | Cloud |
 | --- | --- | --- |
 | [CDP server](/run-locally/commands#serve) (`serve`) | Yes | Yes |
-| [MCP server](/usage/mcp) | Yes, all tools | Partial, subset of tools |
+| [MCP server](/usage/mcp) | Yes | Yes |
 | [AI agent](/usage/agent) | Yes | No |
 | [`fetch` command](/run-locally/commands#fetch) | Yes | No |
 | [HTTP API](/usage/api) | No | Yes |

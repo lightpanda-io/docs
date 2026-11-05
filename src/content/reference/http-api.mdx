@@ -13,7 +13,7 @@ The `POST /api/fetch` endpoint returns a JSON message containing the page's cont
 
 ### Request
 
-The request requires a bearer authorization header with your token and the `Content-Type: application/json` header.
+The request requires a bearer authorization header with your token and the `Content-Type: application/json` header. You can pass the token as a `token` query parameter instead of the header.
 
 The endpoint accepts the following parameters:
 
@@ -21,10 +21,10 @@ The endpoint accepts the following parameters:
 |---|---|---|---|---|
 | `url` | string | Yes | — | The URL to fetch. |
 | `output_format` | `html` \| `markdown` | No | `html` | — |
-| `wait_ms` | uint | No | `5000` | Time to wait before retrieving the page, in milliseconds. `0` also falls back to the default; it doesn't mean "don't wait". |
+| `wait_ms` | uint | No | `5000` | Maximum time to wait for `wait_event`, in milliseconds. On timeout, the page is returned as it is. `0` also falls back to the default; it doesn't mean "don't wait". |
 | `wait_event` | `DOMContentLoaded` \| `load` \| `networkAlmostIdle` \| `networkIdle` | No | `networkIdle` | Event to wait for before retrieving the page. |
 | `raw` | bool | No | `false` | If true, the raw HTML or markdown is returned directly, without the JSON wrapper, with `Content-Type: text/html` or `text/plain` respectively. |
-| `proxy_name` | string | No | `fast_dc` | — |
+| `proxy_name` | string | No | `fast_dc` | Proxy to route the request through: `fast_dc` (the region's default), `datacenter`, or the identifier of a proxy you added in the console. Up to 32 characters. See [use a proxy on Lightpanda Cloud](/guides/configure-a-proxy#use-a-proxy-on-lightpanda-cloud). |
 | `country` | string | No | — | Two-letter country code, case-insensitive. Only used with the `datacenter` proxy. |
 
 ```sh copy
@@ -68,3 +68,15 @@ If the request sets `raw` to `false`, a JSON response is returned.
   }
 }
 ```
+
+### Errors
+
+Errors return a plain-text body instead of the JSON response.
+
+| Status | Cause |
+|---|---|
+| `400` | The body has an unknown field or an invalid value. For an invalid value, the body starts with the parameter's name, for example `wait_event: bad wait event`, `format: bad format`, `proxy_name: bad proxy` or `country: bad country`. |
+| `401` | The token is missing or invalid. |
+| `415` | The `Content-Type` header isn't `application/json`. |
+| `429` | A [plan limit](/run-on-lightpanda-cloud/limits-and-billing#when-you-reach-a-limit) is reached, or no browser is free in the region right now. |
+| `500` | The fetch failed or the service hit an error. A failed fetch returns a body that starts with `fetch:`. |
