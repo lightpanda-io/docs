@@ -60,6 +60,30 @@ Without an explicit choice, the agent resolves a provider in this order:
 Set `HF_BILL_TO` to an organization name to bill Hugging Face requests to it
 rather than to your personal account.
 
+### Use your ChatGPT plan
+
+The `codex` provider bills requests to your ChatGPT subscription instead of an
+API key, the same way the Codex CLI does. Log in once from the REPL:
+
+```sh copy
+lightpanda agent
+```
+
+Then type `/provider codex`. Lightpanda prints a URL
+(`https://auth.openai.com/codex/device`) and a one-time code. Open the URL,
+enter the code, and the REPL switches to Codex once you approve.
+
+The login is stored in `auth.json` in Lightpanda's data directory
+(`~/.local/share/lightpanda` on Linux, `~/Library/Application Support/lightpanda`
+on macOS) and refreshed automatically. Later runs pick it up without logging in
+again, including one-shot tasks:
+
+```sh copy
+lightpanda agent --provider codex --task "..."
+```
+
+Run `/provider codex` again in the REPL to keep, redo or remove the login.
+
 ### Models
 
 Set the model with the CLI option `--model` or the REPL command `/model`;
