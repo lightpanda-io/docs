@@ -10,6 +10,8 @@ Use Lightpanda with [Chromedp](https://github.com/chromedp/chromedp), a Go clien
 
 More examples in [demo/chromedp](https://github.com/lightpanda-io/demo/tree/main/chromedp).
 
+## Connect chromedp
+
 <Tabs items={['Local', 'Cloud']}>
   <Tabs.Tab>
 Start Lightpanda as a local CDP server (find all options in the [serve command reference](/reference/cli/serve#options)):
@@ -119,3 +121,37 @@ wss://euwest.cloud.lightpanda.io/ws?proxy=datacenter&country=de&token=TOKEN
 [Contact us](mailto:hello@lightpanda.io) for additional proxy options.
   </Tabs.Tab>
 </Tabs>
+
+## Lightpanda commands
+
+Lightpanda adds its own CDP commands, the [LP domain](/reference/cdp-lp-domain). Chromedp sends them by name with `cdp.Execute`, from `github.com/chromedp/cdproto/cdp`, inside a `chromedp.ActionFunc`.
+
+A selection of commands, by task:
+
+| Task | Command |
+|---|---|
+| Get the page as Markdown, HTML, PNG or PDF, after your clicks and form fills | `LP.dump` |
+| Get a compact outline of the page, with node IDs | `LP.getSemanticTree` |
+| Click or fill a node by its ID | `LP.clickNode`, `LP.fillNode` |
+| Tell a blocked or broken page from an empty one | `LP.getPageStatus` |
+| Skip images, iframes or other sub-resources for this connection | `LP.configureLoading` |
+
+Find every command, with its parameters and result, in the [LP domain reference](/reference/cdp-lp-domain#reading-the-page).
+
+In the local example, import `github.com/chromedp/cdproto/cdp` and replace the `chromedp.Run` call with:
+
+```go copy
+var res struct {
+    Content string `json:"content"`
+}
+if err := chromedp.Run(ctx,
+    chromedp.Navigate("https://wikipedia.com/"),
+    chromedp.ActionFunc(func(ctx context.Context) error {
+        return cdp.Execute(ctx, "LP.dump", map[string]any{"format": "markdown"}, &res)
+    }),
+); err != nil {
+    log.Fatalf("Failed dumping the page: %v", err)
+}
+
+log.Println(res.Content)
+```
