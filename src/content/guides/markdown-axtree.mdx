@@ -245,8 +245,6 @@ await browser.close();
 
 `LP.dump` takes a required `format` (`markdown`, `html`, `png` or `pdf`) and returns `{ format, content }`, with the Markdown in `content`. [Optional parameters](/reference/cdp-lp-domain#lpdump) scope or trim the output, for example `strip: { clutter: true }` to skip headers, footers, and sidebars.
 
-> `LP.getMarkdown`, which returns `{ markdown }`, still works but is deprecated in favor of `LP.dump`.
-
 ## CDP: Accessibility tree
 
 Lightpanda supports the standard CDP `Accessibility.getFullAXTree` command, returning the complete accessibility tree as a structured array of nodes, compatible with Chrome's CDP implementation.

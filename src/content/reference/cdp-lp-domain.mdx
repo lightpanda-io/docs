@@ -7,7 +7,7 @@ import { Tabs } from 'nextra/components'
 
 # CDP LP Domain
 
-The `LP` domain is a set of Chrome DevTools Protocol (CDP) commands that only Lightpanda implements. They give a CDP client new features, including Markdown and PDF dumps, the semantic tree, actions by node ID, and page diagnostics.
+The `LP` domain is a set of Chrome DevTools Protocol (CDP) commands that only Lightpanda implements. They give a CDP client new features, including Markdown dumps, the semantic tree, actions by node ID, page diagnostics, and browser configuration.
 
 The `LP` domain is available over CDP, in server mode (`lightpanda serve`) and on Lightpanda Cloud.
 
@@ -349,9 +349,3 @@ Carries the body of a download in base64 chunks, when the client sent `Browser.s
 | `data` | string | A chunk of the body, base64-encoded. |
 
 `Browser.downloadWillBegin` also carries a `contentType` field, which Chrome does not send.
-
-## Deprecated commands
-
-### LP.getMarkdown
-
-`LP.getMarkdown` takes an optional `nodeId` (a `backendNodeId`) and returns `{ markdown }`. Use `LP.dump` with `format: "markdown"` instead.
