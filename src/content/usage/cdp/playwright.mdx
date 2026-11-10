@@ -10,6 +10,8 @@ Use Lightpanda with [Playwright](https://playwright.dev/) via the [Chrome DevToo
 
 More examples in [demo/playwright](https://github.com/lightpanda-io/demo/tree/main/playwright) (JavaScript).
 
+## Connect Playwright
+
 <Tabs items={['Local', 'Cloud']}>
   <Tabs.Tab>
 Start Lightpanda as a local CDP server (find all options in the [serve command reference](/reference/cli/serve#options)):
@@ -147,3 +149,27 @@ wss://euwest.cloud.lightpanda.io/ws?proxy=datacenter&country=de&token=TOKEN
 [Contact us](mailto:hello@lightpanda.io) for additional proxy options.
   </Tabs.Tab>
 </Tabs>
+
+## Lightpanda commands
+
+Lightpanda adds its own CDP commands, the [LP domain](/reference/cdp-lp-domain). Playwright sends them through a CDP session: open one on the page and send the command by name.
+
+A selection of commands, by task:
+
+| Task | Command |
+|---|---|
+| Get the page as Markdown, HTML, PNG or PDF, after your clicks and form fills | `LP.dump` |
+| Get a compact outline of the page, with node IDs | `LP.getSemanticTree` |
+| Click or fill a node by its ID | `LP.clickNode`, `LP.fillNode` |
+| Tell a blocked or broken page from an empty one | `LP.getPageStatus` |
+| Skip images, iframes or other sub-resources for this connection | `LP.configureLoading` |
+
+Find every command, with its parameters and result, in the [LP domain reference](/reference/cdp-lp-domain#reading-the-page).
+
+In the local JavaScript example, after `page.goto`, add:
+
+```js copy
+const client = await context.newCDPSession(page);
+const { content } = await client.send('LP.dump', { format: 'markdown' });
+console.log(content);
+```
