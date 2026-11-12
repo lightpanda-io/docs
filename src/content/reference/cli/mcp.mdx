@@ -35,3 +35,9 @@ options:
 The command also accepts the [common options](/reference/cli/common-options).
 
 Find the available tools in the [MCP tools reference](/reference/mcp-tools).
+
+## Replies over HTTP
+
+With `--port`, a client whose `Accept` header lists `text/event-stream` can get the reply as an event stream: once a call sends a notification, such as the console lines `run` prints, or runs longer than 15 seconds, the reply switches to `text/event-stream`, with keep-alive comments while the call runs.
+
+To cancel a call in flight, POST a `notifications/cancelled` message with its `requestId`; the server answers with a 202.
