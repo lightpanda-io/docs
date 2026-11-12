@@ -169,8 +169,8 @@ comes back with blanks where you expected data, suspect the selectors or a
 missing wait before you suspect the page.
 
 The schema is parsed in Zig before the page-side walker runs, so malformed
-schemas are rejected up front with a plain `Error: InvalidParams` rather
-than a V8 stack trace.
+schemas are rejected up front with an `Error: InvalidParams: ...` message
+that says what to fix, rather than a V8 stack trace.
 
 ### Web search
 
