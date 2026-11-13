@@ -83,8 +83,8 @@ export LPD_TOKEN="your token here"
 Then connect Chromedp:
 
 ```go copy
-ctx, cancel := chromedp.NewRemoteAllocator(context.Background(),
-    "wss://euwest.cloud.lightpanda.io/ws?token="+os.Getenv("LPD_TOKEN"), chromedp.NoModifyURL,
+ctx, cancel := remote.NewAllocator(context.Background(),
+    "wss://euwest.cloud.lightpanda.io/ws?token="+os.Getenv("LPD_TOKEN"), remote.NoModifyURL,
 )
 defer cancel()
 ```
