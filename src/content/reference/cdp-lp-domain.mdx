@@ -70,11 +70,12 @@ err := chromedp.Do(ctx, chromedp.Func(func(ctx context.Context, t *chromedp.Targ
 
 | Error | Cause |
 |---|---|
-| `InvalidParams`, `InvalidParam` | A required parameter is missing or has the wrong type, or `selector` matches nothing. |
+| `InvalidParams`, `InvalidParam` | A required parameter is missing or has the wrong type, or `selector` matches nothing. `LP.clickNode`, `LP.fillNode` and `LP.scrollNode` also return `InvalidParam` when the element refuses the action, such as a disabled or read-only control. |
 | `InvalidNodeId` | The `backendNodeId` or `nodeId` is unknown. |
-| `NoBrowserContext` | The session has no page. |
+| `BrowserContextNotLoaded`, `TargetNotLoaded` | The connection has no browser context, or the context has no page. `LP.configureLoading` returns `NoBrowserContext` instead. |
 | `FrameNotLoaded` | The page has not navigated yet. |
 | `InternalError` | The action failed. `LP.waitForSelector` also returns it on timeout. |
+| `Timeout` | `LP.waitUntil` timed out. |
 
 ## Reading the page
 
@@ -292,6 +293,17 @@ Waits until an element matches a CSS selector.
 
 Returns `{ backendNodeId }` of the first match. On timeout, returns an `InternalError` error.
 
+### LP.waitUntil
+
+Waits until the page reaches a load state, with no navigation. It accepts the same states as [`--wait-until`](/reference/cli/fetch#options), including `settled`, so a CDP client can use them too.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `until` | `load` \| `domcontentloaded` \| `networkalmostidle` \| `networkidle` \| `settled` \| `done` | Yes | | The state to wait for. |
+| `timeout` | integer | No | `5000` | Maximum wait, in milliseconds. While the page is still loading, the default is `15000`. |
+
+Returns an empty object. On timeout, returns a `Timeout` error.
+
 ### LP.handleJavaScriptDialog
 
 Sets the answer to the next `confirm` or `prompt` dialog.
@@ -329,6 +341,7 @@ Chooses which sub-resources the session loads, overriding [`--load-resources`](/
 | `worker` | boolean | No | Value of `--load-resources` | Runs web workers. |
 | `externalStylesheets` | boolean | No | Value of `--load-resources` | Loads external stylesheets. |
 | `images` | boolean | No | Value of `--load-resources` | Requests images. |
+| `beacon` | boolean | No | Value of `--load-resources` | Sends `navigator.sendBeacon` requests. |
 
 Returns an empty object.
 
