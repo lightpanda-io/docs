@@ -45,18 +45,17 @@ console.log(result.content);
   <Tabs.Tab id="chromedp" className="m-0">
 
 ```go copy
-// import "github.com/chromedp/cdproto/cdp"
 var status struct {
     HTTPStatus int `json:"httpStatus"`
 }
 var result struct {
     Content string `json:"content"`
 }
-err := chromedp.Run(ctx, chromedp.ActionFunc(func(ctx context.Context) error {
-    if err := cdp.Execute(ctx, "LP.getPageStatus", nil, &status); err != nil {
+err := chromedp.Do(ctx, chromedp.Func(func(ctx context.Context, t *chromedp.Target) error {
+    if err := t.Call(ctx, "LP.getPageStatus", nil, &status); err != nil {
         return err
     }
-    return cdp.Execute(ctx, "LP.dump", map[string]any{"format": "markdown"}, &result)
+    return t.Call(ctx, "LP.dump", map[string]any{"format": "markdown"}, &result)
 }))
 ```
 

@@ -210,22 +210,24 @@ import (
 	"log"
 
 	"github.com/chromedp/chromedp"
+	"github.com/chromedp/chromedp/remote"
 )
 
 func main() {
-	allocCtx, cancel := chromedp.NewRemoteAllocator(context.Background(),
-		"ws://127.0.0.1:9222", chromedp.NoModifyURL,
+	allocCtx, cancel := remote.NewAllocator(context.Background(),
+		"ws://127.0.0.1:9222", remote.NoModifyURL,
 	)
 	defer cancel()
 
 	ctx, cancel := chromedp.NewContext(allocCtx)
 	defer cancel()
 
-	var quote string
-	if err := chromedp.Run(ctx,
-		chromedp.Navigate("https://quotes.toscrape.com/js/"),
-		chromedp.Text(".quote .text", &quote, chromedp.ByQuery),
-	); err != nil {
+	if err := chromedp.Do(ctx, chromedp.Navigate("https://quotes.toscrape.com/js/")); err != nil {
+		log.Fatalf("failed loading the page: %v", err)
+	}
+
+	quote, err := chromedp.Run(ctx, chromedp.Text(chromedp.CSS(".quote .text")))
+	if err != nil {
 		log.Fatalf("failed getting the quote: %v", err)
 	}
 
@@ -389,12 +391,12 @@ import (
 	"log"
 	"os"
 
-	"github.com/chromedp/chromedp"
+	"github.com/chromedp/chromedp/remote"
 )
 
 func main() {
-	allocCtx, cancel := chromedp.NewRemoteAllocator(context.Background(),
-		"wss://euwest.cloud.lightpanda.io/ws?token="+os.Getenv("LPD_TOKEN"), chromedp.NoModifyURL,
+	allocCtx, cancel := remote.NewAllocator(context.Background(),
+		"wss://euwest.cloud.lightpanda.io/ws?token="+os.Getenv("LPD_TOKEN"), remote.NoModifyURL,
 	)
 	// ...
 ```
