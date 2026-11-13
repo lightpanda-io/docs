@@ -97,6 +97,7 @@ The states `waitForState` accepts:
 | `"domcontentloaded"` | The HTML is parsed and deferred scripts have run. Subresources (images, stylesheets, async scripts) may still be loading. |
 | `"networkalmostidle"` | At most 2 requests stay in flight for 500 ms straight. |
 | `"networkidle"` | Zero requests stay in flight for 500 ms straight. |
+| `"settled"` | Experimental. Waits for `load`, then for the requests and short timers that page-load work started, ignoring intervals, long timeouts, idle callbacks and WebSocket traffic. Resolves at `load` when `load` started nothing. |
 | `"done"` | The page goes fully idle: no scheduled JavaScript work and no network activity. Every `waitForState` call eventually resolves to this, even if the requested state is never reached. |
 
 ## Console
