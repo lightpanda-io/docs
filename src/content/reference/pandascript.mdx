@@ -50,6 +50,7 @@ The states `waitForState` and `goto`'s `waitUntil` accept:
 | `"domcontentloaded"` | The HTML is parsed and deferred scripts have run. Subresources (images, stylesheets, async scripts) may still be loading. |
 | `"networkalmostidle"` | At most 2 requests stay in flight for 500 ms straight. |
 | `"networkidle"` | Zero requests stay in flight for 500 ms straight. |
+| `"settled"` | Experimental. Waits for `load`, then for the requests and short timers that page-load work started, ignoring intervals, long timeouts, idle callbacks and WebSocket traffic. Resolves at `load` when `load` started nothing. |
 | `"done"` | The page goes fully idle: no scheduled JavaScript work and no network activity. Every `waitForState` call eventually resolves to this, even if the requested state is never reached. |
 
 ## Extraction schema
@@ -97,7 +98,7 @@ Clicked element (selector: a.login). Page url: https://example.com/app, HTTP 200
 
 | Method | Returns | Comment |
 |--------|---------|---------|
-| `goto` | The same page object it was called on | Resolves once `waitUntil` is reached. `waitUntil` takes the same states as [`waitForState`](#load-states): `load` (default, a fast snapshot that skips content rendered by post-load JavaScript), `domcontentloaded`, `networkalmostidle`, `networkidle`, or `done`. |
+| `goto` | The same page object it was called on | Resolves once `waitUntil` is reached. `waitUntil` takes the same states as [`waitForState`](#load-states): `load` (default, a fast snapshot that skips content rendered by post-load JavaScript), `domcontentloaded`, `networkalmostidle`, `networkidle`, `settled`, or `done`. |
 | `close` | Nothing | |
 | `download` | `saved <bytes> bytes (<content type>) to <absolute path>` | Any status outside 200-203 throws `HTTP <status> <text>; nothing saved`. A failed download leaves an existing file at `path` untouched. |
 | `extract` | An object or an array, shaped by the schema | Schema forms are listed [below](#extraction-schema). |

@@ -8,7 +8,11 @@ import { Tabs } from 'nextra/components'
 
 Use Lightpanda with [Chromedp](https://github.com/chromedp/chromedp), a Go client for the [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/) (CDP).
 
+The examples on this page use the API of Chromedp [v0.23.0](https://github.com/chromedp/chromedp/releases/tag/v0.23.0) and later, which requires Go 1.25.
+
 More examples in [demo/chromedp](https://github.com/lightpanda-io/demo/tree/main/chromedp).
+
+## Connect chromedp
 
 <Tabs items={['Local', 'Cloud']}>
   <Tabs.Tab>
@@ -18,7 +22,7 @@ Start Lightpanda as a local CDP server (find all options in the [serve command r
 lightpanda serve --host 127.0.0.1 --port 9222
 ```
 
-Connect Chromedp using `NewRemoteAllocator`:
+Connect Chromedp using `remote.NewAllocator`:
 
 ```go copy
 package main
@@ -28,22 +32,24 @@ import (
     "log"
 
     "github.com/chromedp/chromedp"
+    "github.com/chromedp/chromedp/remote"
 )
 
 func main() {
-    ctx, cancel := chromedp.NewRemoteAllocator(context.Background(),
-        "ws://127.0.0.1:9222", chromedp.NoModifyURL,
+    ctx, cancel := remote.NewAllocator(context.Background(),
+        "ws://127.0.0.1:9222", remote.NoModifyURL,
     )
     defer cancel()
 
     ctx, cancel = chromedp.NewContext(ctx)
     defer cancel()
 
-    var title string
-    if err := chromedp.Run(ctx,
-        chromedp.Navigate("https://wikipedia.com/"),
-        chromedp.Title(&title),
-    ); err != nil {
+    if err := chromedp.Do(ctx, chromedp.Navigate("https://wikipedia.com/")); err != nil {
+        log.Fatalf("Failed loading the page: %v", err)
+    }
+
+    title, err := chromedp.Run(ctx, chromedp.Title())
+    if err != nil {
         log.Fatalf("Failed getting page's title: %v", err)
     }
 
@@ -67,22 +73,24 @@ import (
 	"os"
 
 	"github.com/chromedp/chromedp"
+	"github.com/chromedp/chromedp/remote"
 )
 
 func main() {
-	ctx, cancel := chromedp.NewRemoteAllocator(context.Background(),
-		"wss://euwest.cloud.lightpanda.io/ws?token="+os.Getenv("LPD_TOKEN"), chromedp.NoModifyURL,
+	ctx, cancel := remote.NewAllocator(context.Background(),
+		"wss://euwest.cloud.lightpanda.io/ws?token="+os.Getenv("LPD_TOKEN"), remote.NoModifyURL,
 	)
 	defer cancel()
 
 	ctx, cancel = chromedp.NewContext(ctx)
 	defer cancel()
 
-	var title string
-	if err := chromedp.Run(ctx,
-		chromedp.Navigate("https://lightpanda.io"),
-		chromedp.Title(&title),
-	); err != nil {
+	if err := chromedp.Do(ctx, chromedp.Navigate("https://lightpanda.io")); err != nil {
+		log.Fatalf("Failed loading lightpanda.io: %v", err)
+	}
+
+	title, err := chromedp.Run(ctx, chromedp.Title())
+	if err != nil {
 		log.Fatalf("Failed getting title of lightpanda.io: %v", err)
 	}
 
@@ -119,3 +127,37 @@ wss://euwest.cloud.lightpanda.io/ws?proxy=datacenter&country=de&token=TOKEN
 [Contact us](mailto:hello@lightpanda.io) for additional proxy options.
   </Tabs.Tab>
 </Tabs>
+
+## Lightpanda commands
+
+Lightpanda adds its own CDP commands, the [LP domain](/reference/cdp-lp-domain). Chromedp sends them by name with the target's `Call` method, inside a `chromedp.Func`.
+
+A selection of commands, by task:
+
+| Task | Command |
+|---|---|
+| Get the page as Markdown, HTML, PNG or PDF, after your clicks and form fills | `LP.dump` |
+| Get a compact outline of the page, with node IDs | `LP.getSemanticTree` |
+| Click or fill a node by its ID | `LP.clickNode`, `LP.fillNode` |
+| Tell a blocked or broken page from an empty one | `LP.getPageStatus` |
+| Skip images, iframes or other sub-resources for this connection | `LP.configureLoading` |
+
+Find every command, with its parameters and result, in the [LP domain reference](/reference/cdp-lp-domain#reading-the-page).
+
+In the local example, replace the `chromedp.Do` and `chromedp.Run` calls with:
+
+```go copy
+var res struct {
+    Content string `json:"content"`
+}
+if err := chromedp.Do(ctx,
+    chromedp.Navigate("https://wikipedia.com/"),
+    chromedp.Func(func(ctx context.Context, t *chromedp.Target) error {
+        return t.Call(ctx, "LP.dump", map[string]any{"format": "markdown"}, &res)
+    }),
+); err != nil {
+    log.Fatalf("Failed dumping the page: %v", err)
+}
+
+log.Println(res.Content)
+```

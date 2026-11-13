@@ -56,7 +56,7 @@ curl -X POST http://localhost:8000/mcp \
 
 Calls with no `Mcp-Session-Id` header use the always-present `default` session, which is what the two calls above do. An `initialize` call creates a new session and returns its id in that header; send that id back on later calls to stay in it. Find the session model and the `session_new`, `session_list` and `session_close` tools in the [MCP tools reference](/reference/mcp-tools#session).
 
-Find all options in the [mcp command reference](/reference/cli/mcp).
+Find all options and the HTTP reply details in the [mcp command reference](/reference/cli/mcp).
 
 ### Debugging
 
@@ -119,6 +119,8 @@ Extract the current page's content as clean, token-efficient markdown.
 </details>
 
 > Using `markdown` with an inline `url` is the most efficient single-call pattern: it navigates and extracts in one request.
+
+When a page links a markdown version of itself (`<link rel="alternate" type="text/markdown">`), pass `"alternate": true` to get that file instead of a conversion of the page. It is the author's file and can differ from the rendered page. If the page has no such link, the page is an error or bot challenge page, or the file doesn't load as markdown, `alternate` has no effect and the tool converts the page as usual.
 
 ### `evaluate`
 
@@ -205,5 +207,5 @@ Which tool the agent picks depends on the model and its own reasoning, not a fix
 A genuine navigation failure (DNS resolution, connection refused, ...) makes `goto` return an error directly: `"navigation failed: CouldntResolveHost"` (`isError: true`). Two cases still report success though:
 
 - **A timeout** doesn't fail: `"Navigation started (HTTP 200 OK) but the page did not finish loading before the timeout."`
-- **An HTTP error page** (404, 500, ...) is still a successful navigation at the network level, but the result carries the status: `"Navigated successfully. HTTP 404 Not Found."` in the text, and `httpStatus` in `structuredContent`. Check it before reading the page as content.
+- **An HTTP error page** (404, 500, ...) is still a successful navigation at the network level, but the result carries the status: `"HTTP 404 Not Found: this is likely an error or rate-limit page, not the requested content."` before `"Navigated. HTTP 404 Not Found."` in the text, and `httpStatus` in `structuredContent`. Check it before reading the page as content.
 
