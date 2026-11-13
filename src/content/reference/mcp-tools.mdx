@@ -24,12 +24,40 @@ Every call goes through the MCP `tools/call` method, with `name` and `arguments`
  "structuredContent":{"url":"https://example.com","httpStatus":200,"title":"Example Domain"},"isError":false}}
 ```
 
-The result comes back as `{"result":{"content":[{"type":"text","text":"..."}],"isError":false}}`.
+## Tool results
 
-**Page state.** `goto` and the tools that act on the page (`click`, `fill`, `scroll`, `hover`, `press`, `selectOption`, `setChecked`) end their text with `Page url: <url>, HTTP <status>, title: <title>`; `goto` reports `Navigated successfully. HTTP <status>.` A 4xx or 5xx status means the page is an error page, not the content.
+### Page state
 
-The same tools also return `structuredContent` with `url`, `httpStatus` and `title`, declared by each tool's `outputSchema` in `tools/list`. Only `url` is always present; `httpStatus` is absent before any response arrives.
+The tools marked **page state** return `structuredContent`, declared by each tool's `outputSchema` in `tools/list`, with these fields:
 
-`goto` returns an error directly on a genuine navigation failure (e.g. `navigation failed: CouldntResolveHost`); a timeout reports `"Navigation started (HTTP <status>) but the page did not finish loading before the timeout."` (see [Known behaviors](/usage/mcp#known-behaviors)).
+- `url`: the page URL, always present.
+- `httpStatus`: the HTTP status, absent before any response arrives.
+- `title`: the page title.
+
+Their text also ends with the page state. `goto` ends with `Navigated. HTTP <status>.`, and the tools that act on the page end with:
+
+```
+Page url: <url>, HTTP <status>, title: <title>
+```
+
+A 4xx or 5xx status means the page is an error page, not the content. For how `goto` reports a failed navigation or a timeout, see [Known behaviors](/usage/mcp#known-behaviors).
+
+### Page notes
+
+When a tool navigates, its text can start with notes on what the page lacks:
+
+- WebGL: `The page asked for WebGL, which Lightpanda does not provide: anything it renders that way is missing.`
+- Iframes: `<n> iframe(s) were not loaded: subframe loading is off.`
+- Refused requests: some of the page's own requests were refused with HTTP 403/429 or blocked by a bot challenge.
+
+An error page or a bot challenge page starts with:
+
+- 4xx or 5xx page: `HTTP <status>: this is likely an error or rate-limit page, not the requested content.`
+- Bot challenge page: `Blocked by a <vendor> bot challenge (HTTP <status>): this is not the requested content.`
+
+Any tool's text can also start with the WebMCP tools the page registers, when that set changed since the last call:
+
+- `The page registers WebMCP tools; callPageTool runs one:` followed by their JSON.
+- `The page no longer registers WebMCP tools.`
 
 <McpTools />
