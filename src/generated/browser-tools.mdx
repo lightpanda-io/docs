@@ -18,7 +18,7 @@ Navigate the current page to a URL. Returns the HTTP status once `waitUntil` fir
 |---|---|---|---|
 | `url` | string | yes | The URL to navigate to, must be a valid URL. |
 | `timeout` | integer | no | Optional timeout in milliseconds. Defaults to 10000. |
-| `waitUntil` | string | no | Event that completes the navigation. Defaults to 'load'. Prefer 'domcontentloaded' followed by waitForSelector on pages whose late scripts (ads) hold 'load' back. Avoid 'done' (full quiescence): on pages with constant background activity it is the slowest choice and can run to the timeout. One of `load`, `domcontentloaded`, `networkalmostidle`, `networkidle`, `done`. |
+| `waitUntil` | string | no | Event that completes the navigation. Defaults to 'load'. Prefer 'domcontentloaded' followed by waitForSelector on pages whose late scripts (ads) hold 'load' back. Avoid 'done' (full quiescence): on pages with constant background activity it is the slowest choice and can run to the timeout. One of `load`, `domcontentloaded`, `networkalmostidle`, `networkidle`, `settled`, `done`. |
 
 Recorded in saved scripts. Reports the resulting page state (`url`, `httpStatus`, `title`).
 
@@ -120,7 +120,7 @@ Navigates first when given `url`.
 
 ### tree
 
-Semantic outline of the page as indented text: one node per line with its role, accessible name, value and backendNodeId, plus checked state and select options with the selected one marked. The default first read of an unfamiliar page; input and select values are already here, so no `nodeDetails` call is needed to read them. Pass `backendNodeId` to scope to a subtree and `maxDepth` to survey structure before going deeper. Read it again after any page-changing action, since the DOM it describes may have changed; use `nodeDetails` to turn a backendNodeId into a CSS selector for actions.
+Semantic outline of the page as indented text: one node per line with its role, accessible name, value and backendNodeId, plus checked state and select options with the selected one marked. The default first read of an unfamiliar page; input and select values are already here, so no `nodeDetails` call is needed to read them. Pass `backendNodeId` to scope to a subtree and `maxDepth` to survey structure before going deeper. Read it again after any page-changing action, since the DOM it describes may have changed; pass `delta` then to get only what changed since the last `tree` call. Use `nodeDetails` to turn a backendNodeId into a CSS selector for actions.
 
 | Argument | Type | Required | Description |
 |---|---|---|---|
@@ -129,6 +129,7 @@ Semantic outline of the page as indented text: one node per line with its role, 
 | `backendNodeId` | integer | no | Optional backend node ID to get the tree for a specific element instead of the document root. 0 is treated as omitted. |
 | `maxDepth` | integer | no | Optional maximum depth of the tree to return. Useful for exploring high-level structure first. |
 | `maxBytes` | integer | no | Optional cap on output size in bytes. Past it, lines are kept by priority (alerts, dialogs, invalid fields and the focused element, then controls and named nodes, then text; list entries breadth-first), and dropped lines are counted in a '[+N more @id]' marker. id is the backendNodeId of the node holding them, often a list item or list that isn't printed itself: call tree with backendNodeId=id to read them. |
+| `delta` | boolean | no | Optional. Return only what changed since the last tree returned in full, by backendNodeId: '- id' removed with its subtree, '~ line' changed, '+ line' added; a new or moved line ends with its place, (after id) or (first in id), and the added lines under it follow indented. One line says when nothing changed. The first call, a navigation, another backendNodeId, maxDepth or maxBytes, or a change to most of the tree return the full tree under a '[full tree]' line. |
 
 Navigates first when given `url`.
 
@@ -241,7 +242,7 @@ Classify the page or an element subtree using TypeSafe System One (Jev). `questi
 
 | Argument | Type | Required | Description |
 |---|---|---|---|
-| `questions` | string | yes | JSON string: array of categories, or object of questions (`{}` for every preset) |
+| `questions` | any | yes | JSON object or array of questions, or a JSON-encoded string of the same (`{}` for every preset) |
 | `selector` | string | no | Optional CSS selector to classify a specific element subtree instead of the full page |
 | `presets` | boolean | no | Also ask every preset in the same call, each answered under its own name beside the questions. Needs the object form. |
 
@@ -411,7 +412,7 @@ Wait for the CURRENT page to reach a load state (no navigation). After a `goto`,
 
 | Argument | Type | Required | Description |
 |---|---|---|---|
-| `state` | string | yes | Load state to wait for. 'networkidle' = network settled (the usual choice to finish a dynamic page). One of `load`, `domcontentloaded`, `networkalmostidle`, `networkidle`, `done`. |
+| `state` | string | yes | Load state to wait for. 'networkidle' = network settled (the usual choice to finish a dynamic page). One of `load`, `domcontentloaded`, `networkalmostidle`, `networkidle`, `settled`, `done`. |
 | `timeout` | integer | no | Optional timeout in milliseconds. Defaults to 5000. |
 
 Recorded in saved scripts.
@@ -426,6 +427,7 @@ These tools inspect browser state outside the DOM.
 | [`getUrl`](#geturl) | Show the current page URL |
 | [`getCookies`](#getcookies) | Show stored cookies |
 | [`getEnv`](#getenv) | Read or list LP_* env vars |
+| [`popups`](#popups) | List windows the page opened, or switch to one |
 
 ### consoleLogs
 
@@ -456,6 +458,14 @@ With `name`: read an LP_* env var (other namespaces report as not set) — for n
 |---|---|---|---|
 | `name` | string | no | Optional. If provided, must start with LP_; returns the value. If omitted, returns the list of LP_* names that are set. |
 
+### popups
+
+Windows the current page opened (`window.open` or target=_blank), main page first. A click that opens a window is followed automatically; a window opened late, after a fetch or a timer, lands here. `follow` makes that window current — subsequent tools act on it; pass the main page's id to switch back. Windows live until the page closes.
+
+| Argument | Type | Required | Description |
+|---|---|---|---|
+| `follow` | integer | no | Id from a previous popups call. Makes that window current for subsequent tool calls. |
+
 ## Page tools (WebMCP)
 
 These tools list and call the tools a page registers for agents through WebMCP.
@@ -467,7 +477,7 @@ These tools list and call the tools a page registers for agents through WebMCP.
 
 ### pageTools
 
-List the tools the current page registers for agents through WebMCP (`navigator.modelContext.registerTool`), as JSON with each tool's `name`, `description`, `inputSchema` and hints. A page tool runs the site's own code and can be more reliable than driving its UI; call one with `callPageTool`. Many pages register their tools after `load`: if the list is empty on a page you expect to have tools, call `waitForState` with `networkidle` and list again.
+List the tools the current page registers for agents through WebMCP (`navigator.modelContext.registerTool`), as JSON with each tool's `name`, `description`, `inputSchema` and hints. A page tool runs the site's own code and can be more reliable than driving its UI; call one with `callPageTool`. Other tool results already show the page's tools, with their schemas, whenever the set changes; call this to list them again. Many pages register their tools after `load`: on a page you expect to have tools, `waitForState` with `networkidle` gives them time.
 
 No arguments.
 

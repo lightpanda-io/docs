@@ -73,6 +73,7 @@ These tools inspect browser state outside the DOM.
 | [`getUrl`](/reference/browser-tools#geturl) | Show the current page URL | read-only, idempotent |
 | [`getCookies`](/reference/browser-tools#getcookies) | Show stored cookies | read-only, idempotent |
 | [`getEnv`](/reference/browser-tools#getenv) | Read or list LP_* env vars | read-only, idempotent |
+| [`popups`](/reference/browser-tools#popups) | List windows the page opened, or switch to one | idempotent |
 
 ## Page tools (WebMCP)
 
@@ -152,7 +153,7 @@ Hints: destructive, idempotent
 
 ### run
 
-**Run an agent script.** Run a Lightpanda agent script in this session, as `lightpanda run` does, and return its console output followed by the value it returns. Pass the source as `script`, or the `path` of a file `save` wrote. The script drives pages through `const page = new Page(); await page.goto(url);` and the builtins as methods on `page`; `$LP_*` placeholders are resolved. Pages the script opens are closed when it ends; cookies and storage stay in the session, so a login carries over to the next call. Script variables do not carry over. A thrown error, a failed step or the timeout ends the script and is reported as an error after the output so far.
+**Run an agent script.** Run a Lightpanda agent script in this session, as `lightpanda run` does, and return its console output followed by the value it returns. Pass the source as `script`, or the `path` of a file `save` wrote. The script drives pages through `const page = new Page(); await page.goto(url);` and the builtins as methods on `page`; `$LP_*` placeholders are resolved. To read several URLs, make one `new Page()` per URL and `await Promise.all(pages.map((p, i) => p.goto(urls[i])))` so they load in parallel, then read each with `page.extract` or `page.evaluate`. Pages the script opens are closed when it ends; cookies and storage stay in the session, so a login carries over to the next call. Script variables do not carry over. A thrown error, a failed step or the timeout ends the script and is reported as an error after the output so far.
 
 | Argument | Type | Required | Description |
 |---|---|---|---|
