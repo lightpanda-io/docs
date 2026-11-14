@@ -202,7 +202,7 @@ def classify(
 ) -> Any
 ```
 
-Classify the page or an element subtree using TypeSafe System One (Jev). `questions` is a JSON array of categories (returns the one that fits), or a JSON object of questions keyed by the name each answer comes back under: `true` for a preset (isBlocked, isCaptcha, isConsentWall, isEmptyCatalog, isErrorPage, isLoginWall, isPaywall, isUnsupportedBrowser, isLoading; an empty object `{}` asks all of them), a string for a yes/no question (returns its probability), `{question, options}` for a choice, or `{question, levels}` for a score on 2-10 levels ordered low to high (returns the `score` between level indices, the nearest `level`, and per-level `probabilities`). A missing answer is null.
+Classify the page or an element subtree using TypeSafe System One (Jev). `questions` is a JSON array of categories (returns the one that fits), or a JSON object of questions keyed by the name each answer comes back under: `true` for a preset (isBlocked, isCaptcha, isConsentWall, isEmptyCatalog, isErrorPage, isLoginWall, isPaywall, isUnsupportedBrowser, isLoading, isAgeGate, isRegionBlocked, isRateLimited; an empty object `{}` asks all of them), a string for a yes/no question (returns its probability), `{question, options}` for a choice, or `{question, levels}` for a score on 2-10 levels ordered low to high (returns the `score` between level indices, the nearest `level`, and per-level `probabilities`). A missing answer is null.
 
 
 **Arguments:**
@@ -786,7 +786,7 @@ Check or uncheck a checkbox or radio button. Provide either a CSS selector (pref
 def structured_data(self, *, url: str | None = None, timeout: int | None = None) -> Any
 ```
 
-Page metadata as JSON: `jsonLd` (each JSON-LD block as a string), `openGraph`, `twitterCard`, `meta` and [`links`](#session-links) (key/value lists), plus `alternate` (hreflang variants) and `linkHeaders` (relations from the HTTP Link header) when present. Empty sections come back as empty arrays. Use it for publisher-declared facts such as product price, article author or canonical URL before scraping the visible text for them. If a url is provided, it navigates there first.
+Page metadata as JSON: `jsonLd` (each JSON-LD block as a string), `openGraph`, `twitterCard`, `meta` and [`links`](#session-links) (key/value lists), plus `microdata` (itemscope items as `{type, id, properties}`, every property value an array), `alternate` (hreflang variants) and `linkHeaders` (relations from the HTTP Link header) when present. Empty sections come back as empty arrays. Use it for publisher-declared facts such as product price, article author or canonical URL before scraping the visible text for them. If a url is provided, it navigates there first.
 
 
 **Arguments:**
@@ -1966,6 +1966,33 @@ is_loading: bool
 
 The page says it is still loading (spinners, placeholders, loading
 text). A page that is blank while it loads says nothing, so this misses it.
+
+### PageVerdict.is_age_gate [#pageverdict-is-age-gate]
+
+```python
+is_age_gate: bool
+```
+
+An age check covers the content, asking the visitor to confirm they are
+an adult or to enter their date of birth.
+
+### PageVerdict.is_region_blocked [#pageverdict-is-region-blocked]
+
+```python
+is_region_blocked: bool
+```
+
+The site says the content is not available in the visitor's country or
+region.
+
+### PageVerdict.is_rate_limited [#pageverdict-is-rate-limited]
+
+```python
+is_rate_limited: bool
+```
+
+The site says too many requests were sent, and to slow down or try again
+later.
 
 ### PageVerdict.scores [#pageverdict-scores]
 
