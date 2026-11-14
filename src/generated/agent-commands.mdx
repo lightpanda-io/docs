@@ -43,7 +43,7 @@ These take only `key=value`, and also accept a prompt in place of their fields: 
 | [`/html [selector=…] [backendNodeId=…] [maxBytes=…] [strip=…] [url=…] [timeout=…]`](/reference/browser-tools#html) | Raw HTML of the page or a node |
 | [`/screenshot [path=…] [selector=…] [backendNodeId=…] [fullPage=…] [strip=…] [url=…] [timeout=…]`](/reference/browser-tools#screenshot) | Screenshot of the page or a node |
 | [`/links [limit=…] [url=…] [timeout=…]`](/reference/browser-tools#links) | List all links on the page |
-| [`/tree [url=…] [timeout=…] [backendNodeId=…] [maxDepth=…] [maxBytes=…]`](/reference/browser-tools#tree) | Semantic DOM tree of the page |
+| [`/tree [url=…] [timeout=…] [backendNodeId=…] [maxDepth=…] [maxBytes=…] [delta=…]`](/reference/browser-tools#tree) | Semantic DOM tree of the page |
 | [`/nodeDetails <backendNodeId>`](/reference/browser-tools#nodedetails) | Inspect a node by backendNodeId |
 | [`/interactiveElements [url=…] [timeout=…]`](/reference/browser-tools#interactiveelements) | List interactive elements on the page |
 | [`/structuredData [url=…] [timeout=…]`](/reference/browser-tools#structureddata) | Extract JSON-LD / microdata / OpenGraph data |
@@ -68,5 +68,6 @@ These take only `key=value`, and also accept a prompt in place of their fields: 
 | [`/getUrl`](/reference/browser-tools#geturl) | Show the current page URL |
 | [`/getCookies [url=…] [all=…]`](/reference/browser-tools#getcookies) | Show stored cookies |
 | [`/getEnv [name=…]`](/reference/browser-tools#getenv) | Read or list LP_* env vars |
+| [`/popups [follow=…]`](/reference/browser-tools#popups) | List windows the page opened, or switch to one |
 | [`/pageTools`](/reference/browser-tools#pagetools) | List the page's WebMCP tools |
 | [`/callPageTool <name> [arguments=…]`](/reference/browser-tools#callpagetool) | Call one of the page's WebMCP tools |
