@@ -74,21 +74,29 @@ The agent chains tool calls to answer it: `goto` the search page, `detectForms` 
 
 ## Go to production
 
-[Lightpanda Cloud](/run-on-lightpanda-cloud/getting-started) exposes the same MCP server over [Streamable HTTP](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http), so there's no process to install or keep alive. Point your host at the endpoint nearest you through [mcp-remote](https://www.npmjs.com/package/mcp-remote), the bridge MCP hosts that only support stdio need to reach a remote server:
+[Lightpanda Cloud](/run-on-lightpanda-cloud/getting-started) exposes the same MCP server over [Streamable HTTP](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http), so there's no process to install or keep alive. Point your host at the endpoint nearest you:
 
 ```json copy
 {
   "mcpServers": {
-    "lightpanda-cloud": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "mcp-remote",
-        "https://euwest.cloud.lightpanda.io/mcp?token=TOKEN"
-      ]
+    "lightpanda": {
+      "type": "http",
+      "url": "https://euwest.cloud.lightpanda.io/mcp",
+      "headers": {
+        "Authorization": "Bearer <YOUR_TOKEN>"
+      }
     }
   }
 }
+```
+
+Alternatively, you can use `claude` CLI to add the mcp server:
+```bash copy
+claude mcp add \
+    --transport http \
+    --header "Authorization: Bearer <YOUR_TOKEN>" \
+    lightpanda \
+    https://euwest.cloud.lightpanda.io/mcp
 ```
 
 Find more [MCP options](/usage/mcp) and every tool in the [MCP tools reference](/reference/mcp-tools).
