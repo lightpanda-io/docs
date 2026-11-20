@@ -2,7 +2,7 @@
 title: MCP
 description: Connect an AI agent to Lightpanda over the Model Context Protocol and drive a real form on a live page.
 ---
-import { Callout, Steps } from 'nextra/components'
+import { Callout, Steps, Tabs } from 'nextra/components'
 
 # MCP
 
@@ -10,7 +10,7 @@ Lightpanda's [MCP](https://modelcontextprotocol.io) server exposes browser tools
 
 ## Prerequisites
 
-- An MCP host: Claude Desktop, Cursor, Windsurf, or a custom client.
+- An MCP host, such as Claude Code, Codex, Cursor, GitHub Copilot (CLI or VS Code), OpenCode, or a custom client.
 
 ## Steps
 
@@ -35,13 +35,74 @@ command -v lightpanda
 
 A bare `lightpanda` may not work here: your MCP host starts it outside your terminal, so it doesn't see the `PATH` you set during install.
 
-Open your host's MCP configuration:
+Add Lightpanda to your host's MCP configuration, replacing `/path/to/lightpanda` with the path you printed. Each tab links to the host's MCP docs, in case its format changes.
 
-- **Claude Desktop:** Settings > Developer > Edit Config (opens `claude_desktop_config.json`)
-- **Cursor:** `.cursor/mcp.json` in your project, or `~/.cursor/mcp.json` for all projects
-- **Windsurf:** `~/.codeium/windsurf/mcp_config.json`
+<Tabs items={['Claude Code', 'Codex', 'Cursor', 'GitHub Copilot', 'OpenCode', 'Claude Desktop']}>
+  <Tabs.Tab>
+Run this command ([Claude Code MCP docs](https://code.claude.com/docs/en/mcp)):
 
-Add Lightpanda, replacing `/path/to/lightpanda` with the path you printed:
+```sh copy
+claude mcp add --transport stdio --scope user lightpanda -- /path/to/lightpanda mcp
+```
+  </Tabs.Tab>
+  <Tabs.Tab>
+Add this to `~/.codex/config.toml`, or `.codex/config.toml` in your project ([Codex MCP docs](https://learn.chatgpt.com/docs/extend/mcp?surface=cli)):
+
+```toml copy
+[mcp_servers.lightpanda]
+command = "/path/to/lightpanda"
+args = ["mcp"]
+```
+  </Tabs.Tab>
+  <Tabs.Tab>
+Add this to `~/.cursor/mcp.json`, or `.cursor/mcp.json` in your project ([Cursor MCP docs](https://cursor.com/docs/mcp)):
+
+```json copy
+{
+  "mcpServers": {
+    "lightpanda": {
+      "type": "stdio",
+      "command": "/path/to/lightpanda",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+  </Tabs.Tab>
+  <Tabs.Tab>
+Copilot CLI and Copilot in VS Code both read these files. Add this to `~/.copilot/mcp-config.json`, or `.mcp.json` at your project root ([Copilot CLI MCP docs](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-mcp-servers), [VS Code MCP docs](https://code.visualstudio.com/docs/agents/reference/mcp-configuration)):
+
+```json copy
+{
+  "mcpServers": {
+    "lightpanda": {
+      "type": "stdio",
+      "command": "/path/to/lightpanda",
+      "args": ["mcp"],
+      "tools": ["*"]
+    }
+  }
+}
+```
+  </Tabs.Tab>
+  <Tabs.Tab>
+Add this to `~/.config/opencode/opencode.json`, or `opencode.json` in your project ([OpenCode MCP docs](https://opencode.ai/docs/mcp-servers/)):
+
+```json copy
+{
+  "mcp": {
+    "servers": {
+      "lightpanda": {
+        "type": "local",
+        "command": ["/path/to/lightpanda", "mcp"]
+      }
+    }
+  }
+}
+```
+  </Tabs.Tab>
+  <Tabs.Tab>
+Open Settings > Developer > Edit Config, which opens `claude_desktop_config.json`, and add this ([Claude Desktop MCP docs](https://modelcontextprotocol.io/docs/develop/connect-local-servers)):
 
 ```json copy
 {
@@ -53,9 +114,11 @@ Add Lightpanda, replacing `/path/to/lightpanda` with the path you printed:
   }
 }
 ```
+  </Tabs.Tab>
+</Tabs>
 
 <Callout type="info" emoji="ℹ️">
-  Respect `robots.txt` and avoid high-frequency requests against small sites. Add `--obey-robots` to `args` to have Lightpanda follow `robots.txt` for you.
+  Respect `robots.txt` and avoid high-frequency requests against small sites. To have Lightpanda follow `robots.txt` for you, add `--obey-robots` to the command in your config, so it runs `/path/to/lightpanda mcp --obey-robots`.
 </Callout>
 
 ### Try it
@@ -74,21 +137,90 @@ The agent chains tool calls to answer it: `goto` the search page, `detectForms` 
 
 ## Go to production
 
-[Lightpanda Cloud](/run-on-lightpanda-cloud/getting-started) exposes the same MCP server over [Streamable HTTP](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http), so there's no process to install or keep alive. Point your host at the endpoint nearest you through [mcp-remote](https://www.npmjs.com/package/mcp-remote), the bridge MCP hosts that only support stdio need to reach a remote server:
+[Lightpanda Cloud](/run-on-lightpanda-cloud/getting-started) exposes the same MCP server over [Streamable HTTP](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http), so there's no process to install or keep alive. Point your host at the endpoint nearest you (`euwest` or `uswest`), replacing `TOKEN` with your API token:
+
+<Tabs items={['Claude Code', 'Codex', 'Cursor', 'GitHub Copilot', 'OpenCode', 'Claude Desktop']}>
+  <Tabs.Tab>
+Run this command ([Claude Code MCP docs](https://code.claude.com/docs/en/mcp)):
+
+```sh copy
+claude mcp add --transport http --scope user \
+  --header "Authorization: Bearer TOKEN" \
+  lightpanda-cloud https://euwest.cloud.lightpanda.io/mcp
+```
+  </Tabs.Tab>
+  <Tabs.Tab>
+Add this to `~/.codex/config.toml`, or `.codex/config.toml` in your project ([Codex MCP docs](https://learn.chatgpt.com/docs/extend/mcp?surface=cli)):
+
+```toml copy
+[mcp_servers.lightpanda-cloud]
+url = "https://euwest.cloud.lightpanda.io/mcp"
+http_headers = { "Authorization" = "Bearer TOKEN" }
+```
+  </Tabs.Tab>
+  <Tabs.Tab>
+Add this to `~/.cursor/mcp.json`, or `.cursor/mcp.json` in your project ([Cursor MCP docs](https://cursor.com/docs/mcp)):
 
 ```json copy
 {
   "mcpServers": {
     "lightpanda-cloud": {
-      "command": "npx",
-      "args": [
-        "-y",
-        "mcp-remote",
-        "https://euwest.cloud.lightpanda.io/mcp?token=TOKEN"
-      ]
+      "url": "https://euwest.cloud.lightpanda.io/mcp",
+      "headers": {
+        "Authorization": "Bearer TOKEN"
+      }
     }
   }
 }
 ```
+  </Tabs.Tab>
+  <Tabs.Tab>
+Copilot CLI and Copilot in VS Code both read these files. Add this to `~/.copilot/mcp-config.json`, or `.mcp.json` at your project root ([Copilot CLI MCP docs](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-mcp-servers), [VS Code MCP docs](https://code.visualstudio.com/docs/agents/reference/mcp-configuration)):
 
-Find more [MCP options](/usage/mcp) and every tool in the [MCP tools reference](/reference/mcp-tools).
+```json copy
+{
+  "mcpServers": {
+    "lightpanda-cloud": {
+      "type": "http",
+      "url": "https://euwest.cloud.lightpanda.io/mcp",
+      "headers": {
+        "Authorization": "Bearer TOKEN"
+      },
+      "tools": ["*"]
+    }
+  }
+}
+```
+  </Tabs.Tab>
+  <Tabs.Tab>
+Add this to `~/.config/opencode/opencode.json`, or `opencode.json` in your project ([OpenCode MCP docs](https://opencode.ai/docs/mcp-servers/)):
+
+```json copy
+{
+  "mcp": {
+    "servers": {
+      "lightpanda-cloud": {
+        "type": "remote",
+        "url": "https://euwest.cloud.lightpanda.io/mcp",
+        "oauth": false,
+        "headers": {
+          "Authorization": "Bearer TOKEN"
+        }
+      }
+    }
+  }
+}
+```
+  </Tabs.Tab>
+  <Tabs.Tab>
+In Claude Desktop or on claude.ai, open Settings > Connectors and add a custom connector with this URL ([Claude connectors docs](https://modelcontextprotocol.io/docs/develop/connect-remote-servers)):
+
+```text copy
+https://euwest.cloud.lightpanda.io/mcp
+```
+
+In the next step, add an `Authorization` header with the value `Bearer TOKEN`. You can also skip the header and put the token in the URL: `https://euwest.cloud.lightpanda.io/mcp?token=TOKEN`.
+  </Tabs.Tab>
+</Tabs>
+
+To keep the token out of the config file, or for hosts that can only start a local process, see the Cloud tab in [Connect the MCP server](/usage/mcp#connect-the-mcp-server). Find every tool in the [MCP tools reference](/reference/mcp-tools).
