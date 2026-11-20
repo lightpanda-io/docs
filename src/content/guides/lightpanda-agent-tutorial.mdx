@@ -241,11 +241,10 @@ return topStories;
 
 ## 6. Add your own JavaScript logic
 
-Agent scripts run in a separate JavaScript context from the page. No
-`window`, `document`, DOM API, `require`, or `process`. Browser
-interaction happens through the `Page` object: `new Page()` makes a
-page, `await page.goto(url)` navigates it, and every other primitive is
-a synchronous method on it.
+Agent scripts run in a separate JavaScript context from the page, with
+no DOM or Node.js globals. All browser interaction goes through a
+`Page` object. Only `goto` and `evaluate` are async and need `await`;
+every other primitive is synchronous.
 
 Use `page.extract(...)` to move page data into local logic, then
 process it with normal JavaScript:
