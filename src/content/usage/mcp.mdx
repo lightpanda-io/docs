@@ -95,10 +95,6 @@ Use `--log-level debug` for the most verbose output. Keep `warn` in production.
 
   </Tabs.Tab>
   <Tabs.Tab>
-<Callout type="info" emoji="ℹ️">
-Each MCP session gets its own browser. The `session_new`, `session_list` and `session_close` tools are not available on the cloud and return an error. The `save` tool writes the script on the cloud machine, so you can't retrieve it.
-</Callout>
-
 Lightpanda Cloud exposes the MCP server over [Streamable HTTP](https://modelcontextprotocol.io/specification/2025-03-26/basic/transports#streamable-http). Connect to the endpoint nearest to you:
 
 - `https://euwest.cloud.lightpanda.io/mcp` (Europe West)
@@ -116,6 +112,8 @@ Authorization: Bearer TOKEN
 ```
 
 The endpoint accepts the same `proxy` and `country` query parameters as the CDP endpoint. See [use a proxy on Lightpanda Cloud](/guides/configure-a-proxy#use-a-proxy-on-lightpanda-cloud).
+
+Each MCP session gets its own browser. To get another browser, start a new MCP session (`initialize`). A session ends with `session_close`, or after 5 minutes without a request. The `save` tool writes the script on the cloud machine, so you can't retrieve it.
 
 How you connect depends on what your host supports. Config formats change between hosts and versions, so check your host's MCP docs for the exact field names:
 
