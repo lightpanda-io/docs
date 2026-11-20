@@ -58,6 +58,28 @@ Calls with no `Mcp-Session-Id` header use the always-present `default` session, 
 
 Find all options and the HTTP reply details in the [mcp command reference](/reference/cli/mcp).
 
+### Expose fewer tools
+
+An MCP client loads the definition of every tool the server lists, and that takes up room in the model's context. Pass `--tools` with the names of the only tools you need:
+
+```sh copy
+lightpanda mcp --tools goto,tree,markdown,click,fill,evaluate
+```
+
+The other tools are not listed, and calling one returns the JSON-RPC error `-32601` `Tool not enabled: the server was started with --tools and this one is not in its list`. An unknown name stops the server at startup and suggests the closest tool name.
+
+To see the names, run `--list-tools`. It prints all of them on one line, in the format `--tools` takes, so you can copy the line and delete the ones you don't want:
+
+```sh copy
+lightpanda mcp --list-tools
+```
+
+There is no flag to exclude tools: the list is always explicit, so a tool added in a later release doesn't appear in your server until you name it.
+
+<Callout type="warning">
+`--tools` shortens the list; it is not a sandbox. A listed tool keeps its full reach: `run` and `waitForScript` execute scripts, and `markdown` navigates when given a `url`. The page [resources](/reference/mcp-tools#resources) stay readable.
+</Callout>
+
 ### Debugging
 
 Lightpanda defaults to `--log-level warn`. Setting `info` surfaces HTTP requests, navigation events, resource loading, and robots.txt fetches. All logs go to **stderr** and never interfere with stdout.
