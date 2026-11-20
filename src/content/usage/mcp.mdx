@@ -58,6 +58,28 @@ Calls with no `Mcp-Session-Id` header use the always-present `default` session, 
 
 Find all options and the HTTP reply details in the [mcp command reference](/reference/cli/mcp).
 
+### Expose fewer tools
+
+An MCP client loads the definition of every tool the server lists, and that takes up room in the model's context. Pass `--tools` with the names of the only tools you need:
+
+```sh copy
+lightpanda mcp --tools goto,tree,markdown,click,fill,evaluate
+```
+
+The other tools are not listed, and calling one returns the JSON-RPC error `-32601` `Tool not enabled: the server was started with --tools and this one is not in its list`. An unknown name stops the server at startup and suggests the closest tool name.
+
+To see the names, run `--list-tools`. It prints all of them on one line, in the format `--tools` takes, so you can copy the line and delete the ones you don't want:
+
+```sh copy
+lightpanda mcp --list-tools
+```
+
+There is no flag to exclude tools: the list is always explicit, so a tool added in a later release doesn't appear in your server until you name it.
+
+<Callout type="warning">
+`--tools` shortens the list; it is not a sandbox. A listed tool keeps its full reach: `run` and `waitForScript` execute scripts, and `markdown` navigates when given a `url`. The page [resources](/reference/mcp-tools#resources) stay readable.
+</Callout>
+
 ### Debugging
 
 Lightpanda defaults to `--log-level warn`. Setting `info` surfaces HTTP requests, navigation events, resource loading, and robots.txt fetches. All logs go to **stderr** and never interfere with stdout.
@@ -84,15 +106,88 @@ Pass your API token either as a `token` query parameter or in an `Authorization:
 https://euwest.cloud.lightpanda.io/mcp?token=TOKEN
 ```
 
+```text
+POST https://euwest.cloud.lightpanda.io/mcp
+Authorization: Bearer TOKEN
+```
+
 The endpoint accepts the same `proxy` and `country` query parameters as the CDP endpoint. See [use a proxy on Lightpanda Cloud](/guides/configure-a-proxy#use-a-proxy-on-lightpanda-cloud).
 
 Each MCP session gets its own browser. To get another browser, start a new MCP session (`initialize`). A session ends with `session_close`, or after 5 minutes without a request. The `save` tool writes the script on the cloud machine, so you can't retrieve it.
+
+How you connect depends on what your host supports. Config formats change between hosts and versions, so check your host's MCP docs for the exact field names:
+
+- [Claude Code](https://code.claude.com/docs/en/mcp)
+- [Codex](https://learn.chatgpt.com/docs/extend/mcp?surface=cli)
+- [Cursor](https://cursor.com/docs/mcp)
+- [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-mcp-servers)
+- [GitHub Copilot in VS Code](https://code.visualstudio.com/docs/agents/reference/mcp-configuration)
+- [OpenCode](https://opencode.ai/docs/mcp-servers/)
+- [Claude Desktop and claude.ai](https://modelcontextprotocol.io/docs/develop/connect-remote-servers)
+
+### Hosts that connect to a URL
+
+Most hosts, such as Claude Code, Codex, Cursor, GitHub Copilot (CLI or VS Code), or OpenCode, connect to a remote MCP server directly. So do Claude's custom connectors (Settings > Connectors in Claude Desktop and on claude.ai). Give them the endpoint, and the token in a header when the host lets you set one. A typical config:
+
+```json copy
+{
+  "mcpServers": {
+    "lightpanda-cloud": {
+      "type": "http",
+      "url": "https://euwest.cloud.lightpanda.io/mcp",
+      "headers": {
+        "Authorization": "Bearer TOKEN"
+      }
+    }
+  }
+}
+```
+
+Claude Code adds it with one command:
+
+```sh copy
+claude mcp add --transport http --scope user \
+  --header "Authorization: Bearer TOKEN" \
+  lightpanda-cloud https://euwest.cloud.lightpanda.io/mcp
+```
+
+If your host only asks for a URL, with no field for headers, put the token in the URL instead:
+
+```text copy
+https://euwest.cloud.lightpanda.io/mcp?token=TOKEN
+```
+
+To keep the token out of the config file, store it in an `LP_TOKEN` environment variable and have your host read it from there. The syntax depends on the host, for example:
+
+- Claude Code: `"Bearer ${LP_TOKEN}"`
+- Codex: `bearer_token_env_var = "LP_TOKEN"` in `config.toml`
+- Cursor: `"Bearer ${env:LP_TOKEN}"`
+- OpenCode: `"Bearer {env:LP_TOKEN}"`
+
+### Hosts that only start local processes
+
+Some hosts can only start a program on your machine, like the local server in the Local tab. Claude Desktop's `claude_desktop_config.json` is one of them. These hosts reach the endpoint through [mcp-remote](https://www.npmjs.com/package/mcp-remote), a local bridge that forwards the calls to the URL. It needs Node.js:
+
+```json copy
+{
+  "mcpServers": {
+    "lightpanda-cloud": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://euwest.cloud.lightpanda.io/mcp?token=TOKEN"
+      ]
+    }
+  }
+}
+```
   </Tabs.Tab>
 </Tabs>
 
 ## Connect an AI agent
 
-See the [MCP quickstart](/quickstarts/mcp) for connecting Claude Desktop, Cursor, or Windsurf, locally or through Lightpanda Cloud. For robots.txt compliance, add `--obey-robots` to the `args` array in your host's MCP server config.
+See the [MCP quickstart](/quickstarts/mcp) for connecting an MCP host, such as Claude Code, Codex, Cursor, GitHub Copilot (CLI or VS Code), or OpenCode, locally or through Lightpanda Cloud. For robots.txt compliance, add `--obey-robots` to the command in your host's MCP server config, so it runs `/path/to/lightpanda mcp --obey-robots`.
 
 ## Tools and resources
 

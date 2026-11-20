@@ -64,7 +64,7 @@ err := chromedp.Do(ctx, chromedp.Func(func(ctx context.Context, t *chromedp.Targ
 
 **Node IDs.** Commands that target an element take a `backendNodeId`. Get one from `LP.getSemanticTree`, `LP.getInteractiveElements`, `LP.detectForms` or `LP.waitForSelector`, or from a standard CDP command such as `DOM.describeNode`.
 
-**Frames.** Every command reads or acts on the main frame. A `backendNodeId` can point into an iframe: `LP.getSemanticTree`, `LP.getInteractiveElements` and `LP.getNodeDetails` then read that iframe's document.
+**Frames.** Every command reads or acts on the main frame. A `backendNodeId` can point into an iframe: `LP.getSemanticTree`, `LP.getInteractiveElements` and `LP.getNodeDetails` then read that iframe's document. `LP.dump` with `withFrames` includes the iframes' documents in its HTML.
 
 **Errors.** A failed command returns a CDP error with code `-31998` and the error name as its message. The common names are:
 
@@ -92,6 +92,7 @@ Converts the current DOM to HTML, Markdown, PNG or PDF. It reads the DOM at call
 | `selector` | string | No | | Dumps only the first element matching this CSS selector. |
 | `backendNodeId` | integer | No | | Dumps only this node. Takes precedence over `selector`. |
 | `maxBytes` | integer | No | | Size cap for `html` and `markdown`; `png` and `pdf` return `InvalidParams`. Longer output is cut and ends with a `[truncated]` marker. |
+| `withFrames` | boolean | No | `false` | Writes each iframe's document inside its `<iframe>` element. `html` only; other formats return `InvalidParams`. |
 
 Returns `{ format, content }`. `content` is the dump as a string, base64-encoded for `png` and `pdf`.
 
