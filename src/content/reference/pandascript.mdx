@@ -118,6 +118,7 @@ Clicked element (selector: a.login). Page url: https://example.com/app, HTTP 200
 | `waitForScript` | `Script returned truthy.` | Same default-`timeout` rule as `waitForSelector`. Re-evaluates the script in the page context until it returns truthy. |
 | `waitForState` | `Page reached <state>.` | Takes one of the [load states](#load-states). `timeout` defaults to 5000ms. |
 | `callPageTool` | The tool's result as a string: the text of an MCP-style `content` array, or JSON for any other value | A tool that throws or rejects, or returns `isError: true`, throws its message in the script. If the tool navigates, the string ends with `(Navigated to <url>, HTTP <status>, title: <title>)`. An unknown name throws `No WebMCP tool named "<name>" on this page; pageTools lists them.` |
+| `getCookies` | An array of cookie objects (`name`, `value`, `domain`, `path`, `expires`, `secure`, `httpOnly`, `sameSite`), empty when none match | A saved script never records it (`--save`), but a script you write can call it. |
 
 ## Errors
 
