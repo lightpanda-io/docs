@@ -20,7 +20,7 @@ lightpanda serve --host 127.0.0.1 --port 9222 --protocol webdriver
 
 This example drives the browser over BiDi: request a BiDi session by setting the `webSocketUrl` capability to `true` (`browserName` can be any value; Lightpanda reports itself back regardless). Without it, the session uses classic WebDriver commands (`driver.get()`, `findElement()`, ...).
 
-<Tabs items={['JavaScript', 'Python']} className="-mb-4">
+<Tabs items={['JavaScript', 'Python']}>
   <Tabs.Tab id="javascript" className="m-0">
 ```sh copy
 npm install selenium-webdriver
@@ -95,3 +95,5 @@ os._exit(0)
 ```
   </Tabs.Tab>
 </Tabs>
+
+To load pages with an invalid TLS certificate, set the `acceptInsecureCerts` capability to `true`. Without it, a classic `driver.get()` to such a page fails with `insecure certificate`.
