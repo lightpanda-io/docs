@@ -4,68 +4,76 @@
 
 These methods bring a page into the browser, or save a URL to a file.
 
-| Method | Call | Summary |
-|---|---|---|
-| [`goto`](/reference/browser-tools#goto) | `await page.goto(url[, { timeout, waitUntil }])` | Open a URL and keep the page in memory |
-| [`download`](/reference/browser-tools#download) | `page.download([{ url, path }])` | Fetch a URL with the session's cookies into a file |
+| Method | Call | Returns | Summary |
+|---|---|---|---|
+| [`goto`](/reference/browser-tools#goto) | `await page.goto(url[, { timeout, waitUntil }])` | A promise of the page object it was called on | Open a URL and keep the page in memory |
+| [`download`](/reference/browser-tools#download) | `page.download([{ url, path }])` | `saved <bytes> bytes (<content type>) to <absolute path>` | Fetch a URL with the session's cookies into a file |
 
 ## Reading the page
 
 These methods read the loaded page without modifying it.
 
-| Method | Call | Summary |
-|---|---|---|
-| [`screenshot`](/reference/browser-tools#screenshot) | `page.screenshot([{ path, selector, fullPage, strip, url, timeout }])` | Screenshot of the page or a node |
+| Method | Call | Returns | Summary |
+|---|---|---|---|
+| [`screenshot`](/reference/browser-tools#screenshot) | `page.screenshot([{ path, selector, fullPage, strip, url, timeout }])` | `Saved <width>x<height> PNG to <path>` | Screenshot of the page or a node |
 
 ## Data extraction and scripting
 
 These methods return structured results from the loaded page.
 
-| Method | Call | Summary |
-|---|---|---|
-| [`evaluate`](/reference/browser-tools#evaluate) | `page.evaluate(script[, { url, timeout, save }])` | Run JavaScript in the page |
-| [`extract`](/reference/browser-tools#extract) | `page.extract(schema)` | Extract structured data via a CSS-selector schema |
-| [`classify`](/reference/browser-tools#classify) | `page.classify(questions[, { selector, presets }])` | Classify page state using semantic questions or presets |
+| Method | Call | Returns | Summary |
+|---|---|---|---|
+| [`evaluate`](/reference/browser-tools#evaluate) | `await page.evaluate(script[, { url, timeout, save }])` | A promise of the script's value as a string, JSON-encoded when it is an object or array. Empty when `save` is set or an async script returns nothing | Run JavaScript in the page |
+| [`extract`](/reference/browser-tools#extract) | `page.extract(schema)` | An object or an array, shaped by the schema | Extract structured data via a CSS-selector schema |
+| [`classify`](/reference/browser-tools#classify) | `page.classify(questions[, { selector, presets }])` | The category that fits, or an object keyed by question name | Classify page state using semantic questions or presets |
 
 ## Interacting with the page
 
 These methods dispatch real DOM events on the page.
 
-| Method | Call | Summary |
-|---|---|---|
-| [`click`](/reference/browser-tools#click) | `page.click(selector)` | Click an element |
-| [`fill`](/reference/browser-tools#fill) | `page.fill(selector, value)` | Type text into an input |
-| [`scroll`](/reference/browser-tools#scroll) | `page.scroll([{ selector, x, y }])` | Scroll the page or an element |
-| [`hover`](/reference/browser-tools#hover) | `page.hover(selector)` | Hover over an element |
-| [`press`](/reference/browser-tools#press) | `page.press(selector, key)` | Press a keyboard key |
-| [`selectOption`](/reference/browser-tools#selectoption) | `page.selectOption(selector, value)` | Select an option in a dropdown |
-| [`setChecked`](/reference/browser-tools#setchecked) | `page.setChecked(selector[, checked])` | Check or uncheck a box |
-| [`acceptCookies`](/reference/browser-tools#acceptcookies) | `page.acceptCookies([{ prefer, selectors }])` | Dismiss a cookie consent banner |
-| [`login`](/reference/browser-tools#login) | `page.login([{ password, username, usernameSelector, passwordSelector, submitSelector, nextSelector, decideOnly }])` | Sign in, picking the fields with Jev |
+| Method | Call | Returns | Summary |
+|---|---|---|---|
+| [`click`](/reference/browser-tools#click) | `page.click(selector)` | A status line starting `Clicked element (<target>)`, with a caveat when the element is disabled or hidden, then the resulting page's URL, HTTP status and title | Click an element |
+| [`fill`](/reference/browser-tools#fill) | `page.fill(selector, value)` | A status line starting `Filled element (<target>) with "<value>"`, then the resulting page's URL, HTTP status and title | Type text into an input |
+| [`scroll`](/reference/browser-tools#scroll) | `page.scroll([{ selector, x, y }])` | A status line starting `Scrolled window to x: <x>, y: <y>`, or the same for an element or its scroll container, then the resulting page's URL, HTTP status and title | Scroll the page or an element |
+| [`hover`](/reference/browser-tools#hover) | `page.hover(selector)` | A status line starting `Hovered element (<target>)`, then the resulting page's URL, HTTP status and title | Hover over an element |
+| [`press`](/reference/browser-tools#press) | `page.press(selector, key)` | A status line starting `Pressed key '<key>'`, then the resulting page's URL, HTTP status and title | Press a keyboard key |
+| [`selectOption`](/reference/browser-tools#selectoption) | `page.selectOption(selector, value)` | A status line starting `Selected option '<value>' (<target>)`, then the resulting page's URL, HTTP status and title | Select an option in a dropdown |
+| [`setChecked`](/reference/browser-tools#setchecked) | `page.setChecked(selector[, checked])` | A status line starting `Set element (<target>) to checked` or `to unchecked`, then the resulting page's URL, HTTP status and title | Check or uncheck a box |
+| [`acceptCookies`](/reference/browser-tools#acceptcookies) | `page.acceptCookies([{ prefer, selectors }])` | An object reporting whether a banner was dismissed | Dismiss a cookie consent banner |
+| [`login`](/reference/browser-tools#login) | `page.login([{ password, username, usernameSelector, passwordSelector, submitSelector, nextSelector, decideOnly }])` | An object reporting whether the form was submitted | Sign in, picking the fields with a decision model |
 
 ## Waiting
 
 These methods block until the page reaches a condition.
 
-| Method | Call | Summary |
-|---|---|---|
-| [`waitForSelector`](/reference/browser-tools#waitforselector) | `page.waitForSelector(selector[, { timeout }])` | Wait for an element to appear |
-| [`waitForScript`](/reference/browser-tools#waitforscript) | `page.waitForScript(script[, { timeout }])` | Wait until a JS expression is truthy |
-| [`waitForState`](/reference/browser-tools#waitforstate) | `page.waitForState(state[, { timeout }])` | Wait for the page to reach a load state |
+| Method | Call | Returns | Summary |
+|---|---|---|---|
+| [`waitForSelector`](/reference/browser-tools#waitforselector) | `page.waitForSelector(selector[, { timeout }])` | `Element found. backendNodeId: <id>` | Wait for an element to appear |
+| [`waitForScript`](/reference/browser-tools#waitforscript) | `page.waitForScript(script[, { timeout }])` | `Script returned truthy.` | Wait until a JS expression is truthy |
+| [`waitForState`](/reference/browser-tools#waitforstate) | `page.waitForState(state[, { timeout }])` | `Page reached <state>.` | Wait for the page to reach a load state |
+
+## State and debugging
+
+These methods inspect browser state outside the DOM.
+
+| Method | Call | Returns | Summary |
+|---|---|---|---|
+| [`getCookies`](/reference/browser-tools#getcookies) | `page.getCookies([{ url, all }])` | An array of cookie objects (`name`, `value`, `domain`, `path`, `expires`, `secure`, `httpOnly`, `sameSite`), empty when none match | Show stored cookies |
 
 ## Page tools (WebMCP)
 
 These methods list and call the tools a page registers for agents through WebMCP.
 
-| Method | Call | Summary |
-|---|---|---|
-| [`callPageTool`](/reference/browser-tools#callpagetool) | `page.callPageTool([{ name, arguments }])` | Call one of the page's WebMCP tools |
+| Method | Call | Returns | Summary |
+|---|---|---|---|
+| [`callPageTool`](/reference/browser-tools#callpagetool) | `page.callPageTool([{ name, arguments }])` | The tool's result as a string | Call one of the page's WebMCP tools |
 
 ## Page lifecycle
 
-| Method | Call | Summary |
-|---|---|---|
-| `close` | `page.close()` | Stales the handle, so later calls on it fail. The page itself is reclaimed on the next `goto` or at script end. |
+| Method | Call | Returns | Summary |
+|---|---|---|---|
+| `close` | `page.close()` | Nothing | Stales the handle, so later calls on it fail. The page itself is reclaimed on the next `goto` or at script end. |
 
 ## Console
 
