@@ -51,7 +51,7 @@ These tools dispatch real DOM events on the page.
 | [`selectOption`](/reference/browser-tools#selectoption) | Select an option in a dropdown | idempotent, page state |
 | [`setChecked`](/reference/browser-tools#setchecked) | Check or uncheck a box | idempotent, page state |
 | [`acceptCookies`](/reference/browser-tools#acceptcookies) | Dismiss a cookie consent banner | destructive, open-world |
-| [`login`](/reference/browser-tools#login) | Sign in, picking the fields with Jev | destructive, open-world |
+| [`login`](/reference/browser-tools#login) | Sign in, picking the fields with a decision model | destructive, open-world |
 
 ## Waiting
 
@@ -126,9 +126,9 @@ around it.
 
 Script rules:
 - `Page` is the only global. `new Page()` makes a page; `await page.goto(url)`
-  navigates it (async — always `await`). Every other builtin is a synchronous
-  method on that page: `const data = page.extract({...})`, never `await
-  page.extract`. The file runs as an async script, so top-level `await` is
+  navigates it. `goto` and `evaluate` are async — always `await` them. Every
+  other builtin is a synchronous method on that page: `const data =
+  page.extract({...})`, never `await page.extract`. The file runs as an async script, so top-level `await` is
   allowed.
 - Read pages with page.extract(schema); all processing of the returned
   strings (trim, split, parse, merge, loops, cross-page aggregation)
@@ -153,7 +153,7 @@ Hints: destructive, idempotent
 
 ### run
 
-**Run an agent script.** Run a Lightpanda agent script in this session, as `lightpanda run` does, and return its console output followed by the value it returns. Pass the source as `script`, or the `path` of a file `save` wrote. The script drives pages through `const page = new Page(); await page.goto(url);` and the builtins as methods on `page`; `$LP_*` placeholders are resolved. To read several URLs, make one `new Page()` per URL and `await Promise.all(pages.map((p, i) => p.goto(urls[i])))` so they load in parallel, then read each with `page.extract` or `page.evaluate`. Pages the script opens are closed when it ends; cookies and storage stay in the session, so a login carries over to the next call. Script variables do not carry over. A thrown error, a failed step or the timeout ends the script and is reported as an error after the output so far.
+**Run an agent script.** Run a Lightpanda agent script in this session, as `lightpanda run` does, and return its console output followed by the value it returns. Pass the source as `script`, or the `path` of a file `save` wrote. The script drives pages through `const page = new Page(); await page.goto(url);` and the builtins as methods on `page`; `$LP_*` placeholders are resolved. To read several URLs, make one `new Page()` per URL and `await Promise.all(pages.map((p, i) => p.goto(urls[i])))` so they load in parallel, then read each with `page.extract` or `await page.evaluate`. Pages the script opens are closed when it ends; cookies and storage stay in the session, so a login carries over to the next call. Script variables do not carry over. A thrown error, a failed step or the timeout ends the script and is reported as an error after the output so far.
 
 | Argument | Type | Required | Description |
 |---|---|---|---|
