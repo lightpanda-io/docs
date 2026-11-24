@@ -7,15 +7,15 @@ import { Callout } from 'nextra/components'
 
 # Architecture overview
 
-Lightpanda is a headless browser built in Zig to be driven by machines, not viewed by people. Its defining choice is that it has no rendering engine and never draws a page to a screen.
+Lightpanda is a headless browser built in Zig to be driven by machines, not viewed by people. Its defining choice is to compute what scripts read and skip the pixels: it never paints a page to a screen.
 
-It fetches pages through a network layer, then runs a JavaScript engine to execute their scripts against an in-memory DOM and Web APIs, but drops the graphics pipeline that makes a normal browser heavy. A single native binary exposes that engine through several entry points, from a CDP server to a built-in AI agent.
+It fetches pages through a network layer, then runs a JavaScript engine to execute their scripts against an in-memory DOM and Web APIs, and leaves out the painting work that makes a normal browser heavy. A single native binary exposes that engine through several entry points, from a CDP server to a built-in AI agent.
 
-## Why there's no rendering engine
+## Built for machines, not screens
 
 A normal browser runs a rendering pipeline to turn a page into pixels for a human: style resolution, layout, paint, and compositing. Machines rarely need those pixels. A client sends commands over a protocol (usually CDP, the Chrome DevTools Protocol) and reads the page's structure, the DOM, back. The picture on screen is irrelevant.
 
-Lightpanda drops the rendering pipeline. What remains is the set of components automation uses, the same ones detailed further down this page:
+Lightpanda keeps what scripts read from that pipeline, styles and an approximate layout, and skips paint and compositing. What remains is the set of components automation uses, the same ones detailed further down this page:
 
 - **Control surface.** The entry points you drive it through: `fetch`, `serve` (CDP, or WebDriver classic and BiDi), `agent`, `mcp`, and, on the cloud, the HTTP API.
 - **Network layer.** Fetches the main document and its subresources over HTTP.
@@ -24,13 +24,10 @@ Lightpanda drops the rendering pipeline. What remains is the set of components a
 - **Web APIs and the DOM.** The in-memory document that scripts read and mutate.
 
 <Callout type="info">
-  Because Lightpanda does not render, it does not compute a real visual
-  layout. Element size is a fair approximation from CSS and HTML attributes,
-  but element position is simulated from DOM depth and sibling order, not
-  real layout
-  ([`calculateDocumentPosition`](https://github.com/lightpanda-io/browser/blob/main/src/browser/webapi/Element.zig#L1411-L1468)).
-  `Page.captureScreenshot` returns a placeholder image, not a real render.
-  Reach for a full browser when you need actual pixels.
+  Lightpanda computes an approximate layout, built for scripts rather than
+  for display, so element sizes and positions stay consistent.
+  Its screenshots are simplified images of the page. For a pixel-accurate
+  render, use Chrome or another graphical browser.
 </Callout>
 
 ## How the parts fit together

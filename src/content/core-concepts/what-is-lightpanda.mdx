@@ -15,7 +15,7 @@ Puppeteer and Playwright talk to Chrome over CDP, the Chrome DevTools Protocol, 
 
 ## How Lightpanda solves it
 
-Lightpanda drops the graphical rendering engine entirely and rebuilds the rest around automation: JavaScript execution, the DOM, and the Web APIs a script needs. The result is around [9x faster execution and 16x less peak memory](/core-concepts/benchmarks) than headless Chrome.
+Lightpanda skips painting pages to a screen and builds everything else around automation: JavaScript execution, the DOM, and the Web APIs a script needs. The result is around [9x faster execution and 16x less peak memory](/core-concepts/benchmarks) than headless Chrome.
 
 Lightpanda meets you at the interface you already use:
 
