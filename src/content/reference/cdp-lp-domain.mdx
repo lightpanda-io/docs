@@ -205,7 +205,11 @@ Returns `{ elements }`, for example:
 
 ### LP.detectForms
 
-Lists the forms of the page with their fields. Takes no parameters.
+Lists the forms of the page with their fields.
+
+| Parameter | Type | Required | Default | Description |
+|---|---|---|---|---|
+| `includeValidation` | boolean | No | `false` | Adds each field's `validationMessage` when it isn't empty, such as a site's `setCustomValidity()` text or `Please fill out this field.`, without firing `invalid` events. A custom message on a password field reads `Please enter a valid value.`, since it can repeat the typed password. |
 
 Returns `{ forms }`, for example:
 
