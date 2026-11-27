@@ -92,7 +92,7 @@ Navigates first when given `url`.
 
 ### screenshot
 
-Render the page, or one node, as a PNG: the text layout Lightpanda computes, not a pixel-accurate browser rendering (no images, fonts or CSS colours). With `path`, writes the file at full size and returns its location; without it, returns the image inline where the client can display one, at most 1280px wide and 4096px tall. Use it to see spatial layout; read content with `markdown`/`tree`.
+Render the page, or one node, as a PNG. Not a pixel-accurate browser rendering (no images, fonts or CSS colours). Mode `reader` (default) flows the text into one readable column; mode `layout` outlines every box where the page's layout places it, with its text, at the coordinates clicks and hit-testing use. With `path`, writes the file at full size and returns its location; without it, returns the image inline where the client can display one, at most 1280px wide and 4096px tall. Use it to see spatial layout; read content with `markdown`/`tree`.
 
 | Argument | Type | Required | Description |
 |---|---|---|---|
@@ -100,6 +100,7 @@ Render the page, or one node, as a PNG: the text layout Lightpanda computes, not
 | `selector` | string | no | Optional CSS selector. When set, render only that element. |
 | `backendNodeId` | integer | no | Optional backend node ID. When set, render only that node. 0 is treated as omitted. |
 | `fullPage` | boolean | no | Render the whole content height instead of one viewport. Defaults to false. |
+| `mode` | string | no | Optional. `reader` (default): the text in one readable column. `layout`: boxes where the page's layout places them. One of `reader`, `layout`. |
 | `strip` | object | no | Optional. Omit element groups from the render; same groups as the html tool's strip (`js`, `css`, `ui`, `invisible`, `shell`, `clutter`). Keys: `js`, `css`, `ui`, `invisible`, `shell`, `clutter`. |
 | `url` | string | no | Optional URL to navigate to before rendering. An empty string is treated as omitted. |
 | `timeout` | integer | no | Optional timeout in milliseconds. Defaults to 10000. |
@@ -165,12 +166,13 @@ Navigates first when given `url`.
 
 ### detectForms
 
-List the forms on the page as JSON: each form's `backendNodeId`, `action`, `method` and `fields`, where each field has `backendNodeId`, `tagName`, `name`, `inputType`, `required`, `disabled`, and when present `value`, `placeholder` and select `options`. Use it before filling a form to see every field it expects. It returns no CSS selectors; get one per field with `nodeDetails` so the fill calls stay replayable. If a url is provided, it navigates there first.
+List the forms on the page as JSON: each form's `backendNodeId`, `action`, `method` and `fields`, where each field has `backendNodeId`, `tagName`, `name`, `inputType`, `required`, `disabled`, and when present `value`, `placeholder` and select `options`. Use it before filling a form to see every field it expects. Pass `includeValidation` to also get each field's `validationMessage`, e.g. when a submit stays on the same page. It returns no CSS selectors; get one per field with `nodeDetails` so the fill calls stay replayable. If a url is provided, it navigates there first.
 
 | Argument | Type | Required | Description |
 |---|---|---|---|
 | `url` | string | no | Optional URL to navigate to before processing. An empty string is treated as omitted. |
 | `timeout` | integer | no | Optional timeout in milliseconds. Defaults to 10000. |
+| `includeValidation` | boolean | no | Include non-empty validationMessage. Custom password messages use a generic error. Defaults to false. |
 
 Navigates first when given `url`.
 
