@@ -87,6 +87,6 @@ Or ask it to check an existing project instead:
 I have an existing Playwright project. Check whether my tests would work with Lightpanda instead of Chrome, and flag anything that wouldn't.
 ```
 
-The skill knows the differences that matter when swapping in Lightpanda. For example, Lightpanda has no graphical rendering, so tests that rely on screenshots or visual layout won't carry over, and Playwright connects to a running Lightpanda with `connectOverCDP` instead of launching its own Chromium.
+The skill knows the differences that matter when swapping in Lightpanda. For example, Lightpanda doesn't produce pixel-accurate renders, so tests that compare screenshots or check visual layout won't carry over, and Playwright connects to a running Lightpanda with `connectOverCDP` instead of launching its own Chromium.
 
 </Steps>

@@ -19,7 +19,7 @@ Across all three, Lightpanda outperforms Chrome. Each section below states the s
 
 The crawling and single-page benchmarks track peak memory (via `smem`, using PSS so shared pages aren't double-counted), CPU utilization (via `ps aux`), and wall-clock duration, sampled every 100ms during the run. Both run on an AWS m5.xlarge instance with a fresh Ubuntu install, comparing Lightpanda against Chrome.
 
-The AI agent benchmark grades differently: each task's final answer is checked against a known correct answer, not a screenshot, since Lightpanda has no rendered page to screenshot in the first place.
+The AI agent benchmark grades differently: each task's final answer is checked against a known correct answer, not a screenshot, since Lightpanda's screenshots are simplified images.
 
 ## Crawling at scale
 
