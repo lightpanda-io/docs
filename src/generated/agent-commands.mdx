@@ -41,13 +41,13 @@ These take only `key=value`, and also accept a prompt in place of their fields: 
 | [`/download url=… path=…`](/reference/browser-tools#download) | Fetch a URL with the session's cookies into a file |
 | [`/markdown [selector=…] [backendNodeId=…] [maxBytes=…] [strip=…] [url=…] [alternate=…] [timeout=…]`](/reference/browser-tools#markdown) | Render the page or a subtree as markdown |
 | [`/html [selector=…] [backendNodeId=…] [maxBytes=…] [strip=…] [url=…] [timeout=…]`](/reference/browser-tools#html) | Raw HTML of the page or a node |
-| [`/screenshot [path=…] [selector=…] [backendNodeId=…] [fullPage=…] [strip=…] [url=…] [timeout=…]`](/reference/browser-tools#screenshot) | Screenshot of the page or a node |
+| [`/screenshot [path=…] [selector=…] [backendNodeId=…] [fullPage=…] [mode=…] [strip=…] [url=…] [timeout=…]`](/reference/browser-tools#screenshot) | Screenshot of the page or a node |
 | [`/links [limit=…] [url=…] [timeout=…]`](/reference/browser-tools#links) | List all links on the page |
 | [`/tree [url=…] [timeout=…] [backendNodeId=…] [maxDepth=…] [maxBytes=…] [delta=…]`](/reference/browser-tools#tree) | Semantic DOM tree of the page |
 | [`/nodeDetails <backendNodeId>`](/reference/browser-tools#nodedetails) | Inspect a node by backendNodeId |
 | [`/interactiveElements [url=…] [timeout=…]`](/reference/browser-tools#interactiveelements) | List interactive elements on the page |
 | [`/structuredData [url=…] [timeout=…]`](/reference/browser-tools#structureddata) | Extract JSON-LD / microdata / OpenGraph data |
-| [`/detectForms [url=…] [timeout=…]`](/reference/browser-tools#detectforms) | List forms and their fields |
+| [`/detectForms [url=…] [timeout=…] [includeValidation=…]`](/reference/browser-tools#detectforms) | List forms and their fields |
 | [`/findElement [role=…] [name=…]`](/reference/browser-tools#findelement) | Find elements by role or name |
 | [`/evaluate script=… [url=…] [timeout=…] [save=…]`](/reference/browser-tools#evaluate) | Run JavaScript in the page |
 | [`/extract schema=… [save=…]`](/reference/browser-tools#extract) | Extract structured data via a CSS-selector schema |
