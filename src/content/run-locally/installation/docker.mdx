@@ -14,3 +14,5 @@ The following command fetches the Docker image and starts a new container exposi
 ```sh copy
 docker run -d --name lightpanda -p 127.0.0.1:9222:9222 lightpanda/browser:latest
 ```
+
+The container runs as the non-root user `lightpanda` (uid `1000`). If you mount a volume for downloads or caches, make it writable by that uid, for example with `chown 1000 <dir>` on the host.
