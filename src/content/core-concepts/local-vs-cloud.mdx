@@ -11,7 +11,7 @@ Lightpanda runs the same engine two ways. You can run the binary yourself, on yo
 
 **Run local when** you want full control and want nothing to leave your machine. The binary runs on your hardware, so pages you visit and data you extract stay in your infrastructure. Local gives you every interface:
 
-- The [CDP](/run-locally/commands#serve) or the [WebDriver BiDi](/usage/bidi/selenium) server
+- The [CDP](/run-locally/commands#connect-a-cdp-client) or the [WebDriver](/run-locally/commands#connect-a-webdriver-client) server
 - The [MCP server](/usage/mcp), with all tools
 - The built-in [AI agent](/usage/agent)
 
@@ -33,11 +33,12 @@ This table shows which interfaces and features you can reach in each mode. Cover
 
 | Interface / feature | Local | Cloud |
 | --- | --- | --- |
-| [CDP server](/run-locally/commands#serve) (`serve`) | Yes | Yes |
+| [CDP server](/run-locally/commands#connect-a-cdp-client) (`serve`) | Yes | Yes |
+| [WebDriver server](/run-locally/commands#connect-a-webdriver-client) (`serve --protocol webdriver`) | Yes | No |
 | [MCP server](/usage/mcp) | Yes | Yes |
 | [AI agent](/usage/agent) | Yes | No |
 | [`fetch` command](/run-locally/commands#fetch) | Yes | No |
 | [HTTP API](/usage/api) | No | Yes |
 | [Proxies](/guides/configure-a-proxy) | Yes, your own proxy | Yes, shared pool with country selection, or your own |
 
-For CDP, both modes speak the same protocol: the same [Puppeteer](/usage/cdp/puppeteer), [Playwright](/usage/cdp/playwright), and [chromedp](/usage/cdp/chromedp) scripts run against a local endpoint or a cloud endpoint with your token. The [HTTP API](/usage/api) is the cloud counterpart to the local [`fetch`](/run-locally/commands#fetch) command: both return one-shot HTML or Markdown with no CDP script. See [Getting started](/run-on-lightpanda-cloud/getting-started) to connect to the cloud.
+For CDP, both modes speak the same protocol: the same [Puppeteer](/usage/cdp/puppeteer), [Playwright](/usage/cdp/playwright), and [chromedp](/usage/cdp/chromedp) scripts, or [raw CDP commands](/usage/cdp/websocket), run against a local endpoint or a cloud endpoint with your token. The [HTTP API](/usage/api) is the cloud counterpart to the local [`fetch`](/run-locally/commands#fetch) command: both return one-shot HTML or Markdown with no CDP script. See [Getting started](/run-on-lightpanda-cloud/getting-started) to connect to the cloud.

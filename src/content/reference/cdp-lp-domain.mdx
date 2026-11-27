@@ -13,9 +13,9 @@ The `LP` domain is available over CDP, in server mode (`lightpanda serve`) and o
 
 ## Send an LP command
 
-Open a CDP session on the page and send the command by name. The commands that read or act on the page use the session's page. To start Lightpanda and connect a client, see [Puppeteer](/usage/cdp/puppeteer), [Playwright](/usage/cdp/playwright) or [chromedp](/usage/cdp/chromedp).
+Open a CDP session on the page and send the command by name. The commands that read or act on the page use the session's page. To start Lightpanda and connect a client, see [Puppeteer](/usage/cdp/puppeteer), [Playwright](/usage/cdp/playwright) or [chromedp](/usage/cdp/chromedp), or [send raw CDP commands over a WebSocket](/usage/cdp/websocket).
 
-<Tabs items={['Puppeteer', 'Playwright', 'chromedp']} className="-mb-4">
+<Tabs items={['Puppeteer', 'Playwright', 'chromedp', 'WebSocket']} className="-mb-4">
   <Tabs.Tab id="Puppeteer" className="m-0">
 
 ```javascript copy
@@ -57,6 +57,18 @@ err := chromedp.Do(ctx, chromedp.Func(func(ctx context.Context, t *chromedp.Targ
     }
     return t.Call(ctx, "LP.dump", map[string]any{"format": "markdown"}, &result)
 }))
+```
+
+  </Tabs.Tab>
+  <Tabs.Tab id="WebSocket" className="m-0">
+
+```text
+# After Target.attachToTarget returns a sessionId; responses shortened
+→ {"id":1,"sessionId":"SID-1","method":"LP.getPageStatus"}
+← {"id":1,"result":{"url":"https://demo-browser.lightpanda.io/","httpStatus":200,...},"sessionId":"SID-1"}
+
+→ {"id":2,"sessionId":"SID-1","method":"LP.dump","params":{"format":"markdown"}}
+← {"id":2,"result":{"format":"markdown","content":"\n# Lightpanda Browser Demo\n..."},"sessionId":"SID-1"}
 ```
 
   </Tabs.Tab>

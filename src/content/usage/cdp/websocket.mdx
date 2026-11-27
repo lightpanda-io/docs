@@ -1,0 +1,103 @@
+---
+title: Raw CDP over WebSocket
+description: Drive Lightpanda with raw CDP commands over a WebSocket, without a client library, by creating and attaching a target before you navigate.
+---
+import { Callout, Tabs } from 'nextra/components'
+
+# Raw CDP over WebSocket
+
+Send [Chrome DevTools Protocol](https://chromedevtools.github.io/devtools-protocol/) (CDP) commands to Lightpanda as JSON messages over a WebSocket, without a client library such as [Puppeteer](/usage/cdp/puppeteer) or [Playwright](/usage/cdp/playwright).
+
+A new connection to Lightpanda has no target (a page, the equivalent of a browser tab), so `Target.getTargets` returns an empty list. Before you navigate, create a target and attach to it, as in the example below. Page commands then carry the `sessionId` at the top level of the message, next to `id` and `method`, not inside `params`.
+
+<Callout type="info">
+  Commands and their responses follow the [CDP specification](https://chromedevtools.github.io/devtools-protocol/). If Lightpanda doesn't support a command, it returns error `-32601` with the message `'<method>' wasn't found`, as Chrome does.
+</Callout>
+
+## Connect
+
+<Tabs items={['Local', 'Cloud']}>
+  <Tabs.Tab>
+Start Lightpanda as a local CDP server (find all options in the [serve command reference](/reference/cli/serve#options)):
+
+```sh copy
+lightpanda serve
+```
+
+By default, it listens on `ws://127.0.0.1:9222`, where the command below connects.
+  </Tabs.Tab>
+  <Tabs.Tab>
+Set your token in `LP_TOKEN`:
+
+```sh copy
+export LP_TOKEN="YOUR_TOKEN"
+```
+
+In the command below, use the commented Cloud line instead of the local one.
+  </Tabs.Tab>
+</Tabs>
+
+## Navigate and read the page
+
+Connect with a WebSocket client such as [wscat](https://github.com/websockets/wscat):
+
+```sh copy
+npx wscat -c ws://127.0.0.1:9222
+# Cloud: npx wscat -c "wss://euwest.cloud.lightpanda.io/ws?token=$LP_TOKEN"
+```
+
+Send each message (`→`) after the previous response (`←`) arrives, with the `targetId` and `sessionId` values Lightpanda returns. Lightpanda also sends events between the responses; the listing below shows only `Page.loadEventFired`.
+
+```text
+# A new connection has no target
+→ {"id":1,"method":"Target.getTargets"}
+← {"id":1,"result":{"targetInfos":[]}}
+
+# Create a page
+→ {"id":2,"method":"Target.createTarget","params":{"url":"about:blank"}}
+← {"id":2,"result":{"targetId":"FID-0000000001"}}
+
+# Attach to it: flatten: true returns a sessionId
+→ {"id":3,"method":"Target.attachToTarget","params":{"targetId":"FID-0000000001","flatten":true}}
+← {"id":3,"result":{"sessionId":"SID-1"}}
+
+# Enable Page events; from here, sessionId sits next to id, not inside params
+→ {"id":4,"sessionId":"SID-1","method":"Page.enable"}
+← {"id":4,"result":{},"sessionId":"SID-1"}
+
+# Navigate: the response comes first, then Page.loadEventFired once the page has loaded
+→ {"id":5,"sessionId":"SID-1","method":"Page.navigate","params":{"url":"https://demo-browser.lightpanda.io/"}}
+← {"id":5,"result":{"frameId":"FID-0000000001","loaderId":"LID-0000000001"},"sessionId":"SID-1"}
+← {"method":"Page.loadEventFired","params":{"timestamp":3992584},"sessionId":"SID-1"}
+
+# Read the title
+→ {"id":6,"sessionId":"SID-1","method":"Runtime.evaluate","params":{"expression":"document.title"}}
+← {"id":6,"result":{"result":{"type":"string","value":"Lightpanda Browser demo"}},"sessionId":"SID-1"}
+
+# Close the page
+→ {"id":7,"method":"Target.closeTarget","params":{"targetId":"FID-0000000001"}}
+← {"id":7,"result":{"success":true}}
+```
+
+## Lightpanda commands
+
+Lightpanda adds its own CDP commands, the [LP domain](/reference/cdp-lp-domain). Send them like any page command, with the `sessionId`.
+
+A selection of commands, by task:
+
+| Task | Command |
+|---|---|
+| Get the page as Markdown, HTML, PNG or PDF, after your clicks and form fills | `LP.dump` |
+| Get a compact outline of the page, with node IDs | `LP.getSemanticTree` |
+| Click or fill a node by its ID | `LP.clickNode`, `LP.fillNode` |
+| Tell a blocked or broken page from an empty one | `LP.getPageStatus` |
+| Skip images, iframes or other sub-resources for this connection | `LP.configureLoading` |
+
+Find every command, with its parameters and result, in the [LP domain reference](/reference/cdp-lp-domain#reading-the-page).
+
+In the listing above, before you close the page, send:
+
+```text
+→ {"id":8,"sessionId":"SID-1","method":"LP.dump","params":{"format":"markdown"}}
+← {"id":8,"result":{"format":"markdown","content":"\n# Lightpanda Browser Demo\n\n## [Campfire Commerce](https://demo-browser.lightpanda.io/campfire-commerce/)\n..."},"sessionId":"SID-1"}
+```
