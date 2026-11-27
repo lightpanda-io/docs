@@ -19,7 +19,7 @@ Lightpanda skips painting pages to a screen and builds everything else around au
 
 Lightpanda meets you at the interface you already use:
 
-- **CDP or WebDriver BiDi**: [Puppeteer](https://pptr.dev/), [Playwright](https://playwright.dev/), and [Chromedp](https://github.com/chromedp/chromedp) connect over CDP the same way they connect to Chrome. [Selenium](/usage/bidi/selenium) drives it over the W3C WebDriver BiDi standard instead, and so does [Puppeteer](/usage/bidi/puppeteer). Point the client at Lightpanda's endpoint and keep your existing scripts.
+- **CDP or WebDriver BiDi**: [Puppeteer](https://pptr.dev/), [Playwright](https://playwright.dev/), and [Chromedp](https://github.com/chromedp/chromedp) connect over CDP the same way they connect to Chrome. You can also [send CDP commands directly](/usage/cdp/websocket) to the browser over a WebSocket, without a client library. [Selenium](/usage/bidi/selenium) drives it over the W3C WebDriver BiDi standard instead, and so does [Puppeteer](/usage/bidi/puppeteer). Point the client at Lightpanda's endpoint and keep your existing scripts.
 - **MCP**: control the browser from AI applications over the [Model Context Protocol](https://modelcontextprotocol.io).
 - **HTTP API**: retrieve results directly over HTTP, without writing or running a CDP script.
 
