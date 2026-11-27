@@ -31,8 +31,26 @@ yay -S lightpanda-nightly-bin
 
 ## Debian/Ubuntu
 
-Starting `0.3.0`, a `.deb` is available with each [tagged
-release](https://github.com/lightpanda-io/browser/releases).
+Install Lightpanda from the [APT repository](https://github.com/lightpanda-io/browser-apt).
+
+Prerequisites:
+
+- Root access: run the commands below as root.
+- `ca-certificates` and `curl` installed.
+
+```sh copy
+install -m 0755 -d /etc/apt/keyrings
+
+curl -fsSL -o /etc/apt/keyrings/lightpanda.asc \
+  https://apt.lightpanda.io/lightpanda.asc
+curl -fsSL -o /etc/apt/sources.list.d/lightpanda.sources \
+  https://apt.lightpanda.io/lightpanda.sources
+chmod 0644 /etc/apt/keyrings/lightpanda.asc /etc/apt/sources.list.d/lightpanda.sources
+
+apt-get update && apt-get install -y lightpanda
+```
+
+New releases then come with regular APT upgrades.
 
 ## Telemetry
 
